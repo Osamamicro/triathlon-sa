@@ -17,7 +17,11 @@ public sealed class ProbeDbContext(DbContextOptions<ProbeDbContext> options) : A
     public DbSet<Probe> Probes => Set<Probe>();
 }
 
-public sealed class SoftDeleteTests : IAsyncLifetime
+/// <summary>
+/// Owns the throwaway PostgreSQL container. Class fixture, so the container starts and the schema is
+/// created once for the whole class instead of once per test.
+/// </summary>
+public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
@@ -30,7 +34,7 @@ public sealed class SoftDeleteTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _postgres.DisposeAsync();
 
-    private ProbeDbContext CreateContext()
+    public ProbeDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<ProbeDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())
@@ -39,6 +43,11 @@ public sealed class SoftDeleteTests : IAsyncLifetime
 
         return new ProbeDbContext(options);
     }
+}
+
+public sealed class SoftDeleteTests(PostgresFixture fixture) : IClassFixture<PostgresFixture>
+{
+    private ProbeDbContext CreateContext() => fixture.CreateContext();
 
     [Fact]
     public async Task Deleting_hides_entity_and_sets_DeletedAt()
@@ -69,6 +78,39 @@ public sealed class SoftDeleteTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Deleting_a_stub_entity_keeps_other_columns()
+    {
+        var id = Guid.CreateVersion7();
+
+        await using (var db = CreateContext())
+        {
+            db.Probes.Add(new Probe { Id = id, Name = "keep" });
+            await db.SaveChangesAsync();
+        }
+
+        DateTimeOffset createdAt;
+        await using (var db = CreateContext())
+        {
+            createdAt = (await db.Probes.SingleAsync(p => p.Id == id)).CreatedAt;
+        }
+
+        // The realistic API-layer delete: a stub carrying nothing but the key.
+        await using (var db = CreateContext())
+        {
+            db.Probes.Remove(new Probe { Id = id });
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = CreateContext())
+        {
+            var deleted = await db.Probes.IgnoreQueryFilters().SingleAsync(p => p.Id == id);
+            Assert.Equal("keep", deleted.Name);
+            Assert.Equal(createdAt, deleted.CreatedAt);
+            Assert.NotNull(deleted.DeletedAt);
+        }
+    }
+
+    [Fact]
     public async Task Adding_sets_CreatedAt()
     {
         var id = Guid.CreateVersion7();
@@ -83,6 +125,7 @@ public sealed class SoftDeleteTests : IAsyncLifetime
         {
             var probe = await db.Probes.SingleAsync(p => p.Id == id);
             Assert.NotEqual(default, probe.CreatedAt);
+            Assert.Null(probe.CreatedBy);
             Assert.Null(probe.UpdatedAt);
             Assert.Null(probe.DeletedAt);
         }

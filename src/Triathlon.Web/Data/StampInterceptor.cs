@@ -53,10 +53,16 @@ public sealed class StampInterceptor(TimeProvider timeProvider, IHttpContextAcce
                     break;
 
                 case EntityState.Deleted:
-                    entry.State = EntityState.Modified;
+                    // Via Unchanged, not straight to Modified: flipping a delete to Modified marks every
+                    // property modified, so deleting a key-only stub (db.Remove(new Event { Id = id }))
+                    // would overwrite the whole row with that stub's defaults. Stamp columns only.
+                    entry.State = EntityState.Unchanged;
                     entry.Entity.DeletedAt = now;
                     entry.Entity.UpdatedAt = now;
                     entry.Entity.UpdatedBy = user;
+                    entry.Property(nameof(BaseEntity.DeletedAt)).IsModified = true;
+                    entry.Property(nameof(BaseEntity.UpdatedAt)).IsModified = true;
+                    entry.Property(nameof(BaseEntity.UpdatedBy)).IsModified = true;
                     break;
             }
         }
