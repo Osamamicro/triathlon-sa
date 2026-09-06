@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Triathlon.Web.Areas.Dashboard;
 using Triathlon.Web.Areas.Dashboard.Account;
+using Triathlon.Web.Areas.Public;
 using Triathlon.Web.Data;
 using Triathlon.Web.Data.Seed;
 using Triathlon.Web.Domain.Identity;
@@ -14,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
+
+// Razor Pages under /{culture} for the public website, plus the localization that segment drives.
+builder.Services.AddPublicSite();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -71,11 +75,17 @@ else
 app.UseStatusCodePagesWithReExecute("/dashboard/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+// Explicit so request localization can sit behind it: the culture comes out of the matched route.
+app.UseRouting();
+app.UseRequestLocalization();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapPublicRoot();
+app.MapRazorPages();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapAdditionalIdentityEndpoints();

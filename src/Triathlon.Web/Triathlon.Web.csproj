@@ -25,6 +25,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Shared.cs sits beside these files, so MSBuild's resx-to-class heuristic would name them
+         after that class alone ("Triathlon.Web.Shared"). IStringLocalizer<Shared> looks under
+         ResourcesPath instead ("Triathlon.Web.Resources.Shared"), so the names are pinned here. -->
+    <EmbeddedResource Update="Resources\Shared.en.resx" LogicalName="Triathlon.Web.Resources.Shared.en.resources" />
+    <EmbeddedResource Update="Resources\Shared.ar.resx" LogicalName="Triathlon.Web.Resources.Shared.ar.resources" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Lets Triathlon.Tests unit-test IdentityRedirectManager.IsLocalUrl directly instead of
          only through the full login round trip. -->
     <InternalsVisibleTo Include="Triathlon.Tests" />
