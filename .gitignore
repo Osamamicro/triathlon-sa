@@ -1,0 +1,13 @@
+# Browser automation output
+.playwright-cli/
+
+# Commercial / client-confidential material — repo is public (GitHub Pages). Keep local only.
+docs/proposal/
+/Saudi_Triathlon_Website_Proposal.pdf
+/*.pdf
+STF-w.avif
+~$*.docx
+
+# OS / editor
+Thumbs.db
+.DS_Store
