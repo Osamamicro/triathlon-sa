@@ -11,3 +11,11 @@ STF-w.avif
 # OS / editor
 Thumbs.db
 .DS_Store
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+src/Triathlon.Web/Data/app.db
