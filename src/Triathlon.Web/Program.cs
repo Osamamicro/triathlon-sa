@@ -31,6 +31,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/dashboard/login";
     options.LogoutPath = "/dashboard/logout";
     options.AccessDeniedPath = "/dashboard/access-denied";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 builder.Services.AddAppDatabase(builder.Configuration);

@@ -43,6 +43,15 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
                 ["Seed:AdminPassword"] = AdminPassword,
             }));
     }
+
+    /// <summary>
+    /// The identity cookie is marked Secure (see Program.cs), so a client that talks to the test
+    /// host over plain "http://localhost" never gets it back on the next request. Tests that need
+    /// the cookie to round-trip (anything that signs in and then reuses the client) must create
+    /// their client with this as the <see cref="WebApplicationFactoryClientOptions.BaseAddress"/> —
+    /// TestServer accepts "https" without a real TLS handshake, so this is otherwise a normal client.
+    /// </summary>
+    public static readonly Uri HttpsBaseAddress = new("https://localhost");
 }
 
 /// <summary>Shares one container and one application host across every web test class.</summary>

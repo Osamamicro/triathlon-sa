@@ -36,7 +36,13 @@ public sealed class DashboardAuthTests(WebAppFixture app)
     [Fact]
     public async Task Seeded_admin_can_sign_in()
     {
-        using var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        // The identity cookie is Secure-only (see Program.cs), so this client must talk "https"
+        // for the cookie set on sign-in to actually come back on the follow-up GET /dashboard.
+        using var client = app.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = WebAppFixture.HttpsBaseAddress,
+        });
 
         var loginPage = await client.GetStringAsync("/dashboard/login");
         var form = HiddenFields(loginPage);
@@ -55,6 +61,29 @@ public sealed class DashboardAuthTests(WebAppFixture app)
 
         Assert.Equal(HttpStatusCode.OK, dashboard.StatusCode);
         Assert.Contains(WebAppFixture.AdminEmail, await dashboard.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Login_never_redirects_off_host_even_with_a_protocol_relative_returnUrl()
+    {
+        using var client = app.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = WebAppFixture.HttpsBaseAddress,
+        });
+
+        var loginPage = await client.GetStringAsync("/dashboard/login?returnUrl=%2F%2Fevil.com");
+        var form = HiddenFields(loginPage);
+        Assert.Contains("__RequestVerificationToken", form.Keys);
+
+        form["Input.Email"] = WebAppFixture.AdminEmail;
+        form["Input.Password"] = WebAppFixture.AdminPassword;
+
+        using var signIn = await client.PostAsync("/dashboard/login?returnUrl=%2F%2Fevil.com", new FormUrlEncodedContent(form));
+
+        Assert.Equal(HttpStatusCode.Found, signIn.StatusCode);
+        Assert.Contains("/dashboard", signIn.Headers.Location!.ToString());
+        Assert.DoesNotContain("evil.com", signIn.Headers.Location!.ToString());
     }
 
     /// <summary>Collects every hidden input on a page — the antiforgery token and Blazor's form handler.</summary>
