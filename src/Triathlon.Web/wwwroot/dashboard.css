@@ -1,0 +1,130 @@
+/* Styling for the plain-HTML corners of the dashboard: the sign-in shell and the statically
+   rendered account forms. Everything else is MudBlazor. */
+
+:root {
+    --stf-green: #008250;
+    --stf-green-dark: #00663f;
+    --stf-ink: #14201b;
+    --stf-muted: #5d6b64;
+    --stf-line: #d9e0dc;
+    --stf-error: #b3261e;
+    --stf-ok: #1b5e20;
+}
+
+.auth-shell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+    background: #f4f7f5;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--stf-ink);
+}
+
+.auth-card {
+    width: min(26rem, 100%);
+    padding: 2rem;
+    background: #fff;
+    border: 1px solid var(--stf-line);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgb(20 32 27 / 8%);
+}
+
+.auth-brand {
+    margin: 0 0 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stf-green);
+}
+
+.auth-card h1 {
+    margin: 0 0 1.25rem;
+    font-size: 1.5rem;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="password"] {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font: inherit;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--stf-line);
+    border-radius: 0.5rem;
+}
+
+.field input:focus-visible {
+    outline: 2px solid var(--stf-green);
+    outline-offset: 1px;
+}
+
+.field-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-inline label {
+    margin: 0;
+    font-weight: 400;
+}
+
+.field-error {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--stf-error);
+}
+
+button.primary {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--stf-green);
+    border: 0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+button.primary:hover {
+    background: var(--stf-green-dark);
+}
+
+.status {
+    margin: 0 0 1rem;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+}
+
+.status-error {
+    color: var(--stf-error);
+    background: #fdecea;
+}
+
+.status-ok {
+    color: var(--stf-ok);
+    background: #e8f5e9;
+}
+
+.muted {
+    font-size: 0.8125rem;
+    color: var(--stf-muted);
+}

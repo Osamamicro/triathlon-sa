@@ -19,8 +19,6 @@ public static class DbSetup
     public static IServiceCollection AddAppDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var provider = configuration["Database:Provider"] ?? Postgres;
-        var connectionString = configuration.GetConnectionString("Default")
-            ?? throw new InvalidOperationException("Connection string 'Default' not found.");
 
         services.AddHttpContextAccessor();
         services.TryAddSingleton(TimeProvider.System);
@@ -31,13 +29,13 @@ public static class DbSetup
         if (string.Equals(provider, Postgres, StringComparison.OrdinalIgnoreCase))
         {
             services.AddDbContext<AppDbContext, PostgresDbContext>((sp, options) => options
-                .UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory"))
+                .UseNpgsql(ConnectionString(sp), npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory"))
                 .AddInterceptors(sp.GetRequiredService<StampInterceptor>()));
         }
         else if (string.Equals(provider, SqlServer, StringComparison.OrdinalIgnoreCase))
         {
             services.AddDbContext<AppDbContext, SqlServerDbContext>((sp, options) => options
-                .UseSqlServer(connectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory"))
+                .UseSqlServer(ConnectionString(sp), sql => sql.MigrationsHistoryTable("__EFMigrationsHistory"))
                 .AddInterceptors(sp.GetRequiredService<StampInterceptor>()));
         }
         else
@@ -50,4 +48,14 @@ public static class DbSetup
 
         return services;
     }
+
+    /// <summary>
+    /// Resolved when the first context is created rather than when the service is registered, so the
+    /// connection string is whatever the built host's configuration says. Registration runs before a
+    /// test host or a late configuration source has been layered in, and a string captured there would
+    /// quietly pin every context to the settings file.
+    /// </summary>
+    private static string ConnectionString(IServiceProvider services) =>
+        services.GetRequiredService<IConfiguration>().GetConnectionString("Default")
+            ?? throw new InvalidOperationException("Connection string 'Default' not found.");
 }

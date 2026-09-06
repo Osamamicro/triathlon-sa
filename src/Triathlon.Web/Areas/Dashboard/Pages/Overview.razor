@@ -1,0 +1,20 @@
+@page "/dashboard"
+@using System.Security.Claims
+
+<PageTitle>Dashboard</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <MudText Typo="Typo.h4" GutterBottom="true">Welcome</MudText>
+        <MudText Typo="Typo.body1">Signed in as @context.User.Identity?.Name.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">Roles: @RoleList(context)</MudText>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private static string RoleList(AuthenticationState state)
+    {
+        var roles = state.User.FindAll(ClaimTypes.Role).Select(claim => claim.Value).ToArray();
+        return roles.Length == 0 ? "none" : string.Join(", ", roles);
+    }
+}

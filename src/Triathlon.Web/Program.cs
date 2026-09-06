@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Triathlon.Web.Components;
-using Triathlon.Web.Components.Account;
+using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
+using Triathlon.Web.Areas.Dashboard;
+using Triathlon.Web.Areas.Dashboard.Account;
 using Triathlon.Web.Data;
+using Triathlon.Web.Data.Seed;
+using Triathlon.Web.Domain.Identity;
+using Triathlon.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddMudServices();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -17,46 +22,73 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
     })
     .AddIdentityCookies();
 
-builder.Services.AddAppDatabase(builder.Configuration);
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/dashboard/login";
+    options.LogoutPath = "/dashboard/logout";
+    options.AccessDeniedPath = "/dashboard/access-denied";
+});
 
-builder.Services.AddIdentityCore<ApplicationUser>(options =>
+builder.Services.AddAppDatabase(builder.Configuration);
+builder.Services.AddAppAuthorization();
+
+builder.Services.AddIdentityCore<AppUser>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = true;
-        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+        // Staff accounts are created by an administrator, so there is no confirmation mail to wait on.
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Password.RequiredLength = 12;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        // Left at the default schema version: passkeys and their table were removed with the rest of
+        // the scaffolded self-service account pages, and the design-time model must match this one or
+        // every migration comes out with phantom pending changes.
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddScoped<IActivityLogger, ActivityLogger>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseExceptionHandler("/dashboard/error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. See https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
+app.UseStatusCodePagesWithReExecute("/dashboard/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-// Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
+// Staging and production keep this off and migrate as a deployment step; developers and the
+// integration tests turn it on so a fresh database is usable immediately.
+if (app.Configuration.GetValue("Database:MigrateOnStartup", false))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    await SeedIdentity.RunAsync(scope.ServiceProvider);
+}
+
 app.Run();
+
+/// <summary>Named so the integration tests can boot the real application with WebApplicationFactory.</summary>
+public partial class Program;

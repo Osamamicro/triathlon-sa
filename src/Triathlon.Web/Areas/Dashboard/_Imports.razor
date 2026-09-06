@@ -1,0 +1,16 @@
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using MudBlazor
+@using Triathlon.Web
+@using Triathlon.Web.Areas.Dashboard
+@using Triathlon.Web.Areas.Dashboard.Account
+@using Triathlon.Web.Areas.Dashboard.Layout
+@using Triathlon.Web.Domain.Identity
+
+@* The dashboard is staff-only, so authorisation is the default and pages opt out with [AllowAnonymous]. *@
+@attribute [Authorize]

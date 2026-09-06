@@ -1,0 +1,93 @@
+@page "/dashboard/login"
+@layout AuthLayout
+@attribute [AllowAnonymous]
+
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<AppUser> SignInManager
+@inject ILogger<Login> Logger
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Sign in</PageTitle>
+
+<h1>Sign in</h1>
+
+<StatusMessage Message="@errorMessage" />
+
+<EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+    <DataAnnotationsValidator />
+
+    <div class="field">
+        <label for="Input.Email">Email</label>
+        <InputText @bind-Value="Input.Email" id="Input.Email" autocomplete="username" aria-required="true" />
+        <ValidationMessage For="() => Input.Email" class="field-error" />
+    </div>
+
+    <div class="field">
+        <label for="Input.Password">Password</label>
+        <InputText type="password" @bind-Value="Input.Password" id="Input.Password" autocomplete="current-password" aria-required="true" />
+        <ValidationMessage For="() => Input.Password" class="field-error" />
+    </div>
+
+    <div class="field field-inline">
+        <InputCheckbox @bind-Value="Input.RememberMe" id="Input.RememberMe" />
+        <label for="Input.RememberMe">Remember me</label>
+    </div>
+
+    <button type="submit" class="primary">Sign in</button>
+</EditForm>
+
+<p class="muted">Dashboard accounts are created by a federation administrator.</p>
+
+@code {
+    /// <summary>Where a successful sign-in lands when the visitor did not arrive from a protected page.</summary>
+    private const string DefaultReturnUrl = "dashboard";
+
+    private string? errorMessage;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized() => Input ??= new();
+
+    private async Task LoginUser()
+    {
+        // lockoutOnFailure is what makes the configured 5 attempts / 15 minutes actually bite.
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User {Email} signed in.", Input.Email);
+            RedirectManager.RedirectTo(string.IsNullOrWhiteSpace(ReturnUrl) ? DefaultReturnUrl : ReturnUrl);
+            return;
+        }
+
+        if (result.IsLockedOut)
+        {
+            Logger.LogWarning("Account {Email} is locked out.", Input.Email);
+            RedirectManager.RedirectTo("dashboard/lockout");
+            return;
+        }
+
+        // Deliberately does not say which half was wrong.
+        errorMessage = "Error: Invalid sign-in attempt.";
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [Display(Name = "Remember me")]
+        public bool RememberMe { get; set; }
+    }
+}

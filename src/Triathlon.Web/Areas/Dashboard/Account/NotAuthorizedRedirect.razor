@@ -1,0 +1,21 @@
+@inject NavigationManager NavigationManager
+
+@code {
+    /// <summary>Who the visitor is, supplied by <c>AuthorizeRouteView</c>'s <c>NotAuthorized</c> fragment.</summary>
+    [Parameter]
+    public AuthenticationState? State { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Signed in but short of the required role is a different answer from not signed in at all:
+        // sending the first case to the login form would look like the sign-in silently failed.
+        if (State?.User.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo("dashboard/access-denied", forceLoad: true);
+            return;
+        }
+
+        var returnUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        NavigationManager.NavigateTo($"dashboard/login?returnUrl={returnUrl}", forceLoad: true);
+    }
+}

@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Domain.Identity;
 
 namespace Triathlon.Web.Data;
 
@@ -10,11 +11,14 @@ namespace Triathlon.Web.Data;
 /// subclasses (<see cref="PostgresDbContext"/>, <see cref="SqlServerDbContext"/>) exist so that each
 /// provider owns its own migration set, since EF matches migrations to a context type.
 /// </summary>
-public class AppDbContext : IdentityDbContext<ApplicationUser>
+public class AppDbContext : IdentityDbContext<AppUser>
 {
     protected AppDbContext(DbContextOptions options) : base(options)
     {
     }
+
+    /// <summary>Append-only audit trail; never soft-deleted, so it is exempt from the filter below.</summary>
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
