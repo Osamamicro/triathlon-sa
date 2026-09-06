@@ -46,6 +46,10 @@ public sealed class PublicPagesTests(WebAppFixture app)
     [InlineData("en;q=0.4,ar;q=0.9", "/ar")]
     // Neither top choice is published, so the best supported one wins rather than the default.
     [InlineData("fr-FR,fr;q=0.9,ar;q=0.5", "/ar")]
+    // "arn" (Mapudungun) must not match "ar" on a bare prefix check.
+    [InlineData("arn", "/en")]
+    // q=0 means "not acceptable", not "low priority" — it must never win.
+    [InlineData("ar;q=0,en;q=0.5", "/en")]
     public async Task Root_redirects_by_accept_language(string? acceptLanguage, string expected)
     {
         using var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
@@ -60,6 +64,10 @@ public sealed class PublicPagesTests(WebAppFixture app)
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(expected, response.Headers.Location!.ToString());
+        // The redirect target depends on the request's Accept-Language, and the choice itself
+        // must not be cached, so a shared cache needs both signals.
+        Assert.Contains("Accept-Language", response.Headers.Vary);
+        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
     }
 
     [Fact]
@@ -103,5 +111,37 @@ public sealed class PublicPagesTests(WebAppFixture app)
         Assert.True(end > start, "The language toggle is not an anchor.");
 
         return html[start..(end + "</a>".Length)];
+    }
+
+    [Fact]
+    public async Task Theme_toggle_label_is_localized()
+    {
+        using var client = app.CreateClient();
+
+        var english = await client.GetStringAsync("/en");
+        var arabic = await client.GetStringAsync("/ar");
+
+        var englishToggle = ThemeToggle(english);
+        Assert.Contains("data-label-light=\"Switch to light mode\"", englishToggle, StringComparison.Ordinal);
+        Assert.Contains("data-label-dark=\"Switch to dark mode\"", englishToggle, StringComparison.Ordinal);
+
+        var arabicToggle = ThemeToggle(arabic);
+        Assert.Contains("data-label-light=\"التبديل إلى الوضع الفاتح\"", arabicToggle, StringComparison.Ordinal);
+        Assert.Contains("data-label-dark=\"التبديل إلى الوضع الداكن\"", arabicToggle, StringComparison.Ordinal);
+        // The whole point: an Arabic page must never carry the hard-coded English strings that
+        // site.js used to stamp onto the toggle's aria-label after boot.
+        Assert.DoesNotContain("Switch to", arabicToggle, StringComparison.Ordinal);
+    }
+
+    /// <summary>Isolates the theme toggle button so the assertions cannot pass on stray page copy.</summary>
+    private static string ThemeToggle(string html)
+    {
+        var start = html.IndexOf("class=\"theme-toggle\"", StringComparison.Ordinal);
+        Assert.True(start >= 0, "The page has no theme toggle.");
+
+        var end = html.IndexOf("</button>", start, StringComparison.Ordinal);
+        Assert.True(end > start, "The theme toggle is not a button.");
+
+        return html[start..(end + "</button>".Length)];
     }
 }

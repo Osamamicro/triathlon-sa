@@ -94,6 +94,14 @@
     <value>Switch theme</value>
     <comment>Accessible name of the dark/light toggle before scripting takes over.</comment>
   </data>
+  <data name="SwitchToLight" xml:space="preserve">
+    <value>Switch to light mode</value>
+    <comment>Theme toggle accessible name shown while dark mode is active (the action switches to light).</comment>
+  </data>
+  <data name="SwitchToDark" xml:space="preserve">
+    <value>Switch to dark mode</value>
+    <comment>Theme toggle accessible name shown while light mode is active (the action switches to dark).</comment>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Swim, bike, run</value>
     <comment>Browser-title prefix for the home page; the site name is appended by the layout.</comment>

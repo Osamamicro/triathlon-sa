@@ -85,6 +85,12 @@
   <data name="ThemeToggle" xml:space="preserve">
     <value>تغيير المظهر</value>
   </data>
+  <data name="SwitchToLight" xml:space="preserve">
+    <value>التبديل إلى الوضع الفاتح</value>
+  </data>
+  <data name="SwitchToDark" xml:space="preserve">
+    <value>التبديل إلى الوضع الداكن</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>سباحة ودراجة وجري</value>
   </data>

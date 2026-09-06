@@ -84,7 +84,14 @@ public static class PublicSite
     /// public URL without a culture segment, and it never renders anything itself.
     /// </summary>
     public static IEndpointConventionBuilder MapPublicRoot(this IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGet("/", (HttpRequest request) => Results.Redirect("/" + PreferredCulture(request)));
+        endpoints.MapGet("/", (HttpRequest request) =>
+        {
+            // The redirect target depends on Accept-Language, so a cache must not serve one
+            // visitor's culture pick to the next, and the choice itself should not be cached either.
+            request.HttpContext.Response.Headers[HeaderNames.Vary] = "Accept-Language";
+            request.HttpContext.Response.Headers[HeaderNames.CacheControl] = "no-store";
+            return Results.Redirect("/" + PreferredCulture(request));
+        });
 
     /// <summary>
     /// The visitor's highest-weighted <c>Accept-Language</c> entry that the site is actually
@@ -100,8 +107,17 @@ public static class PublicSite
         // OrderByDescending is stable, so entries of equal quality keep the order the client sent.
         foreach (var language in languages.OrderByDescending(l => l.Quality ?? 1d))
         {
+            // q=0 is an explicit "not acceptable" in the Accept-Language grammar, not a low weight.
+            if (language.Quality == 0d)
+            {
+                continue;
+            }
+
+            // Exact tag or tag-plus-region only ("ar", "ar-SA") — a bare StartsWith("ar") would also
+            // match unrelated tags such as "arn" (Mapudungun) or "ary" (Moroccan Arabic).
             var match = SupportedCultures.FirstOrDefault(c =>
-                language.Value.StartsWith(c, StringComparison.OrdinalIgnoreCase));
+                language.Value.Equals(c, StringComparison.OrdinalIgnoreCase) ||
+                language.Value.StartsWith(c + "-", StringComparison.OrdinalIgnoreCase));
 
             if (match is not null)
             {

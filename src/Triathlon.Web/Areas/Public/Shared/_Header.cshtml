@@ -46,7 +46,7 @@
             <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)"><span class="en">@item.En</span><span class="ar">@item.Ar</span></a>
         }
     </nav>
-    <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]">
+    <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]" data-label-light="@L["SwitchToLight"]" data-label-dark="@L["SwitchToDark"]">
         <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>
         <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2" /><path d="M12 2v2.4M12 19.6V22M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2 12h2.4M19.6 12H22M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" /></svg>
     </button>

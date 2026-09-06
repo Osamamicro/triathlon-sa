@@ -22,7 +22,10 @@
     else html.removeAttribute("data-theme");
     try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* storage may be blocked */ }
     document.querySelectorAll(".theme-toggle").forEach(b => {
-      b.setAttribute("aria-label", theme === "light" ? "Switch to dark mode" : "Switch to light mode");
+      /* labels are server-rendered per culture in data-label-light/dark; leave the
+         SSR aria-label alone if a page ever lacks them rather than guessing in English */
+      const label = theme === "light" ? b.dataset.labelDark : b.dataset.labelLight;
+      if (label) b.setAttribute("aria-label", label);
     });
   }
 
