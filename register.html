@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");if(localStorage.getItem("stf-lang")==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}}catch(e){}</script>
+<title>Athlete Registration — Saudi Triathlon Federation</title>
+<meta name="description" content="Register as an athlete with the Saudi Triathlon Federation — demo online registration flow. (Design prototype)">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Saudi Triathlon Federation — Prototype">
+<meta property="og:title" content="Athlete Registration — Saudi Triathlon Federation">
+<meta property="og:description" content="Register as an athlete with the Saudi Triathlon Federation — demo online registration flow. (Design prototype)">
+<meta property="og:image" content="https://osamamicro.github.io/triathlon-sa/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='9' fill='%23060B14'/%3E%3Cpath d='M22 7 L37 36 H31.5 L22 17.5 L12.5 36 H7 Z' fill='none' stroke='%232EE68A' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="page-grid" aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow"><span class="en">Online registration — demo</span><span class="ar">التسجيل الإلكتروني — تجريبي</span></span>
+      <h1><span class="en">Athlete Registration</span><span class="ar">تسجيل الرياضيين</span></h1>
+      <p class="hero-lead">
+        <span class="en">The production registration flow, working end-to-end as a demo: your details stay in this
+        browser only and nothing is sent anywhere — submit to see your demo athlete license.</span>
+        <span class="ar">مسار التسجيل الفعلي كنموذج تجريبي متكامل: بياناتك تبقى في هذا المتصفح فقط ولا تُرسل
+        إلى أي جهة — أكمل النموذج لترى رخصتك الرياضية التجريبية.</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:16px">
+    <div class="container">
+      <div class="detail-grid">
+
+        <form id="regForm" class="card" novalidate>
+          <span class="eyebrow"><span class="en">Step 1 — Personal details</span><span class="ar">الخطوة 1 — البيانات الشخصية</span></span>
+          <div class="form-grid">
+            <div class="field" data-key="name">
+              <label for="fName"><span class="en">Full name</span><span class="ar">الاسم الكامل</span></label>
+              <input class="input" id="fName" autocomplete="name">
+              <span class="err"><span class="en">Please enter your name.</span><span class="ar">فضلاً أدخل اسمك.</span></span>
+            </div>
+            <div class="field" data-key="email">
+              <label for="fEmail"><span class="en">Email</span><span class="ar">البريد الإلكتروني</span></label>
+              <input class="input" id="fEmail" type="email" autocomplete="email">
+              <span class="err"><span class="en">Please enter a valid email.</span><span class="ar">فضلاً أدخل بريداً صحيحاً.</span></span>
+            </div>
+            <div class="field" data-key="dob">
+              <label for="fDob"><span class="en">Date of birth</span><span class="ar">تاريخ الميلاد</span></label>
+              <input class="input" id="fDob" type="date">
+              <span class="err"><span class="en">Please enter your date of birth.</span><span class="ar">فضلاً أدخل تاريخ ميلادك.</span></span>
+            </div>
+            <div class="field" data-key="city">
+              <label for="fCity"><span class="en">City</span><span class="ar">المدينة</span></label>
+              <select class="input" id="fCity"></select>
+            </div>
+          </div>
+
+          <hr class="tri" style="margin-block:20px">
+
+          <span class="eyebrow"><span class="en">Step 2 — Your sport</span><span class="ar">الخطوة 2 — رياضتك</span></span>
+          <div class="form-grid">
+            <div class="field" data-key="category">
+              <label for="fCat"><span class="en">Category</span><span class="ar">الفئة</span></label>
+              <select class="input" id="fCat">
+                <option value="Youth">Youth · الناشئون</option>
+                <option value="Age Group" selected>Age Group · الفئات العمرية</option>
+                <option value="Elite">Elite · النخبة</option>
+                <option value="Para">Para · ذوو الإعاقة</option>
+                <option value="Community">Community · مجتمعي</option>
+              </select>
+            </div>
+            <div class="field" data-key="club">
+              <label for="fClub"><span class="en">Club (optional)</span><span class="ar">النادي (اختياري)</span></label>
+              <select class="input" id="fClub"></select>
+            </div>
+            <div class="field" data-key="event" style="grid-column:1/-1">
+              <label for="fEvent"><span class="en">First event of interest (optional)</span><span class="ar">أول فعالية تهمك (اختياري)</span></label>
+              <select class="input" id="fEvent"></select>
+              <span class="hint"><span class="en">Pre-filled when you arrive from an event page.</span><span class="ar">تُعبأ تلقائياً عند القدوم من صفحة فعالية.</span></span>
+            </div>
+          </div>
+
+          <hr class="tri" style="margin-block:20px">
+
+          <span class="eyebrow"><span class="en">Step 3 — Declarations</span><span class="ar">الخطوة 3 — الإقرارات</span></span>
+          <div class="field" data-key="medical">
+            <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.9rem;color:var(--muted)">
+              <input type="checkbox" id="fMedical" style="margin-top:3px">
+              <span><span class="en">I declare that I am medically fit to train and race, and I accept the STF Competition Rules and Anti-Doping Policy.</span>
+              <span class="ar">أقر بأنني لائق طبياً للتدريب والمنافسة، وأوافق على قوانين المنافسات وسياسة مكافحة المنشطات.</span></span>
+            </label>
+            <span class="err"><span class="en">The declaration is required to register.</span><span class="ar">الإقرار مطلوب لإتمام التسجيل.</span></span>
+          </div>
+
+          <button class="btn btn-primary" type="submit" style="margin-top:10px">
+            <span class="en">Submit registration</span><span class="ar">إرسال التسجيل</span>
+          </button>
+        </form>
+
+        <aside>
+          <div class="card">
+            <span class="eyebrow"><span class="en">What happens next</span><span class="ar">ماذا بعد؟</span></span>
+            <ul class="list-check" style="margin:0">
+              <li><span class="en">Your license number is issued instantly (demo).</span><span class="ar">يصدر رقم رخصتك فوراً (تجريبي).</span></li>
+              <li><span class="en">In production: ID verification, payment, and club confirmation follow.</span><span class="ar">في النسخة النهائية: التحقق من الهوية والدفع وتأكيد النادي.</span></li>
+              <li><span class="en">Licensed athletes enter any sanctioned race with one click.</span><span class="ar">الرياضي المرخص يسجل في أي سباق معتمد بنقرة واحدة.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <span class="eyebrow"><span class="en">Privacy — demo</span><span class="ar">الخصوصية — تجريبي</span></span>
+            <p class="muted" style="font-size:.88rem;margin:0">
+              <span class="en">This prototype stores your entry in this browser only. Nothing is transmitted or collected.</span>
+              <span class="ar">يحفظ هذا النموذج بياناتك في متصفحك فقط. لا يُرسل أو يُجمع أي شيء.</span>
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <div id="doneView" hidden style="max-width:640px">
+        <span class="eyebrow"><span class="en">Registration complete</span><span class="ar">اكتمل التسجيل</span></span>
+        <h2><span class="en">Welcome to the start line</span><span class="ar">أهلاً بك عند خط الانطلاق</span></h2>
+        <div class="license-card" style="margin-block:22px">
+          <span class="eyebrow"><span class="en">Demo athlete license</span><span class="ar">رخصة رياضي تجريبية</span></span>
+          <div class="license-num mono" id="licNum">STF-2026-0000</div>
+          <ul class="info-list" style="margin-top:14px">
+            <li><span class="k"><span class="en">Athlete</span><span class="ar">الرياضي</span></span><span class="v" id="licName"></span></li>
+            <li><span class="k"><span class="en">Category</span><span class="ar">الفئة</span></span><span class="v mono" id="licCat"></span></li>
+            <li><span class="k"><span class="en">Season</span><span class="ar">الموسم</span></span><span class="v mono">2026–27</span></li>
+          </ul>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="events.html"><span class="en">Find your first race</span><span class="ar">اعثر على سباقك الأول</span></a>
+          <a class="btn btn-ghost" href="training.html"><span class="en">Start training</span><span class="ar">ابدأ التدريب</span></a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  (function () {
+    var citySel = document.getElementById("fCity");
+    var clubSel = document.getElementById("fClub");
+    var eventSel = document.getElementById("fEvent");
+
+    Object.keys(STF.cities).forEach(function (k) {
+      var c = STF.cities[k];
+      citySel.appendChild(new Option(c.name.en + " · " + c.name.ar, k));
+    });
+    clubSel.appendChild(new Option("— · —", ""));
+    STF.clubs.forEach(function (c) {
+      clubSel.appendChild(new Option(c.name.en + " · " + c.name.ar, c.name.en));
+    });
+    eventSel.appendChild(new Option("— · —", ""));
+    STF.upcoming.forEach(function (e) {
+      eventSel.appendChild(new Option(e.title.en + " · " + e.title.ar, e.id));
+    });
+
+    var pre = new URLSearchParams(location.search).get("event");
+    if (pre) eventSel.value = pre;
+
+    var form = document.getElementById("regForm");
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var ok = true;
+      function check(key, valid) {
+        var f = form.querySelector('.field[data-key="' + key + '"]');
+        f.classList.toggle("invalid", !valid);
+        if (!valid) ok = false;
+      }
+      var name = document.getElementById("fName").value.trim();
+      var email = document.getElementById("fEmail").value.trim();
+      check("name", name.length > 1);
+      check("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+      check("dob", !!document.getElementById("fDob").value);
+      check("medical", document.getElementById("fMedical").checked);
+      if (!ok) {
+        form.querySelector(".field.invalid").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      var num = "STF-2026-" + String(Math.floor(1000 + Math.random() * 9000));
+      var entry = {
+        num: num, name: name, email: email,
+        dob: document.getElementById("fDob").value,
+        city: citySel.value,
+        category: document.getElementById("fCat").value,
+        club: clubSel.value || null,
+        event: eventSel.value || null,
+        at: new Date().toISOString()
+      };
+      try {
+        var all = JSON.parse(localStorage.getItem("stf-registrations") || "[]");
+        all.push(entry);
+        localStorage.setItem("stf-registrations", JSON.stringify(all));
+      } catch (e) { /* demo only */ }
+
+      document.getElementById("licNum").textContent = num;
+      document.getElementById("licName").textContent = name;
+      document.getElementById("licCat").textContent = entry.category;
+      form.closest(".detail-grid").hidden = true;
+      document.getElementById("doneView").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  })();
+</script>
+</body>
+</html>

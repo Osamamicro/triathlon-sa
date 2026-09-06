@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found — Saudi Triathlon</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Tajawal:wght@400;700&display=swap">
+<style>
+  :root{--ground:#060B14;--ink:#E8EEF6;--muted:#8CA0B8;--swim:#26C6E8;--bike:#2EE68A;--run:#FFA245}
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--ground);color:var(--ink);font-family:"IBM Plex Sans","Tajawal",system-ui,sans-serif;
+    background-image:
+      radial-gradient(50% 45% at 20% 15%,rgba(38,198,232,.13),transparent 70%),
+      radial-gradient(50% 45% at 80% 85%,rgba(255,162,69,.10),transparent 70%);
+    padding:24px;text-align:center;
+  }
+  .code{
+    font-family:Rajdhani,sans-serif;font-weight:700;font-size:clamp(5rem,18vw,9rem);line-height:1;
+    background:linear-gradient(90deg,var(--swim),var(--bike),var(--run));
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin:0;
+  }
+  p{color:var(--muted);max-width:44ch;margin:14px auto 30px;line-height:1.7}
+  a{
+    display:inline-block;padding:12px 26px;border-radius:999px;text-decoration:none;
+    font-family:Rajdhani,sans-serif;font-weight:700;letter-spacing:.05em;
+    background:var(--bike);color:#04140B;
+  }
+  .mono{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.2em;color:#5C6E85;margin-top:38px}
+</style>
+</head>
+<body>
+<div>
+  <h1 class="code">404</h1>
+  <p>This page took a wrong turn at T2 — it doesn't exist.<br>
+  <span lang="ar" dir="rtl">هذه الصفحة ضلّت الطريق عند المنطقة الانتقالية — غير موجودة.</span></p>
+  <a href="/triathlon-sa/">Back to home · العودة للرئيسية</a>
+  <div class="mono">SWIM · BIKE · RUN</div>
+</div>
+</body>
+</html>

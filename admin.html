@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");if(localStorage.getItem("stf-lang")==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}}catch(e){}</script>
+<title>Content Dashboard — Saudi Triathlon Federation</title>
+<meta name="description" content="Demo content-management dashboard of the Saudi Triathlon Federation prototype — manage events, statistics, documents, rules, clubs and registrations. Changes stay in this browser.">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Saudi Triathlon Federation — Prototype">
+<meta property="og:title" content="Content Dashboard — Saudi Triathlon Federation">
+<meta property="og:description" content="Demo content-management dashboard: manage events, statistics, documents, rules, clubs and registrations.">
+<meta property="og:image" content="https://osamamicro.github.io/triathlon-sa/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='9' fill='%23060B14'/%3E%3Cpath d='M22 7 L37 36 H31.5 L22 17.5 L12.5 36 H7 Z' fill='none' stroke='%232EE68A' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  .stat-edit{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:1080px){.stat-edit{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:640px){.stat-edit{grid-template-columns:repeat(2,1fr)}}
+  .stat-edit .field{margin-bottom:0}
+  .saved-flash{display:none;font-family:var(--mono);font-size:.72rem;color:var(--bike);letter-spacing:.14em;text-transform:uppercase}
+  .saved-flash.show{display:inline-flex;align-items:center;gap:6px}
+  html[lang="ar"] .saved-flash{letter-spacing:.02em;font-size:.8rem}
+  .btn-danger{border-color:rgba(255,100,115,.5);color:var(--danger)}
+  .btn-danger:hover{border-color:var(--danger);background:rgba(255,100,115,.1)}
+</style>
+</head>
+<body>
+<div class="page-grid" aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="page-hero" style="padding-block:clamp(36px,6vw,64px) 20px">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow"><span class="en">Back office — demo</span><span class="ar">الإدارة الخلفية — تجريبي</span></span>
+      <h1><span class="en">Content Dashboard</span><span class="ar">لوحة إدارة المحتوى</span></h1>
+      <p class="hero-lead">
+        <span class="en">The proposal asks for a website staff can run "from the dashboard, never the code."
+        This is that back office — add, edit and remove events, statistics, documents, rules and clubs, and
+        every change appears across the public site. Changes are stored in this browser only (demo).</span>
+        <span class="ar">يطلب المقترح موقعاً يديره الموظفون «من لوحة التحكم لا من الشيفرة». هذه هي تلك اللوحة —
+        أضِف وعدّل واحذف الفعاليات والإحصائيات والمستندات واللوائح والأندية، وتظهر كل التغييرات في الموقع العام.
+        تُحفظ التغييرات في هذا المتصفح فقط (تجريبي).</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:16px">
+    <div class="container">
+      <div class="admin-layout">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="admin-nav" id="adminNav" aria-label="Dashboard sections">
+          <span class="nav-label"><span class="en">Manage</span><span class="ar">الإدارة</span></span>
+          <button type="button" data-sec="overview" aria-current="true">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <span class="en">Overview</span><span class="ar">نظرة عامة</span>
+          </button>
+          <button type="button" data-sec="events">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+            <span class="en">Events</span><span class="ar">الفعاليات</span>
+            <span class="nav-count" data-count="events">0</span>
+          </button>
+          <button type="button" data-sec="stats">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            <span class="en">Statistics</span><span class="ar">الإحصائيات</span>
+          </button>
+          <button type="button" data-sec="documents">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            <span class="en">Documents</span><span class="ar">المستندات</span>
+            <span class="nav-count" data-count="documents">0</span>
+          </button>
+          <button type="button" data-sec="rules">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4a2 2 0 0 1 2-2h10l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+            <span class="en">Rules & guides</span><span class="ar">اللوائح والأدلة</span>
+            <span class="nav-count" data-count="rules">0</span>
+          </button>
+          <button type="button" data-sec="clubs">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3.2 3.2 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-3-4.9"/></svg>
+            <span class="en">Clubs</span><span class="ar">الأندية</span>
+            <span class="nav-count" data-count="clubs">0</span>
+          </button>
+          <button type="button" data-sec="registrations">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><path d="M9 3a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 12l2 2 4-4M21 6l-4-4"/></svg>
+            <span class="en">Registrations</span><span class="ar">التسجيلات</span>
+            <span class="nav-count" data-count="registrations">0</span>
+          </button>
+          <div class="nav-sep"></div>
+          <button type="button" data-sec="settings">
+            <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 7 2.6h.1A1.6 1.6 0 0 0 8.8 1.1V1a2 2 0 1 1 4 0v.1A1.6 1.6 0 0 0 15 2.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1h.1a2 2 0 1 1 0 4H21a1.6 1.6 0 0 0-1.5 1z"/></svg>
+            <span class="en">Settings</span><span class="ar">الإعدادات</span>
+          </button>
+        </aside>
+
+        <!-- ================= CONTENT ================= -->
+        <div class="admin-main">
+
+          <!-- ---------- OVERVIEW ---------- -->
+          <section class="admin-section active" id="sec-overview">
+            <div class="admin-head">
+              <div><h2><span class="en">Overview</span><span class="ar">نظرة عامة</span></h2>
+              <p><span class="en">A snapshot of everything published on the site right now.</span><span class="ar">لمحة عن كل ما هو منشور على الموقع الآن.</span></p></div>
+            </div>
+            <div class="kpi-grid" id="kpiGrid"></div>
+            <div class="admin-card" style="margin-top:20px">
+              <div class="admin-toolbar" style="margin-bottom:12px">
+                <h3 style="margin:0"><span class="en">Latest registrations</span><span class="ar">أحدث التسجيلات</span></h3>
+                <button class="btn btn-ghost btn-sm" data-goto="registrations"><span class="en">View all</span><span class="ar">عرض الكل</span></button>
+              </div>
+              <div id="ovRegs"></div>
+            </div>
+          </section>
+
+          <!-- ---------- EVENTS ---------- -->
+          <section class="admin-section" id="sec-events">
+            <div class="admin-head">
+              <div><h2><span class="en">Events & calendar</span><span class="ar">الفعاليات والتقويم</span></h2>
+              <p><span class="en">Add, edit or remove races. Competition and community are separate calendars; past events retire automatically.</span><span class="ar">أضِف أو عدّل أو احذف السباقات. البطولات والفعاليات المجتمعية تقويمان منفصلان، والفعاليات المنتهية تنسحب تلقائياً.</span></p></div>
+              <button class="btn btn-primary btn-sm" id="eventAddBtn"><span class="en">+ Add event</span><span class="ar">+ إضافة فعالية</span></button>
+            </div>
+            <span class="saved-flash" id="eventSaved">✓ <span class="en">Saved — live on the site</span><span class="ar">حُفظت — ظاهرة في الموقع</span></span>
+
+            <form class="admin-form hidden" id="eventForm" novalidate>
+              <div class="admin-toolbar"><h3 style="margin:0" id="eventFormTitle"><span class="en">Add event</span><span class="ar">إضافة فعالية</span></h3></div>
+              <div class="form-grid">
+                <div class="field" data-key="ten"><label for="eTitleEn"><span class="en">Title (English)</span><span class="ar">العنوان (إنجليزي)</span></label><input class="input" id="eTitleEn"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field" data-key="tar"><label for="eTitleAr"><span class="en">Title (Arabic)</span><span class="ar">العنوان (عربي)</span></label><input class="input" id="eTitleAr" dir="rtl"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field"><label for="eType"><span class="en">Calendar</span><span class="ar">التقويم</span></label><select class="input" id="eType"><option value="competition">Competition · بطولات</option><option value="community">Community · مجتمعي</option></select></div>
+                <div class="field"><label for="eStatus"><span class="en">Registration</span><span class="ar">التسجيل</span></label><select class="input" id="eStatus"><option value="open">Open · مفتوح</option><option value="soon">Opens soon · يفتح قريباً</option><option value="done">Completed · انتهت</option></select></div>
+                <div class="field" data-key="date"><label for="eDate"><span class="en">Date</span><span class="ar">التاريخ</span></label><input class="input" id="eDate" type="date"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field"><label for="eTime"><span class="en">First start</span><span class="ar">أول انطلاقة</span></label><input class="input" id="eTime" type="time" value="06:00"></div>
+                <div class="field"><label for="eCity"><span class="en">City</span><span class="ar">المدينة</span></label><select class="input" id="eCity"></select></div>
+                <div class="field"><label for="eSwim"><span class="en">Swim distance</span><span class="ar">مسافة السباحة</span></label><input class="input" id="eSwim" placeholder="750m"></div>
+                <div class="field"><label for="eBike"><span class="en">Bike distance</span><span class="ar">مسافة الدراجة</span></label><input class="input" id="eBike" placeholder="20km"></div>
+                <div class="field"><label for="eRun"><span class="en">Run distance</span><span class="ar">مسافة الجري</span></label><input class="input" id="eRun" placeholder="5km"></div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" type="submit"><span class="en">Save event</span><span class="ar">حفظ الفعالية</span></button>
+                <button class="btn btn-ghost btn-sm" type="button" data-cancel><span class="en">Cancel</span><span class="ar">إلغاء</span></button>
+              </div>
+            </form>
+
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th><span class="en">Date</span><span class="ar">التاريخ</span></th>
+                <th><span class="en">Event</span><span class="ar">الفعالية</span></th>
+                <th><span class="en">Calendar</span><span class="ar">التقويم</span></th>
+                <th><span class="en">City</span><span class="ar">المدينة</span></th>
+                <th style="text-align:end"><span class="en">Actions</span><span class="ar">إجراءات</span></th>
+              </tr></thead>
+              <tbody id="eventRows"></tbody>
+            </table></div>
+            <div id="eventRestore"></div>
+          </section>
+
+          <!-- ---------- STATISTICS ---------- -->
+          <section class="admin-section" id="sec-stats">
+            <div class="admin-head">
+              <div><h2><span class="en">Federation statistics</span><span class="ar">إحصائيات الاتحاد</span></h2>
+              <p><span class="en">These figures feed the home page and the statistics page. Edit and save — no code needed.</span><span class="ar">هذه الأرقام تغذي الصفحة الرئيسية وصفحة الإحصائيات. عدّل واحفظ دون أي شيفرة.</span></p></div>
+              <span class="saved-flash" id="statsSaved">✓ <span class="en">Saved</span><span class="ar">حُفظت</span></span>
+            </div>
+            <div class="admin-card">
+              <div class="stat-edit" id="statEditors"></div>
+              <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" id="saveStats"><span class="en">Save statistics</span><span class="ar">حفظ الإحصائيات</span></button>
+                <a class="btn btn-ghost btn-sm" href="stats.html" target="_blank" rel="noopener"><span class="en">Open public page ↗</span><span class="ar">فتح الصفحة العامة ↗</span></a>
+              </div>
+            </div>
+          </section>
+
+          <!-- ---------- DOCUMENTS ---------- -->
+          <section class="admin-section" id="sec-documents">
+            <div class="admin-head">
+              <div><h2><span class="en">Documents library</span><span class="ar">مكتبة المستندات</span></h2>
+              <p><span class="en">Governance, financial and board-minutes documents, organized by category and year.</span><span class="ar">مستندات الحوكمة والمالية ومحاضر المجلس، مصنّفة حسب الفئة والسنة.</span></p></div>
+              <button class="btn btn-primary btn-sm" id="docAddBtn"><span class="en">+ Add document</span><span class="ar">+ إضافة مستند</span></button>
+            </div>
+            <span class="saved-flash" id="docSaved">✓ <span class="en">Saved</span><span class="ar">حُفظت</span></span>
+            <form class="admin-form hidden" id="docForm" novalidate>
+              <div class="form-grid">
+                <div class="field" data-key="den"><label for="dTitleEn"><span class="en">Title (English)</span><span class="ar">العنوان (إنجليزي)</span></label><input class="input" id="dTitleEn"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field" data-key="dar"><label for="dTitleAr"><span class="en">Title (Arabic)</span><span class="ar">العنوان (عربي)</span></label><input class="input" id="dTitleAr" dir="rtl"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field"><label for="dCat"><span class="en">Category</span><span class="ar">الفئة</span></label><select class="input" id="dCat"><option value="governance">Governance · حوكمة</option><option value="finance">Financial · مالية</option><option value="minutes">Board minutes · محاضر</option></select></div>
+                <div class="field"><label for="dYear"><span class="en">Year</span><span class="ar">السنة</span></label><input class="input" id="dYear" type="number" min="2018" max="2035" value="2026"></div>
+                <div class="field"><label for="dSize"><span class="en">File size (label)</span><span class="ar">حجم الملف (وصف)</span></label><input class="input" id="dSize" placeholder="2.0 MB"></div>
+              </div>
+              <p class="muted" style="font-size:.82rem;margin:0 0 14px"><span class="en">In production the PDF is uploaded here; the demo links to a sample file.</span><span class="ar">في النسخة النهائية يُرفع ملف PDF هنا؛ ويربط النموذج بملف عيّنة.</span></p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" type="submit"><span class="en">Add document</span><span class="ar">إضافة المستند</span></button>
+                <button class="btn btn-ghost btn-sm" type="button" data-cancel><span class="en">Cancel</span><span class="ar">إلغاء</span></button>
+              </div>
+            </form>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th><span class="en">Document</span><span class="ar">المستند</span></th>
+                <th><span class="en">Category</span><span class="ar">الفئة</span></th>
+                <th class="mono"><span class="en">Year</span><span class="ar">السنة</span></th>
+                <th style="text-align:end"><span class="en">Actions</span><span class="ar">إجراءات</span></th>
+              </tr></thead>
+              <tbody id="docRows"></tbody>
+            </table></div>
+            <div id="docRestore"></div>
+          </section>
+
+          <!-- ---------- RULES ---------- -->
+          <section class="admin-section" id="sec-rules">
+            <div class="admin-head">
+              <div><h2><span class="en">Rules & guides</span><span class="ar">اللوائح والأدلة</span></h2>
+              <p><span class="en">Regulations, athlete guides and official handbooks shown on the Rules page.</span><span class="ar">الأنظمة وأدلة الرياضيين والكتيبات الرسمية الظاهرة في صفحة اللوائح.</span></p></div>
+              <button class="btn btn-primary btn-sm" id="ruleAddBtn"><span class="en">+ Add document</span><span class="ar">+ إضافة مستند</span></button>
+            </div>
+            <span class="saved-flash" id="ruleSaved">✓ <span class="en">Saved</span><span class="ar">حُفظت</span></span>
+            <form class="admin-form hidden" id="ruleForm" novalidate>
+              <div class="form-grid">
+                <div class="field" data-key="ren"><label for="rTitleEn"><span class="en">Title (English)</span><span class="ar">العنوان (إنجليزي)</span></label><input class="input" id="rTitleEn"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field" data-key="rar"><label for="rTitleAr"><span class="en">Title (Arabic)</span><span class="ar">العنوان (عربي)</span></label><input class="input" id="rTitleAr" dir="rtl"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field" style="grid-column:1/-1"><label for="rDescEn"><span class="en">Description (English)</span><span class="ar">الوصف (إنجليزي)</span></label><input class="input" id="rDescEn"></div>
+                <div class="field" style="grid-column:1/-1"><label for="rDescAr"><span class="en">Description (Arabic)</span><span class="ar">الوصف (عربي)</span></label><input class="input" id="rDescAr" dir="rtl"></div>
+                <div class="field"><label for="rUpdated"><span class="en">Updated (YYYY-MM)</span><span class="ar">التحديث (سنة-شهر)</span></label><input class="input" id="rUpdated" placeholder="2026-06"></div>
+                <div class="field"><label for="rSize"><span class="en">File size (label)</span><span class="ar">حجم الملف (وصف)</span></label><input class="input" id="rSize" placeholder="2.0 MB"></div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" type="submit"><span class="en">Add document</span><span class="ar">إضافة المستند</span></button>
+                <button class="btn btn-ghost btn-sm" type="button" data-cancel><span class="en">Cancel</span><span class="ar">إلغاء</span></button>
+              </div>
+            </form>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th><span class="en">Document</span><span class="ar">المستند</span></th>
+                <th class="mono"><span class="en">Updated</span><span class="ar">التحديث</span></th>
+                <th style="text-align:end"><span class="en">Actions</span><span class="ar">إجراءات</span></th>
+              </tr></thead>
+              <tbody id="ruleRows"></tbody>
+            </table></div>
+            <div id="ruleRestore"></div>
+          </section>
+
+          <!-- ---------- CLUBS ---------- -->
+          <section class="admin-section" id="sec-clubs">
+            <div class="admin-head">
+              <div><h2><span class="en">Affiliated clubs</span><span class="ar">الأندية المنتسبة</span></h2>
+              <p><span class="en">The clubs listed on the Join page, where new athletes start.</span><span class="ar">الأندية الظاهرة في صفحة الانضمام، حيث يبدأ الرياضيون الجدد.</span></p></div>
+              <button class="btn btn-primary btn-sm" id="clubAddBtn"><span class="en">+ Add club</span><span class="ar">+ إضافة نادٍ</span></button>
+            </div>
+            <span class="saved-flash" id="clubSaved">✓ <span class="en">Saved</span><span class="ar">حُفظت</span></span>
+            <form class="admin-form hidden" id="clubForm" novalidate>
+              <div class="form-grid">
+                <div class="field" data-key="cen"><label for="cNameEn"><span class="en">Club name (English)</span><span class="ar">اسم النادي (إنجليزي)</span></label><input class="input" id="cNameEn"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field" data-key="car"><label for="cNameAr"><span class="en">Club name (Arabic)</span><span class="ar">اسم النادي (عربي)</span></label><input class="input" id="cNameAr" dir="rtl"><span class="err"><span class="en">Required.</span><span class="ar">مطلوب.</span></span></div>
+                <div class="field"><label for="cCityEn"><span class="en">City (English)</span><span class="ar">المدينة (إنجليزي)</span></label><input class="input" id="cCityEn"></div>
+                <div class="field"><label for="cCityAr"><span class="en">City (Arabic)</span><span class="ar">المدينة (عربي)</span></label><input class="input" id="cCityAr" dir="rtl"></div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" type="submit"><span class="en">Add club</span><span class="ar">إضافة النادي</span></button>
+                <button class="btn btn-ghost btn-sm" type="button" data-cancel><span class="en">Cancel</span><span class="ar">إلغاء</span></button>
+              </div>
+            </form>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th><span class="en">Club</span><span class="ar">النادي</span></th>
+                <th><span class="en">City</span><span class="ar">المدينة</span></th>
+                <th style="text-align:end"><span class="en">Actions</span><span class="ar">إجراءات</span></th>
+              </tr></thead>
+              <tbody id="clubRows"></tbody>
+            </table></div>
+            <div id="clubRestore"></div>
+          </section>
+
+          <!-- ---------- REGISTRATIONS ---------- -->
+          <section class="admin-section" id="sec-registrations">
+            <div class="admin-head">
+              <div><h2><span class="en">Registrations received</span><span class="ar">التسجيلات الواردة</span></h2>
+              <p><span class="en">Athletes who completed the online registration form (stored in this browser).</span><span class="ar">الرياضيون الذين أكملوا نموذج التسجيل الإلكتروني (محفوظون في هذا المتصفح).</span></p></div>
+              <a class="btn btn-ghost btn-sm" href="register.html" target="_blank" rel="noopener"><span class="en">Open form ↗</span><span class="ar">فتح النموذج ↗</span></a>
+            </div>
+            <div class="table-wrap" id="regWrap"><table>
+              <thead><tr>
+                <th class="mono">#</th>
+                <th><span class="en">Athlete</span><span class="ar">الرياضي</span></th>
+                <th><span class="en">Category</span><span class="ar">الفئة</span></th>
+                <th><span class="en">City</span><span class="ar">المدينة</span></th>
+                <th><span class="en">Club</span><span class="ar">النادي</span></th>
+              </tr></thead>
+              <tbody id="regRows"></tbody>
+            </table></div>
+            <div class="empty-note" id="regEmpty" hidden><span class="en">No registrations yet — try the public registration form.</span><span class="ar">لا توجد تسجيلات بعد — جرّب نموذج التسجيل العام.</span></div>
+          </section>
+
+          <!-- ---------- SETTINGS ---------- -->
+          <section class="admin-section" id="sec-settings">
+            <div class="admin-head">
+              <div><h2><span class="en">Settings</span><span class="ar">الإعدادات</span></h2>
+              <p><span class="en">This dashboard is a front-end demo. All edits and registrations are stored only in this browser (localStorage) and are never sent anywhere.</span><span class="ar">هذه اللوحة نموذج واجهة أمامية. كل التعديلات والتسجيلات تُحفظ في هذا المتصفح فقط ولا تُرسل إلى أي جهة.</span></p></div>
+            </div>
+            <div class="admin-card">
+              <h3 style="margin-top:0"><span class="en">In production</span><span class="ar">في النسخة النهائية</span></h3>
+              <ul class="list-check" style="margin-bottom:0">
+                <li><span class="en">This front end connects to a headless CMS / dashboard API and a database.</span><span class="ar">تتصل هذه الواجهة بنظام إدارة محتوى ولوحة تحكم وقاعدة بيانات.</span></li>
+                <li><span class="en">Staff sign in with roles and permissions; every change is logged.</span><span class="ar">يسجّل الموظفون الدخول بأدوار وصلاحيات، وتُسجَّل كل التغييرات.</span></li>
+                <li><span class="en">Documents and event photos are uploaded and stored on the server.</span><span class="ar">تُرفع المستندات وصور الفعاليات وتُخزَّن على الخادم.</span></li>
+              </ul>
+            </div>
+            <div class="cta-banner">
+              <div><h2 style="font-size:1.5rem"><span class="en">Reset the demo</span><span class="ar">إعادة تعيين التجربة</span></h2>
+              <p><span class="en">Clears all dashboard edits and demo registrations from this browser and restores the defaults.</span><span class="ar">يمسح كل تعديلات اللوحة والتسجيلات التجريبية من هذا المتصفح ويعيد الوضع الافتراضي.</span></p></div>
+              <button class="btn btn-ghost btn-danger" id="resetBtn"><span class="en">Reset demo data</span><span class="ar">إعادة التعيين</span></button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  "use strict";
+  var bi = STFApp.bi;
+  var $ = function (id) { return document.getElementById(id); };
+  var val = function (id) { return $(id).value; };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" })[c]; }); };
+  var SAMPLE_PDF = "assets/docs/governance-charter.pdf";  /* stand-in for demo-added files */
+
+  /* ---- overlay helpers ---- */
+  function readOv() { return STF.readOverlay(); }
+  function writeOv(ov) { try { localStorage.setItem(STF.OVERLAY_KEY, JSON.stringify(ov)); } catch (e) {} }
+  function eff() { return STF.mergeOverlay(STF._base, readOv()); }
+  var isBuiltinEvent = function (id) { return STF._base.events.some(function (e) { return e.id === id; }); };
+  var isBuiltinDoc  = function (id) { return STF._base.documents.some(function (d) { return d.id === id; }); };
+  var isBuiltinRule = function (id) { return STF._base.rules.some(function (r) { return r.id === id; }); };
+  var isBuiltinClub = function (n)  { return STF._base.clubs.some(function (c) { return c.name.en === n; }); };
+  function regs() { try { return JSON.parse(localStorage.getItem("stf-registrations") || "[]"); } catch (e) { return []; } }
+
+  function flash(id) { var el = $(id); if (!el) return; el.classList.add("show"); setTimeout(function () { el.classList.remove("show"); }, 2400); }
+
+  /* ---- city options (shared) ---- */
+  function cityOptions(sel, selected) {
+    sel.innerHTML = Object.keys(STF.cities).map(function (k) {
+      return '<option value="' + k + '"' + (k === selected ? " selected" : "") + ">" + STF.cities[k].name.en + " · " + STF.cities[k].name.ar + "</option>";
+    }).join("");
+  }
+
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  var ICON_DEL  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>';
+
+  /* =================================================================
+     EVENTS
+     ================================================================= */
+  var editingEventId = null;
+  cityOptions($("eCity"));
+
+  function eventFromForm(id) {
+    var city = val("eCity");
+    return {
+      id: id, type: val("eType"), status: val("eStatus"),
+      date: val("eDate"), time: val("eTime") || "06:00", city: city,
+      venue: STF.cities[city].name,
+      title: { en: val("eTitleEn").trim(), ar: val("eTitleAr").trim() || val("eTitleEn").trim() },
+      distances: { swim: val("eSwim").trim() || null, bike: val("eBike").trim() || null, run: val("eRun").trim() || null },
+      categories: ["Open"],
+      desc: { en: "Managed from the staff content dashboard (demo).", ar: "تُدار من لوحة إدارة المحتوى (تجريبي)." }
+    };
+  }
+  function fillEventForm(e) {
+    $("eTitleEn").value = e ? e.title.en : "";
+    $("eTitleAr").value = e ? e.title.ar : "";
+    $("eType").value = e ? e.type : "competition";
+    $("eStatus").value = e ? e.status : "open";
+    $("eDate").value = e ? e.date : "";
+    $("eTime").value = e ? (e.time || "06:00") : "06:00";
+    cityOptions($("eCity"), e ? e.city : "riyadh");
+    $("eSwim").value = e && e.distances.swim ? e.distances.swim : "";
+    $("eBike").value = e && e.distances.bike ? e.distances.bike : "";
+    $("eRun").value = e && e.distances.run ? e.distances.run : "";
+  }
+  function openEventForm(e) {
+    editingEventId = e ? e.id : null;
+    fillEventForm(e);
+    $("eventFormTitle").innerHTML = e
+      ? '<span class="en">Edit event</span><span class="ar">تعديل الفعالية</span>'
+      : '<span class="en">Add event</span><span class="ar">إضافة فعالية</span>';
+    $("eventForm").classList.remove("hidden");
+    $("eventForm").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function closeEventForm() { $("eventForm").classList.add("hidden"); editingEventId = null; }
+
+  $("eventAddBtn").addEventListener("click", function () { openEventForm(null); });
+  $("eventForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var ok = true;
+    [["ten", val("eTitleEn").trim().length > 1], ["date", !!val("eDate")]].forEach(function (c) {
+      var f = $("eventForm").querySelector('.field[data-key="' + c[0] + '"]');
+      f.classList.toggle("invalid", !c[1]); if (!c[1]) ok = false;
+    });
+    if (!ok) return;
+    var id = editingEventId || ("custom-" + Date.now());
+    var data = eventFromForm(id);
+    var ov = readOv();
+    if (editingEventId && isBuiltinEvent(editingEventId)) {
+      ov.eventsEdit = ov.eventsEdit || {}; ov.eventsEdit[editingEventId] = data;
+    } else {
+      ov.eventsAdd = ov.eventsAdd || [];
+      var i = ov.eventsAdd.map(function (x) { return x.id; }).indexOf(id);
+      if (i >= 0) ov.eventsAdd[i] = data; else ov.eventsAdd.push(data);
+    }
+    writeOv(ov); closeEventForm(); renderEvents(); renderOverview(); refreshCounts(); flash("eventSaved");
+  });
+  function deleteEvent(id) {
+    var ov = readOv();
+    if (isBuiltinEvent(id)) { ov.eventsDel = ov.eventsDel || []; if (ov.eventsDel.indexOf(id) === -1) ov.eventsDel.push(id);
+      if (ov.eventsEdit) delete ov.eventsEdit[id]; }
+    else if (ov.eventsAdd) ov.eventsAdd = ov.eventsAdd.filter(function (x) { return x.id !== id; });
+    writeOv(ov); renderEvents(); renderOverview(); refreshCounts();
+  }
+  function restoreEvent(id) {
+    var ov = readOv(); if (ov.eventsDel) ov.eventsDel = ov.eventsDel.filter(function (x) { return x !== id; });
+    writeOv(ov); renderEvents(); renderOverview(); refreshCounts();
+  }
+
+  function renderEvents() {
+    var list = eff().events.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+    $("eventRows").innerHTML = list.map(function (e) {
+      var d = STFApp.fmtDate(e.date);
+      return "<tr>" +
+        '<td class="mono"><span class="en">' + d.en.day + " " + d.en.mon + " " + e.date.slice(0, 4) + '</span><span class="ar">' + e.date + "</span></td>" +
+        "<td>" + bi(e.title) + (isBuiltinEvent(e.id) ? "" : ' <span class="tag-built">· added</span>') + "</td>" +
+        '<td>' + STFApp.typeChip(e) + "</td>" +
+        "<td>" + bi(STF.cities[e.city].name) + "</td>" +
+        '<td><div class="row-actions">' +
+          '<button class="icon-btn edit" title="Edit" data-edit="' + e.id + '">' + ICON_EDIT + "</button>" +
+          '<button class="icon-btn del" title="Delete" data-del="' + e.id + '">' + ICON_DEL + "</button>" +
+        "</div></td></tr>";
+    }).join("");
+
+    var ov = readOv(); var removed = (ov.eventsDel || []);
+    $("eventRestore").innerHTML = removed.length ? '<p class="muted" style="font-size:.8rem;margin:16px 0 6px"><span class="en">Removed events</span><span class="ar">فعاليات محذوفة</span></p>' +
+      removed.map(function (id) {
+        var e = STF._base.events.filter(function (x) { return x.id === id; })[0]; if (!e) return "";
+        return '<div class="restore-row"><span>' + bi(e.title) + "</span>" +
+          '<button class="btn btn-ghost btn-sm" data-restore-ev="' + id + '"><span class="en">Restore</span><span class="ar">استعادة</span></button></div>';
+      }).join("") : "";
+  }
+  $("eventRows").addEventListener("click", function (ev) {
+    var e = ev.target.closest("[data-edit]"); if (e) { openEventForm(eff().events.filter(function (x) { return x.id === e.dataset.edit; })[0]); return; }
+    var d = ev.target.closest("[data-del]"); if (d) { deleteEvent(d.dataset.del); }
+  });
+  $("eventRestore").addEventListener("click", function (ev) { var b = ev.target.closest("[data-restore-ev]"); if (b) restoreEvent(b.dataset.restoreEv); });
+
+  /* =================================================================
+     STATISTICS
+     ================================================================= */
+  function renderStats() {
+    var s = eff().stats;
+    $("statEditors").innerHTML = Object.keys(s).map(function (k) {
+      return '<div class="field"><label for="st-' + k + '">' + bi(s[k].label) + (s[k].suffix || "") + "</label>" +
+        '<input class="input mono" type="number" min="0" id="st-' + k + '" value="' + s[k].value + '"></div>';
+    }).join("");
+  }
+  $("saveStats").addEventListener("click", function () {
+    var ov = readOv(); ov.stats = ov.stats || {};
+    Object.keys(STF._base.stats).forEach(function (k) {
+      var el = $("st-" + k); if (!el) return;
+      var v = parseInt(el.value, 10); if (!isNaN(v) && v >= 0) ov.stats[k] = v;
+    });
+    writeOv(ov); renderOverview(); flash("statsSaved");
+  });
+
+  /* =================================================================
+     DOCUMENTS  (governance library)
+     ================================================================= */
+  var CAT = { governance: { en: "GOVERNANCE", ar: "حوكمة" }, finance: { en: "FINANCIAL", ar: "مالية" }, minutes: { en: "MINUTES", ar: "محاضر" } };
+  $("docAddBtn").addEventListener("click", function () { $("docForm").classList.toggle("hidden"); });
+  $("docForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var ok = true;
+    [["den", val("dTitleEn").trim().length > 1], ["dar", val("dTitleAr").trim().length > 0]].forEach(function (c) {
+      var f = $("docForm").querySelector('.field[data-key="' + c[0] + '"]'); f.classList.toggle("invalid", !c[1]); if (!c[1]) ok = false;
+    });
+    if (!ok) return;
+    var doc = { id: "doc-custom-" + Date.now(), cat: val("dCat"), year: parseInt(val("dYear"), 10) || 2026,
+      size: val("dSize").trim() || "1.0 MB", url: SAMPLE_PDF,
+      title: { en: val("dTitleEn").trim(), ar: val("dTitleAr").trim() } };
+    var ov = readOv(); ov.docsAdd = ov.docsAdd || []; ov.docsAdd.push(doc); writeOv(ov);
+    $("docForm").reset(); $("docForm").classList.add("hidden"); renderDocs(); renderOverview(); refreshCounts(); flash("docSaved");
+  });
+  function deleteDoc(id) {
+    var ov = readOv();
+    if (isBuiltinDoc(id)) { ov.docsDel = ov.docsDel || []; if (ov.docsDel.indexOf(id) === -1) ov.docsDel.push(id); }
+    else if (ov.docsAdd) ov.docsAdd = ov.docsAdd.filter(function (x) { return x.id !== id; });
+    writeOv(ov); renderDocs(); renderOverview(); refreshCounts();
+  }
+  function renderDocs() {
+    var list = eff().documents.slice().sort(function (a, b) { return b.year - a.year; });
+    $("docRows").innerHTML = list.map(function (d) {
+      return "<tr><td>" + bi(d.title) + (isBuiltinDoc(d.id) ? "" : ' <span class="tag-built">· added</span>') + "</td>" +
+        '<td><span class="badge-cat">' + bi(CAT[d.cat] || { en: d.cat, ar: d.cat }) + "</span></td>" +
+        '<td class="mono">' + d.year + "</td>" +
+        '<td><div class="row-actions"><button class="icon-btn del" data-del="' + d.id + '" title="Delete">' + ICON_DEL + "</button></div></td></tr>";
+    }).join("");
+    var ov = readOv(); var removed = (ov.docsDel || []);
+    $("docRestore").innerHTML = removed.length ? '<p class="muted" style="font-size:.8rem;margin:16px 0 6px"><span class="en">Removed documents</span><span class="ar">مستندات محذوفة</span></p>' +
+      removed.map(function (id) { var d = STF._base.documents.filter(function (x) { return x.id === id; })[0]; if (!d) return "";
+        return '<div class="restore-row"><span>' + bi(d.title) + '</span><button class="btn btn-ghost btn-sm" data-restore-doc="' + id + '"><span class="en">Restore</span><span class="ar">استعادة</span></button></div>'; }).join("") : "";
+  }
+  $("docRows").addEventListener("click", function (ev) { var d = ev.target.closest("[data-del]"); if (d) deleteDoc(d.dataset.del); });
+  $("docRestore").addEventListener("click", function (ev) { var b = ev.target.closest("[data-restore-doc]"); if (b) { var ov = readOv(); ov.docsDel = (ov.docsDel || []).filter(function (x) { return x !== b.dataset.restoreDoc; }); writeOv(ov); renderDocs(); renderOverview(); refreshCounts(); } });
+
+  /* =================================================================
+     RULES & GUIDES
+     ================================================================= */
+  $("ruleAddBtn").addEventListener("click", function () { $("ruleForm").classList.toggle("hidden"); });
+  $("ruleForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var ok = true;
+    [["ren", val("rTitleEn").trim().length > 1], ["rar", val("rTitleAr").trim().length > 0]].forEach(function (c) {
+      var f = $("ruleForm").querySelector('.field[data-key="' + c[0] + '"]'); f.classList.toggle("invalid", !c[1]); if (!c[1]) ok = false;
+    });
+    if (!ok) return;
+    var r = { id: "rule-custom-" + Date.now(), size: val("rSize").trim() || "1.0 MB", updated: val("rUpdated").trim() || "2026", url: SAMPLE_PDF,
+      title: { en: val("rTitleEn").trim(), ar: val("rTitleAr").trim() },
+      desc: { en: val("rDescEn").trim() || "Managed from the staff dashboard (demo).", ar: val("rDescAr").trim() || "تُدار من لوحة التحكم (تجريبي)." } };
+    var ov = readOv(); ov.rulesAdd = ov.rulesAdd || []; ov.rulesAdd.push(r); writeOv(ov);
+    $("ruleForm").reset(); $("ruleForm").classList.add("hidden"); renderRules(); refreshCounts(); flash("ruleSaved");
+  });
+  function deleteRule(id) {
+    var ov = readOv();
+    if (isBuiltinRule(id)) { ov.rulesDel = ov.rulesDel || []; if (ov.rulesDel.indexOf(id) === -1) ov.rulesDel.push(id); }
+    else if (ov.rulesAdd) ov.rulesAdd = ov.rulesAdd.filter(function (x) { return x.id !== id; });
+    writeOv(ov); renderRules(); refreshCounts();
+  }
+  function renderRules() {
+    var list = eff().rules;
+    $("ruleRows").innerHTML = list.map(function (r) {
+      return "<tr><td>" + bi(r.title) + (isBuiltinRule(r.id) ? "" : ' <span class="tag-built">· added</span>') + "</td>" +
+        '<td class="mono">' + esc(r.updated || "—") + "</td>" +
+        '<td><div class="row-actions"><button class="icon-btn del" data-del="' + r.id + '" title="Delete">' + ICON_DEL + "</button></div></td></tr>";
+    }).join("");
+    var ov = readOv(); var removed = (ov.rulesDel || []);
+    $("ruleRestore").innerHTML = removed.length ? '<p class="muted" style="font-size:.8rem;margin:16px 0 6px"><span class="en">Removed documents</span><span class="ar">مستندات محذوفة</span></p>' +
+      removed.map(function (id) { var r = STF._base.rules.filter(function (x) { return x.id === id; })[0]; if (!r) return "";
+        return '<div class="restore-row"><span>' + bi(r.title) + '</span><button class="btn btn-ghost btn-sm" data-restore-rule="' + id + '"><span class="en">Restore</span><span class="ar">استعادة</span></button></div>'; }).join("") : "";
+  }
+  $("ruleRows").addEventListener("click", function (ev) { var d = ev.target.closest("[data-del]"); if (d) deleteRule(d.dataset.del); });
+  $("ruleRestore").addEventListener("click", function (ev) { var b = ev.target.closest("[data-restore-rule]"); if (b) { var ov = readOv(); ov.rulesDel = (ov.rulesDel || []).filter(function (x) { return x !== b.dataset.restoreRule; }); writeOv(ov); renderRules(); refreshCounts(); } });
+
+  /* =================================================================
+     CLUBS
+     ================================================================= */
+  $("clubAddBtn").addEventListener("click", function () { $("clubForm").classList.toggle("hidden"); });
+  $("clubForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var ok = true;
+    [["cen", val("cNameEn").trim().length > 1], ["car", val("cNameAr").trim().length > 0]].forEach(function (c) {
+      var f = $("clubForm").querySelector('.field[data-key="' + c[0] + '"]'); f.classList.toggle("invalid", !c[1]); if (!c[1]) ok = false;
+    });
+    if (!ok) return;
+    var club = { name: { en: val("cNameEn").trim(), ar: val("cNameAr").trim() },
+      city: { en: val("cCityEn").trim() || "—", ar: val("cCityAr").trim() || "—" } };
+    var ov = readOv(); ov.clubsAdd = ov.clubsAdd || []; ov.clubsAdd.push(club); writeOv(ov);
+    $("clubForm").reset(); $("clubForm").classList.add("hidden"); renderClubs(); renderOverview(); refreshCounts(); flash("clubSaved");
+  });
+  function deleteClub(name) {
+    var ov = readOv();
+    if (isBuiltinClub(name)) { ov.clubsDel = ov.clubsDel || []; if (ov.clubsDel.indexOf(name) === -1) ov.clubsDel.push(name); }
+    else if (ov.clubsAdd) ov.clubsAdd = ov.clubsAdd.filter(function (x) { return x.name.en !== name; });
+    writeOv(ov); renderClubs(); renderOverview(); refreshCounts();
+  }
+  function renderClubs() {
+    var list = eff().clubs;
+    $("clubRows").innerHTML = list.map(function (c) {
+      return "<tr><td>" + bi(c.name) + (isBuiltinClub(c.name.en) ? "" : ' <span class="tag-built">· added</span>') + "</td>" +
+        "<td>" + bi(c.city) + "</td>" +
+        '<td><div class="row-actions"><button class="icon-btn del" data-del="' + esc(c.name.en) + '" title="Delete">' + ICON_DEL + "</button></div></td></tr>";
+    }).join("");
+    var ov = readOv(); var removed = (ov.clubsDel || []);
+    $("clubRestore").innerHTML = removed.length ? '<p class="muted" style="font-size:.8rem;margin:16px 0 6px"><span class="en">Removed clubs</span><span class="ar">أندية محذوفة</span></p>' +
+      removed.map(function (n) { var c = STF._base.clubs.filter(function (x) { return x.name.en === n; })[0]; if (!c) return "";
+        return '<div class="restore-row"><span>' + bi(c.name) + '</span><button class="btn btn-ghost btn-sm" data-restore-club="' + esc(n) + '"><span class="en">Restore</span><span class="ar">استعادة</span></button></div>'; }).join("") : "";
+  }
+  $("clubRows").addEventListener("click", function (ev) { var d = ev.target.closest("[data-del]"); if (d) deleteClub(d.dataset.del); });
+  $("clubRestore").addEventListener("click", function (ev) { var b = ev.target.closest("[data-restore-club]"); if (b) { var ov = readOv(); ov.clubsDel = (ov.clubsDel || []).filter(function (x) { return x !== b.dataset.restoreClub; }); writeOv(ov); renderClubs(); renderOverview(); refreshCounts(); } });
+
+  /* =================================================================
+     REGISTRATIONS
+     ================================================================= */
+  function regRowsHtml(list, limit) {
+    return list.slice(0, limit || list.length).map(function (r) {
+      var city = STF.cities[r.city] ? STF.cities[r.city].name : { en: r.city, ar: r.city };
+      return "<tr><td class=\"mono\">" + esc(r.num) + "</td><td>" + esc(r.name) + '</td><td class="mono">' + esc(r.category) + "</td><td>" + bi(city) + "</td><td>" + (r.club ? esc(r.club) : "—") + "</td></tr>";
+    }).join("");
+  }
+  function renderRegs() {
+    var list = regs();
+    $("regWrap").hidden = list.length === 0;
+    $("regEmpty").hidden = list.length > 0;
+    $("regRows").innerHTML = regRowsHtml(list);
+  }
+
+  /* =================================================================
+     OVERVIEW
+     ================================================================= */
+  function renderOverview() {
+    var e = eff();
+    var today = new Date();
+    var upcoming = e.events.filter(function (x) { return new Date(x.date + "T23:59:59") >= today; });
+    var cards = [
+      { c: "var(--swim)", v: upcoming.length, l: { en: "Upcoming events", ar: "فعاليات قادمة" } },
+      { c: "var(--bike)", v: e.stats.athletes.value.toLocaleString("en-US"), l: { en: "Registered athletes", ar: "رياضيون مسجلون" } },
+      { c: "var(--run)",  v: e.events.length, l: { en: "Total events", ar: "إجمالي الفعاليات" } },
+      { c: "var(--swim)", v: e.documents.length, l: { en: "Documents", ar: "مستندات" } },
+      { c: "var(--bike)", v: e.rules.length, l: { en: "Rules & guides", ar: "لوائح وأدلة" } },
+      { c: "var(--run)",  v: e.clubs.length, l: { en: "Affiliated clubs", ar: "أندية منتسبة" } }
+    ];
+    $("kpiGrid").innerHTML = cards.map(function (k) {
+      return '<div class="kpi" style="--kpi-c:' + k.c + '"><span class="kpi-v mono">' + k.v + '</span><span class="kpi-l">' + bi(k.l) + "</span></div>";
+    }).join("");
+    var rl = regs();
+    $("ovRegs").innerHTML = rl.length
+      ? '<div class="table-wrap"><table><thead><tr><th class="mono">#</th><th><span class="en">Athlete</span><span class="ar">الرياضي</span></th><th><span class="en">Category</span><span class="ar">الفئة</span></th></tr></thead><tbody>' +
+          rl.slice(0, 5).map(function (r) { return "<tr><td class=\"mono\">" + esc(r.num) + "</td><td>" + esc(r.name) + '</td><td class="mono">' + esc(r.category) + "</td></tr>"; }).join("") +
+        "</tbody></table></div>"
+      : '<div class="empty-note"><span class="en">No registrations yet.</span><span class="ar">لا توجد تسجيلات بعد.</span></div>';
+  }
+
+  /* ---- nav counts ---- */
+  function refreshCounts() {
+    var e = eff();
+    var map = { events: e.events.length, documents: e.documents.length, rules: e.rules.length, clubs: e.clubs.length, registrations: regs().length };
+    document.querySelectorAll("[data-count]").forEach(function (el) { el.textContent = map[el.dataset.count]; });
+  }
+
+  /* =================================================================
+     SECTION SWITCHING + INIT
+     ================================================================= */
+  var rendered = {};
+  function show(sec) {
+    document.querySelectorAll(".admin-section").forEach(function (s) { s.classList.toggle("active", s.id === "sec-" + sec); });
+    document.querySelectorAll("#adminNav button").forEach(function (b) { b.setAttribute("aria-current", String(b.dataset.sec === sec)); });
+    if (!rendered[sec]) {
+      ({ events: renderEvents, stats: renderStats, documents: renderDocs, rules: renderRules, clubs: renderClubs, registrations: renderRegs, overview: renderOverview }[sec] || function () {})();
+      rendered[sec] = true;
+    }
+    try { history.replaceState(null, "", "#" + sec); } catch (e) {}
+  }
+  $("adminNav").addEventListener("click", function (ev) { var b = ev.target.closest("button[data-sec]"); if (b) show(b.dataset.sec); });
+  document.addEventListener("click", function (ev) {
+    var g = ev.target.closest("[data-goto]"); if (g) show(g.dataset.goto);
+    var c = ev.target.closest("[data-cancel]"); if (c) { c.closest("form").classList.add("hidden"); editingEventId = null; }
+  });
+
+  $("resetBtn").addEventListener("click", function () {
+    try { localStorage.removeItem(STF.OVERLAY_KEY); localStorage.removeItem("stf-registrations"); } catch (e) {}
+    location.hash = "overview"; location.reload();
+  });
+
+  /* language switch re-renders visible bilingual tables cleanly */
+  document.addEventListener("stf:lang", function () { rendered = {}; var cur = (location.hash || "#overview").slice(1); show(cur); });
+
+  refreshCounts();
+  renderOverview();
+  var start = (location.hash || "").slice(1);
+  show(["overview","events","stats","documents","rules","clubs","registrations","settings"].indexOf(start) >= 0 ? start : "overview");
+})();
+</script>
+</body>
+</html>

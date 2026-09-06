@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");if(localStorage.getItem("stf-lang")==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}}catch(e){}</script>
+<title>Season Timeline — Saudi Triathlon Federation</title>
+<meta name="description" content="The 2026–27 Saudi Triathlon season as an interactive timeline and map of the Kingdom — every tournament, every city. (Design prototype)">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Saudi Triathlon Federation — Prototype">
+<meta property="og:title" content="Season Timeline — Saudi Triathlon Federation">
+<meta property="og:description" content="The 2026–27 Saudi Triathlon season as an interactive timeline and map of the Kingdom — every tournament, every city. (Design prototype)">
+<meta property="og:image" content="https://osamamicro.github.io/triathlon-sa/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='9' fill='%23060B14'/%3E%3Cpath d='M22 7 L37 36 H31.5 L22 17.5 L12.5 36 H7 Z' fill='none' stroke='%232EE68A' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  .season-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,54px);align-items:start}
+  @media (max-width:920px){
+    .season-grid{grid-template-columns:1fr}
+    .map-wrap{position:static;order:-1;margin-bottom:10px}
+  }
+  .tl-card{padding:20px}
+  .tl-card h3{font-size:1.06rem;margin:0 0 4px}
+  .tl-card .event-meta{margin-bottom:10px}
+  .map-legend{display:flex;gap:18px;margin-top:14px;font-family:var(--mono);font-size:.7rem;color:var(--muted);flex-wrap:wrap}
+  .map-legend span{display:inline-flex;align-items:center;gap:8px}
+  .map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .map-caption{font-family:var(--mono);font-size:.66rem;color:var(--faint);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="page-grid" aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow"><span class="en">Creative calendar</span><span class="ar">التقويم الإبداعي</span></span>
+      <h1><span class="en">The Season, Mapped</span><span class="ar">الموسم على الخريطة</span></h1>
+      <p class="hero-lead">
+        <span class="en">The 2026–27 tournament sequence as one journey across the Kingdom.
+        Select an event to light up its city — or tap a city to find its races.</span>
+        <span class="ar">تسلسل بطولات موسم 2026–27 كرحلة واحدة عبر المملكة.
+        اختر فعالية لتُضيء مدينتها — أو المس مدينة لتجد سباقاتها.</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:10px">
+    <div class="container">
+
+      <div class="filter-bar">
+        <div class="seg" id="typeSeg">
+          <button type="button" data-type="all" aria-pressed="true"><span class="en">All</span><span class="ar">الكل</span></button>
+          <button type="button" data-type="competition" aria-pressed="false"><span class="en">Competition</span><span class="ar">البطولات</span></button>
+          <button type="button" data-type="community" aria-pressed="false"><span class="en">Community</span><span class="ar">المجتمعي</span></button>
+        </div>
+      </div>
+
+      <div class="season-grid">
+        <div id="timelineHost"></div>
+
+        <div class="map-wrap">
+          <svg class="ksa-map" id="ksaMap" viewBox="0 0 1000 800" role="img"
+               aria-label="Map of Saudi Arabia with event locations">
+            <path class="land" d="M41 135 L136 30 L214 15 L486 145 L568 150 L618 175 L673 190
+              L714 250 L736 285 L750 325 L764 355 L800 390 L964 465 L950 605 L818 700
+              L595 730 L455 745 L395 765 L355 720 L318 650 L291 585 L232 530 L205 450
+              L177 400 L132 325 L95 265 L77 230 L36 180 Z"></path>
+            <g id="markers"></g>
+          </svg>
+          <div class="map-legend">
+            <span><i style="background:var(--swim)"></i><span class="en">COMPETITION</span><span class="ar">بطولات</span></span>
+            <span><i style="background:var(--run)"></i><span class="en">COMMUNITY</span><span class="ar">مجتمعي</span></span>
+            <span><i style="background:var(--bike)"></i><span class="en">SELECTED</span><span class="ar">المحدد</span></span>
+          </div>
+          <p class="map-caption">
+            <span class="en">STYLIZED MAP — FOR EVENT NAVIGATION, NOT GEOGRAPHIC ACCURACY</span>
+            <span class="ar">خريطة تعبيرية — للتنقل بين الفعاليات وليست مرجعاً جغرافياً</span>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  (function () {
+    var state = { type: "all", activeCity: null };
+    var host = document.getElementById("timelineHost");
+    var markersG = document.getElementById("markers");
+    var season = STF.events.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+
+    function filtered() {
+      return season.filter(function (e) { return state.type === "all" || e.type === state.type; });
+    }
+
+    function renderTimeline() {
+      var list = filtered();
+      var out = "";
+      var lastMonth = "";
+      list.forEach(function (e) {
+        var m = STFApp.fmtMonth(e.date);
+        var mk = e.date.slice(0, 7);
+        if (mk !== lastMonth) {
+          out += '<div class="tl-month mono"><span class="en">' + m.en.toUpperCase() + '</span><span class="ar">' + m.ar + "</span></div>";
+          lastMonth = mk;
+        }
+        var d = STFApp.fmtDate(e.date);
+        var city = STF.cities[e.city];
+        var past = e.status === "done";
+        out +=
+          '<div class="tl-item t-' + e.type + (state.activeCity === e.city ? " active" : "") + '" data-city="' + e.city + '">' +
+            '<div class="card tl-card event-card' + (past ? " past" : "") + '" data-city="' + e.city + '" data-href="event.html?id=' + e.id + '" tabindex="0" role="link">' +
+              '<div class="chips" style="margin-bottom:10px">' + STFApp.typeChip(e) + STFApp.statusChip(e) + "</div>" +
+              "<h3>" + STFApp.bi(e.title) + "</h3>" +
+              '<div class="event-meta">' +
+                '<span class="mono"><span class="en">' + d.en.full + '</span><span class="ar">' + d.ar.full + "</span></span>" +
+                "<span>◈ " + STFApp.bi(city.name) + "</span>" +
+              "</div>" +
+              STFApp.distanceRow(e) +
+            "</div>" +
+          "</div>";
+      });
+      host.innerHTML = '<div class="season-timeline">' + out + "</div>";
+    }
+
+    function renderMap() {
+      var list = filtered();
+      var seen = {};
+      var out = "";
+      list.forEach(function (e) {
+        var c = STF.cities[e.city];
+        if (seen[e.city]) {
+          /* a city with both calendars: competition marker wins the color */
+          if (e.type === "competition") seen[e.city].type = "competition";
+          return;
+        }
+        seen[e.city] = { c: c, type: e.type, key: e.city };
+      });
+      Object.keys(seen).forEach(function (k) {
+        var m = seen[k];
+        var active = state.activeCity === k;
+        out +=
+          '<g class="marker m-' + m.type + (active ? " active" : "") + '" data-city="' + k + '" tabindex="0" role="button" ' +
+            'aria-label="' + m.c.name.en + '">' +
+            '<circle class="halo" cx="' + m.c.x + '" cy="' + m.c.y + '" r="14"></circle>' +
+            '<circle class="core" cx="' + m.c.x + '" cy="' + m.c.y + '" r="' + (active ? 12 : 9) + '"></circle>' +
+            '<text x="' + (m.c.anchor === "end" ? m.c.x - 20 : m.c.x + 20) + '" y="' + (m.c.y + 7 + (m.c.dy || 0)) + '"' +
+              (m.c.anchor === "end" ? ' text-anchor="end"' : "") + ">" +
+              '<tspan class="en">' + m.c.name.en.toUpperCase() + '</tspan><tspan class="ar">' + m.c.name.ar + "</tspan>" +
+            "</text>" +
+          "</g>";
+      });
+      markersG.innerHTML = out;
+    }
+
+    function setActive(city) {
+      state.activeCity = state.activeCity === city ? null : city;
+      renderMap();
+      document.querySelectorAll(".tl-item").forEach(function (el) {
+        el.classList.toggle("active", el.dataset.city === state.activeCity);
+      });
+      if (state.activeCity) {
+        var first = document.querySelector('.tl-item[data-city="' + state.activeCity + '"]');
+        if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    document.getElementById("typeSeg").addEventListener("click", function (ev) {
+      var b = ev.target.closest("button[data-type]");
+      if (!b) return;
+      state.type = b.dataset.type;
+      state.activeCity = null;
+      this.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      renderTimeline(); renderMap();
+    });
+
+    markersG.addEventListener("click", function (ev) {
+      var g = ev.target.closest(".marker");
+      if (g) setActive(g.dataset.city);
+    });
+    markersG.addEventListener("keydown", function (ev) {
+      var g = ev.target.closest(".marker");
+      if (g && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); setActive(g.dataset.city); }
+    });
+
+    host.addEventListener("click", function (ev) {
+      var card = ev.target.closest(".tl-card");
+      if (card) location.href = card.dataset.href;
+    });
+    host.addEventListener("keydown", function (ev) {
+      var card = ev.target.closest(".tl-card");
+      if (card && ev.key === "Enter") location.href = card.dataset.href;
+    });
+    host.addEventListener("mouseover", function (ev) {
+      var card = ev.target.closest(".tl-card");
+      if (!card) return;
+      markersG.querySelectorAll(".marker").forEach(function (m) {
+        m.classList.toggle("active", m.dataset.city === card.dataset.city);
+      });
+    });
+    host.addEventListener("mouseout", function () {
+      markersG.querySelectorAll(".marker").forEach(function (m) {
+        m.classList.toggle("active", m.dataset.city === state.activeCity);
+      });
+    });
+
+    renderTimeline(); renderMap();
+  })();
+</script>
+</body>
+</html>

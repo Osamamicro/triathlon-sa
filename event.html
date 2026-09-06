@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");if(localStorage.getItem("stf-lang")==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}}catch(e){}</script>
+<title>Event — Saudi Triathlon Federation</title>
+<meta name="description" content="Event details — Saudi Triathlon Federation. (Design prototype)">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Saudi Triathlon Federation — Prototype">
+<meta property="og:title" content="Event — Saudi Triathlon Federation">
+<meta property="og:description" content="Event details — Saudi Triathlon Federation. (Design prototype)">
+<meta property="og:image" content="https://osamamicro.github.io/triathlon-sa/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='9' fill='%23060B14'/%3E%3Cpath d='M22 7 L37 36 H31.5 L22 17.5 L12.5 36 H7 Z' fill='none' stroke='%232EE68A' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  .back-link{
+    display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  }
+  .back-link:hover{color:var(--ink)}
+  html[lang="ar"] .back-link{letter-spacing:.03em;font-size:.8rem}
+  .detail-hero h1{margin-top:10px}
+  .detail-hero .chips{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="page-grid" aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main id="eventMain">
+  <!-- populated by script -->
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  (function () {
+    var bi = STFApp.bi;
+    var id = new URLSearchParams(location.search).get("id");
+    var e = STF.events.find(function (x) { return x.id === id; }) || STF.upcoming[0] || STF.events[0];
+    var main = document.getElementById("eventMain");
+    if (!e) {
+      main.innerHTML = '<section class="section"><div class="container"><div class="empty-note">' +
+        bi({ en: "Event not found.", ar: "الفعالية غير موجودة." }) + "</div></div></section>";
+      return;
+    }
+
+    var d = STFApp.fmtDate(e.date);
+    var city = STF.cities[e.city];
+    var past = e.status === "done";
+    document.title = e.title.en + " — Saudi Triathlon Federation";
+
+    var infoRows =
+      '<li><span class="k">' + bi({ en: "Date", ar: "التاريخ" }) + '</span><span class="v"><span class="en">' + d.en.full + '</span><span class="ar">' + d.ar.full + "</span></span></li>" +
+      '<li><span class="k">' + bi({ en: "First start", ar: "أول انطلاقة" }) + '</span><span class="v mono">' + e.time + "</span></li>" +
+      '<li><span class="k">' + bi({ en: "City", ar: "المدينة" }) + '</span><span class="v">' + bi(city.name) + "</span></li>" +
+      '<li><span class="k">' + bi({ en: "Venue", ar: "الموقع" }) + '</span><span class="v">' + bi(e.venue) + "</span></li>" +
+      '<li><span class="k">' + bi({ en: "Categories", ar: "الفئات" }) + '</span><span class="v mono">' + e.categories.join(" · ") + "</span></li>";
+
+    var legs = "";
+    if (e.distances.swim) legs += '<div class="tri-leg leg-swim"><span class="leg-name">' + bi(STFApp.LABELS.swim) + '</span><span class="leg-data mono">' + e.distances.swim + "</span></div>";
+    if (e.distances.bike) legs += '<div class="tri-leg leg-bike"><span class="leg-name">' + bi(STFApp.LABELS.bike) + '</span><span class="leg-data mono">' + e.distances.bike + "</span></div>";
+    if (e.distances.run)  legs += '<div class="tri-leg leg-run"><span class="leg-name">'  + bi(STFApp.LABELS.run)  + '</span><span class="leg-data mono">' + e.distances.run  + "</span></div>";
+
+    var resultsBlock = "";
+    if (e.results && e.results.length) {
+      var rows = e.results.map(function (r) {
+        return "<tr>" +
+          '<td class="mono pos-' + r.pos + '">' + r.pos + "</td>" +
+          "<td>" + bi(r.name) + "</td>" +
+          "<td>" + bi(r.club) + "</td>" +
+          '<td class="mono">' + r.time + "</td>" +
+        "</tr>";
+      }).join("");
+      resultsBlock =
+        '<section class="section" style="padding-top:0"><div class="container">' +
+          '<span class="eyebrow">' + bi({ en: "Official results", ar: "النتائج الرسمية" }) + "</span>" +
+          "<h2>" + bi({ en: "Podium & top finishers", ar: "منصة التتويج وأوائل المتسابقين" }) + "</h2>" +
+          '<p class="muted" style="font-size:.85rem">' + bi({ en: "Sample results — prototype data.", ar: "نتائج توضيحية — بيانات تجريبية." }) + "</p>" +
+          '<div class="table-wrap"><table>' +
+            "<thead><tr><th>#</th><th>" + bi({ en: "Athlete", ar: "الرياضي" }) + "</th><th>" + bi({ en: "Club", ar: "النادي" }) + "</th><th>" + bi({ en: "Time", ar: "الزمن" }) + "</th></tr></thead>" +
+            "<tbody>" + rows + "</tbody>" +
+          "</table></div>" +
+        "</div></section>";
+    }
+
+    var ctaBtn = past
+      ? '<a class="btn btn-ghost" href="events.html">' + bi({ en: "Browse upcoming events", ar: "تصفح الفعاليات القادمة" }) + "</a>"
+      : e.status === "open"
+        ? '<a class="btn btn-primary" href="register.html?event=' + e.id + '">' + bi({ en: "Register now", ar: "سجّل الآن" }) + "</a>"
+        : '<span class="btn btn-ghost" aria-disabled="true" style="opacity:.6;cursor:default">' + bi({ en: "Registration opens soon", ar: "التسجيل يفتح قريباً" }) + "</span>";
+
+    main.innerHTML =
+      '<section class="page-hero detail-hero">' +
+        '<div class="hero-glow" aria-hidden="true"></div>' +
+        '<div class="container">' +
+          '<a class="back-link" href="events.html"><span aria-hidden="true">←</span>' + bi({ en: "All events", ar: "جميع الفعاليات" }) + "</a>" +
+          '<div class="chips">' + STFApp.typeChip(e) + STFApp.statusChip(e) + "</div>" +
+          "<h1>" + bi(e.title) + "</h1>" +
+          '<p class="hero-lead"><span class="en">' + d.en.full + " · " + city.name.en + '</span><span class="ar">' + d.ar.full + " · " + city.name.ar + "</span></p>" +
+        "</div>" +
+      "</section>" +
+
+      '<section class="section" style="padding-top:8px"><div class="container">' +
+        '<div class="detail-grid">' +
+          "<div>" +
+            '<div class="card">' +
+              '<span class="eyebrow">' + bi({ en: "About the race", ar: "عن السباق" }) + "</span>" +
+              "<p style=\"margin-bottom:0\">" + bi(e.desc) + "</p>" +
+            "</div>" +
+            '<div class="tri-strip" style="margin-top:20px">' + legs + "</div>" +
+            '<div style="margin-top:20px">' +
+              '<span class="eyebrow">' + bi({ en: "Gallery", ar: "معرض الصور" }) + "</span>" +
+              '<div class="gallery">' +
+                '<div class="ph">SWIM</div><div class="ph">BIKE</div><div class="ph">RUN</div>' +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+          '<aside class="card">' +
+            '<span class="eyebrow">' + bi({ en: "Key information", ar: "معلومات أساسية" }) + "</span>" +
+            '<ul class="info-list">' + infoRows + "</ul>" +
+            '<div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">' + ctaBtn +
+              '<a class="btn btn-ghost" href="timeline.html">' + bi({ en: "See it on the season map", ar: "شاهدها على خريطة الموسم" }) + "</a>" +
+            "</div>" +
+          "</aside>" +
+        "</div>" +
+      "</div></section>" +
+      resultsBlock;
+  })();
+</script>
+</body>
+</html>

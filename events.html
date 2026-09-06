@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");if(localStorage.getItem("stf-lang")==="ar"){document.documentElement.lang="ar";document.documentElement.dir="rtl";}}catch(e){}</script>
+<title>Events & Calendar — Saudi Triathlon Federation</title>
+<meta name="description" content="Competition and community calendars of the Saudi Triathlon Federation — upcoming races, registration and past results. (Design prototype)">
+<meta name="robots" content="noindex">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Saudi Triathlon Federation — Prototype">
+<meta property="og:title" content="Events & Calendar — Saudi Triathlon Federation">
+<meta property="og:description" content="Competition and community calendars of the Saudi Triathlon Federation — upcoming races, registration and past results. (Design prototype)">
+<meta property="og:image" content="https://osamamicro.github.io/triathlon-sa/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='9' fill='%23060B14'/%3E%3Cpath d='M22 7 L37 36 H31.5 L22 17.5 L12.5 36 H7 Z' fill='none' stroke='%232EE68A' stroke-width='3.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<div class="page-grid" aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow"><span class="en">Season 2026–27</span><span class="ar">موسم 2026–27</span></span>
+      <h1><span class="en">Events & Calendar</span><span class="ar">الفعاليات والتقويم</span></h1>
+      <p class="hero-lead">
+        <span class="en">Two calendars, one season: official competition rounds of the national series,
+        and community events open to everyone. Completed races move automatically to the results archive.</span>
+        <span class="ar">تقويمان في موسم واحد: جولات البطولات الرسمية للسلسلة الوطنية، وفعاليات مجتمعية
+        مفتوحة للجميع. تنتقل السباقات المنتهية تلقائياً إلى أرشيف النتائج.</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:14px">
+    <div class="container">
+
+      <div class="filter-bar" role="group" aria-label="Event filters">
+        <div class="seg" id="typeSeg">
+          <button type="button" data-type="all" aria-pressed="true">
+            <span class="en">All</span><span class="ar">الكل</span>
+          </button>
+          <button type="button" data-type="competition" aria-pressed="false">
+            <span class="en">Competition</span><span class="ar">البطولات</span>
+          </button>
+          <button type="button" data-type="community" aria-pressed="false">
+            <span class="en">Community</span><span class="ar">المجتمعي</span>
+          </button>
+        </div>
+        <select class="select" id="citySel" aria-label="City">
+          <option value="all">All cities · كل المدن</option>
+        </select>
+      </div>
+
+      <div class="section-head" style="margin-bottom:24px">
+        <div>
+          <span class="eyebrow"><span class="en">Open for entry</span><span class="ar">متاح للتسجيل</span></span>
+          <h2><span class="en">Upcoming</span><span class="ar">القادمة</span></h2>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="timeline.html">
+          <span class="en">View as season timeline</span><span class="ar">اعرضها كجدول زمني</span>
+        </a>
+      </div>
+      <div class="grid grid-3" id="upcomingGrid"></div>
+      <div class="empty-note" id="upcomingEmpty" hidden>
+        <span class="en">No events match this filter — try another city or calendar.</span>
+        <span class="ar">لا توجد فعاليات مطابقة — جرّب مدينة أو تقويماً آخر.</span>
+      </div>
+
+      <hr class="tri">
+
+      <div class="section-head" style="margin-bottom:24px">
+        <div>
+          <span class="eyebrow"><span class="en">Archive</span><span class="ar">الأرشيف</span></span>
+          <h2><span class="en">Past events & results</span><span class="ar">الفعاليات السابقة والنتائج</span></h2>
+        </div>
+      </div>
+      <div class="grid grid-3" id="pastGrid"></div>
+      <div class="empty-note" id="pastEmpty" hidden>
+        <span class="en">No past events match this filter.</span>
+        <span class="ar">لا توجد فعاليات سابقة مطابقة.</span>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  (function () {
+    var typeSeg = document.getElementById("typeSeg");
+    var citySel = document.getElementById("citySel");
+    var state = { type: "all", city: "all" };
+
+    /* populate city select from data */
+    Object.keys(STF.cities).forEach(function (key) {
+      var c = STF.cities[key];
+      var o = document.createElement("option");
+      o.value = key;
+      o.textContent = c.name.en + " · " + c.name.ar;
+      citySel.appendChild(o);
+    });
+
+    function match(e) {
+      return (state.type === "all" || e.type === state.type) &&
+             (state.city === "all" || e.city === state.city);
+    }
+
+    function render() {
+      var up = STF.upcoming.filter(match);
+      var past = STF.past.filter(match);
+      document.getElementById("upcomingGrid").innerHTML = up.map(function (e) { return STFApp.eventCard(e); }).join("");
+      document.getElementById("pastGrid").innerHTML = past.map(function (e) { return STFApp.eventCard(e); }).join("");
+      document.getElementById("upcomingEmpty").hidden = up.length > 0;
+      document.getElementById("pastEmpty").hidden = past.length > 0;
+    }
+
+    typeSeg.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button[data-type]");
+      if (!b) return;
+      state.type = b.dataset.type;
+      typeSeg.querySelectorAll("button").forEach(function (x) {
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+      render();
+    });
+    citySel.addEventListener("change", function () { state.city = citySel.value; render(); });
+
+    render();
+  })();
+</script>
+</body>
+</html>
