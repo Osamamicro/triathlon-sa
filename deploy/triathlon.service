@@ -1,0 +1,43 @@
+# systemd unit for the production site on Linux.
+#
+# Install as /etc/systemd/system/triathlon.service, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now triathlon
+#
+# Staging is the same file with every "triathlon" replaced by "triathlon-staging" and a different
+# port (5001), so the two sites are independent services with independent environment files.
+
+[Unit]
+Description=Saudi Triathlon Federation website
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+WorkingDirectory=/var/www/triathlon
+ExecStart=/usr/bin/dotnet /var/www/triathlon/Triathlon.Web.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=triathlon
+User=www-data
+Group=www-data
+
+# Bound to the loopback interface only: nginx is the sole thing that may reach the application,
+# which is the assumption Site__BehindProxy relies on. See README.md.
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=DOTNET_NOLOGO=true
+
+# Connection string, seed administrator, SMTP credentials and the staging password live here.
+# Owned by root, mode 0600 — it is the only place on the server that holds secrets.
+EnvironmentFile=/etc/triathlon/production.env
+
+# The application writes uploads to Media__Root and nothing else outside its own folder.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

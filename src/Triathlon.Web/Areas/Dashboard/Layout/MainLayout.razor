@@ -1,0 +1,68 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="Toggle navigation" />
+        <MudText Typo="Typo.h6">Federation dashboard</MudText>
+        <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudText Typo="Typo.body2" Class="mr-4">@context.User.Identity?.Name</MudText>
+                <form action="dashboard/logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="returnUrl" value="dashboard/login" />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit">Sign out</MudButton>
+                </form>
+            </Authorized>
+        </AuthorizeView>
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <MudNavMenu>
+            <MudNavLink Href="dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Overview</MudNavLink>
+
+            @* The destinations below are built by later tasks; the entries are here so the role
+               filtering is wired and reviewable now. *@
+            <AuthorizeView Policy="@Policies.Content" Context="content">
+                <MudNavGroup Title="Content" Icon="@Icons.Material.Filled.Article" Expanded="true">
+                    <MudNavLink Disabled="true">Pages</MudNavLink>
+                    <MudNavLink Disabled="true">Events</MudNavLink>
+                    <MudNavLink Disabled="true">Documents</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
+
+            <AuthorizeView Policy="@Policies.Crm" Context="crm">
+                <MudNavGroup Title="CRM" Icon="@Icons.Material.Filled.Groups" Expanded="true">
+                    <MudNavLink Disabled="true">Athletes</MudNavLink>
+                    <MudNavLink Disabled="true">Clubs</MudNavLink>
+                    <MudNavLink Disabled="true">Registrations</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
+
+            <AuthorizeView Policy="@Policies.Admin" Context="admin">
+                <MudNavLink Disabled="true" Icon="@Icons.Material.Filled.ManageAccounts">Users</MudNavLink>
+                <MudNavLink Disabled="true" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+            </AuthorizeView>
+
+            <MudDivider Class="my-2" />
+            <MudNavLink Href="dashboard/account/password" Icon="@Icons.Material.Filled.Password">Change password</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+
+    private void ToggleDrawer() => drawerOpen = !drawerOpen;
+}

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SiteName" xml:space="preserve">
+    <value>Saudi Triathlon Federation</value>
+    <comment>Federation name, used as the browser-title suffix and in the footer.</comment>
+  </data>
+  <data name="MetaDescription" xml:space="preserve">
+    <value>The national governing body for triathlon, duathlon and aquathlon in Saudi Arabia. Events, national series, training, rules and governance.</value>
+    <comment>Meta description and Open Graph description.</comment>
+  </data>
+  <data name="SkipToContent" xml:space="preserve">
+    <value>Skip to content</value>
+    <comment>Keyboard-only link that jumps past the header.</comment>
+  </data>
+  <data name="LanguageToggleLabel" xml:space="preserve">
+    <value>العربية</value>
+    <comment>Visible label of the language toggle: it always names the OTHER language, so the English page offers Arabic.</comment>
+  </data>
+  <data name="LanguageToggleAria" xml:space="preserve">
+    <value>التبديل إلى العربية</value>
+    <comment>Accessible name of the language toggle, spoken in the language it switches to.</comment>
+  </data>
+  <data name="FooterLegal" xml:space="preserve">
+    <value>© {0} Saudi Triathlon Federation. All rights reserved.</value>
+    <comment>Footer legal line. {0} is the current year.</comment>
+  </data>
+  <data name="MainNav" xml:space="preserve">
+    <value>Main</value>
+    <comment>Accessible name of the primary navigation landmark.</comment>
+  </data>
+  <data name="MenuToggle" xml:space="preserve">
+    <value>Menu</value>
+    <comment>Accessible name of the mobile menu button.</comment>
+  </data>
+  <data name="ThemeToggle" xml:space="preserve">
+    <value>Switch theme</value>
+    <comment>Accessible name of the dark/light toggle before scripting takes over.</comment>
+  </data>
+  <data name="SwitchToLight" xml:space="preserve">
+    <value>Switch to light mode</value>
+    <comment>Theme toggle accessible name shown while dark mode is active (the action switches to light).</comment>
+  </data>
+  <data name="SwitchToDark" xml:space="preserve">
+    <value>Switch to dark mode</value>
+    <comment>Theme toggle accessible name shown while light mode is active (the action switches to dark).</comment>
+  </data>
+  <data name="HomeTitle" xml:space="preserve">
+    <value>Swim, bike, run</value>
+    <comment>Browser-title prefix for the home page; the site name is appended by the layout.</comment>
+  </data>
+</root>

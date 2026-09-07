@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-Triathlon_Web-f9f517c8-98ed-4ee0-8d0e-eeeb9b2adc1e</UserSecretsId>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.25" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="MudBlazor" Version="9.9.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared.cs sits beside these files, so MSBuild's resx-to-class heuristic would name them
+         after that class alone ("Triathlon.Web.Shared"). IStringLocalizer<Shared> looks under
+         ResourcesPath instead ("Triathlon.Web.Resources.Shared"), so the names are pinned here. -->
+    <EmbeddedResource Update="Resources\Shared.en.resx" LogicalName="Triathlon.Web.Resources.Shared.en.resources" />
+    <EmbeddedResource Update="Resources\Shared.ar.resx" LogicalName="Triathlon.Web.Resources.Shared.ar.resources" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets Triathlon.Tests unit-test IdentityRedirectManager.IsLocalUrl directly instead of
+         only through the full login round trip. -->
+    <InternalsVisibleTo Include="Triathlon.Tests" />
+  </ItemGroup>
+
+</Project>

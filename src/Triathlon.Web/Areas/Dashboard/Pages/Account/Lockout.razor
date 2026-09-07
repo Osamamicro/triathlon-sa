@@ -1,0 +1,10 @@
+@page "/dashboard/lockout"
+@layout AuthLayout
+@attribute [AllowAnonymous]
+
+<PageTitle>Account locked</PageTitle>
+
+<h1>Account locked</h1>
+<p role="alert">Too many failed sign-in attempts. This account is locked for 15 minutes.</p>
+
+<p><a href="dashboard/login">Back to sign in</a></p>

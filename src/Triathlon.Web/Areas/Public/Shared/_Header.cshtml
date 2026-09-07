@@ -1,0 +1,57 @@
+@inject IStringLocalizer<Shared> L
+@{
+    var culture = PublicCulture.Of(ViewContext);
+
+    // Where we are inside the culture, e.g. "/en/events/timeline" -> "events/timeline".
+    var here = (Context.Request.Path.Value ?? string.Empty).Trim('/');
+    here = here.Length <= culture.Length ? string.Empty : here[(culture.Length + 1)..];
+    if (here.Equals("index", StringComparison.OrdinalIgnoreCase))
+    {
+        here = string.Empty;
+    }
+
+    // Sections shipping in later weeks are already in the navigation; they 404 until they land.
+    (string Path, string En, string Ar)[] nav =
+    [
+        ("", "Home", "الرئيسية"),
+        ("events", "Events", "الفعاليات"),
+        ("events/timeline", "Season", "الموسم"),
+        ("join", "Join", "الانضمام"),
+        ("training", "Training", "التدريب"),
+        ("rules", "Rules", "اللوائح"),
+        ("governance", "Governance", "الحوكمة"),
+        ("statistics", "Statistics", "الإحصائيات"),
+    ];
+
+    bool Current(string path) => path.Length == 0
+        ? here.Length == 0
+        : here.Equals(path, StringComparison.OrdinalIgnoreCase)
+          || here.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
+}
+<header class="site-header"><div class="container">
+    <a class="brand" href="@PublicCulture.Url(culture)">
+        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+            <path d="M22 5 L39 37 H33 L22 16 L11 37 H5 Z" fill="none" stroke="url(#triGrad)" stroke-width="3.4" stroke-linejoin="round" />
+            <defs>
+                <linearGradient id="triGrad" x1="0" y1="0" x2="44" y2="44">
+                    <stop offset="0" stop-color="#26C6E8" /><stop offset=".5" stop-color="#2EE68A" /><stop offset="1" stop-color="#FFA245" />
+                </linearGradient>
+            </defs>
+        </svg>
+        <span class="brand-name"><span class="en">Saudi Triathlon</span><span class="ar">الاتحاد السعودي للترايثلون</span><small><span class="en">FEDERATION · SWIM BIKE RUN</span><span class="ar">سباحة · دراجة · جري</span></small></span>
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="@L["MainNav"]">
+        @foreach (var item in nav)
+        {
+            <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)"><span class="en">@item.En</span><span class="ar">@item.Ar</span></a>
+        }
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]" data-label-light="@L["SwitchToLight"]" data-label-dark="@L["SwitchToDark"]">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2" /><path d="M12 2v2.4M12 19.6V22M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2 12h2.4M19.6 12H22M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" /></svg>
+    </button>
+    @* The toggle is a link to this same page in the other culture, and it is labelled with that
+       culture's own name — so it always offers the language you are not currently reading. *@
+    <a class="lang-toggle" href="@PublicCulture.SwitchUrl(ViewContext)" lang="@PublicCulture.Other(culture)" aria-label="@L["LanguageToggleAria"]">@L["LanguageToggleLabel"]</a>
+    <button class="nav-burger" type="button" aria-expanded="false" aria-controls="mainNav" aria-label="@L["MenuToggle"]">☰</button>
+</div></header>

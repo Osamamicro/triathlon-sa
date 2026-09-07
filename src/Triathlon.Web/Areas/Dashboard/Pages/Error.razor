@@ -1,0 +1,25 @@
+@page "/dashboard/error"
+@layout AuthLayout
+@attribute [AllowAnonymous]
+@using System.Diagnostics
+
+<PageTitle>Error</PageTitle>
+
+<h1>Something went wrong</h1>
+<p>The request could not be completed. Please try again, or contact the federation IT team if it keeps happening.</p>
+
+@if (!string.IsNullOrEmpty(requestId))
+{
+    <p class="muted">Reference: <code>@requestId</code></p>
+}
+
+<p><a href="dashboard">Back to the dashboard</a></p>
+
+@code {
+    private string? requestId;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized() => requestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}
