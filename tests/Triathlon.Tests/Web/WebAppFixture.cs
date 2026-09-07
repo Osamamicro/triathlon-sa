@@ -89,6 +89,7 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
                 ["ConnectionStrings:Default"] = _postgres.GetConnectionString(),
                 ["Database:Provider"] = "Postgres",
                 ["Database:MigrateOnStartup"] = "true",
+                ["Database:SeedContent"] = "true",
                 ["Seed:AdminEmail"] = AdminEmail,
                 ["Seed:AdminPassword"] = AdminPassword,
             }));

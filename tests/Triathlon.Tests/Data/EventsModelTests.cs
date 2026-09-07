@@ -12,25 +12,41 @@ public sealed class EventsModelTests(WebAppFixture app)
     [Fact]
     public async Task Slug_and_city_key_are_unique()
     {
-        await using var scope = app.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Guid cityId;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var city = new City { Key = "test-" + Guid.NewGuid().ToString("N")[..8], NameEn = "T", NameAr = "ت" };
-        db.Cities.Add(city);
-        await db.SaveChangesAsync();
+            var city = new City { Key = "test-" + Guid.NewGuid().ToString("N")[..8], NameEn = "T", NameAr = "ت" };
+            db.Cities.Add(city);
+            await db.SaveChangesAsync();
+            cityId = city.Id;
 
-        db.Cities.Add(new City { Key = city.Key, NameEn = "T2", NameAr = "ت٢" });
-        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            db.Cities.Add(new City { Key = city.Key, NameEn = "T2", NameAr = "ت٢" });
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
+
+        // Cleanup in a fresh scope: the failed insert above is still tracked as Added on `db`, and
+        // saving it again would violate the same unique constraint. Soft-deleting the city here keeps
+        // it out of other tests' CitiesAsync() counts without touching the tracked, still-broken entity.
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Cities.Remove(await db.Cities.SingleAsync(c => c.Id == cityId));
+            await db.SaveChangesAsync();
+        }
     }
 
     [Fact]
     public async Task Deleting_an_event_soft_deletes_gallery_and_results_but_keeps_registrations()
     {
         Guid eventId;
+        Guid cityId;
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var city = new City { Key = "cascade-" + Guid.NewGuid().ToString("N")[..8], NameEn = "C", NameAr = "ج" };
+            cityId = city.Id;
             var ev = new Event
             {
                 Slug = "cascade-" + Guid.NewGuid().ToString("N")[..8], Type = EventType.Community, IsPublished = true,
@@ -60,6 +76,15 @@ public sealed class EventsModelTests(WebAppFixture app)
             Assert.Empty(await db.EventResults.Where(r => r.EventId == eventId).ToListAsync());
             Assert.Single(await db.EventRegistrations.Where(r => r.EventId == eventId).ToListAsync());
             Assert.NotNull((await db.EventGalleryImages.IgnoreQueryFilters().SingleAsync(g => g.EventId == eventId)).DeletedAt);
+        }
+
+        // Cleanup: the event's own soft-delete cascade does not touch the city (see ADR 0001 — a city
+        // is not owned by its events), so it lingers and would otherwise inflate other tests' CitiesAsync() counts.
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Cities.Remove(await db.Cities.SingleAsync(c => c.Id == cityId));
+            await db.SaveChangesAsync();
         }
     }
 }

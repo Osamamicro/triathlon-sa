@@ -171,6 +171,11 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", false))
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await SeedIdentity.RunAsync(scope.ServiceProvider);
+
+    if (app.Configuration.GetValue("Database:SeedContent", false))
+    {
+        await SeedContent.RunAsync(scope.ServiceProvider);
+    }
 }
 
 app.Run();
