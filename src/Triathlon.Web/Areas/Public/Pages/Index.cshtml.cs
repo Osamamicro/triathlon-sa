@@ -23,7 +23,9 @@ namespace Triathlon.Web.Areas.Public.Pages;
 [OutputCache(
     PolicyName = OutputCacheSetup.PublicPolicy,
     Tags = [CacheTags.Home, CacheTags.Events, CacheTags.Stats, CacheTags.News])]
-public sealed class IndexModel(IStringLocalizer<Shared> localizer, EventsService events, StatsService stats, NewsService news) : PageModel
+public sealed class IndexModel(
+    IStringLocalizer<Shared> localizer, EventsService events, StatsService stats, NewsService news, ContentService content)
+    : PageModel
 {
     /// <summary>How many articles the home page's news band shows.</summary>
     private const int LatestNews = 3;
@@ -34,13 +36,25 @@ public sealed class IndexModel(IStringLocalizer<Shared> localizer, EventsService
 
     public IReadOnlyList<NewsPost> Latest { get; private set; } = [];
 
+    /// <summary>
+    /// The <c>home</c> CMS page's blocks: the hero copy first, then the season teaser, the quick-path
+    /// cards and the final call-to-action. Empty on an unseeded database — the page still renders,
+    /// just without those sections, rather than throwing.
+    /// </summary>
+    public IReadOnlyList<PageBlock> Blocks { get; private set; } = [];
+
     public async Task OnGetAsync(CancellationToken ct)
     {
         Upcoming = await events.UpcomingAsync(null, null, 3, ct);
         HomeKpis = await stats.HomeKpisAsync(ct);
         Latest = await news.LatestAsync(LatestNews, ct);
+        Blocks = (await content.PageAsync("home", ct))?.Blocks ?? [];
 
         ViewData["Title"] = localizer["HomeTitle"].Value;
         ViewData["today"] = events.Today;
+
+        // Built from a slug, so it cannot sit in the [OutputCache] attribute above (which needs a
+        // compile-time constant) — added here instead, exactly as the other CMS-backed pages do.
+        HttpContext.Features.Get<IOutputCacheFeature>()?.Context.Tags.Add(CacheTags.Page("home"));
     }
 }

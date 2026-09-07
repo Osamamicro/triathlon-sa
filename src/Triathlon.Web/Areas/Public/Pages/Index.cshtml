@@ -2,28 +2,17 @@
 @model IndexModel
 @{
     var culture = PublicCulture.Of(ViewContext);
+    var heroBlock = Model.Blocks.Count > 0 ? Model.Blocks[0] : null;
 }
 
   <!-- ======================= HERO ======================= -->
   <section class="hero">
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="container">
-      <span class="hero-kicker mono">@Bi("National Series 2026–27 · Registration open", "السلسلة الوطنية 2026–27 · التسجيل مفتوح")</span>
-      <h1>
-        @if (IsArabic)
-        {
-          <text>اسبح. اركب. اجرِ.<br><span class="grad">نحو الأمام.</span></text>
-        }
-        else
-        {
-          <text>Swim. Ride. Run.<br><span class="grad">Forward.</span></text>
-        }
-      </h1>
-      <p class="hero-lead">@Bi("The Saudi Triathlon Federation is the national home of multisport — from your first community aquathlon to the national team. Find your race, join a club, and follow the series across the Kingdom.", "الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة — من أول أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ، وتابع السلسلة في جميع مناطق المملكة.")</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events")">@Bi("Find your race", "اعثر على سباقك")</a>
-        <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "join")">@Bi("Become an athlete", "كن رياضياً")</a>
-      </div>
+      @if (heroBlock is not null)
+      {
+        <partial name="_HomeHero" model="heroBlock" />
+      }
 
       <!-- course line: swim → T1 → bike → T2 → run -->
       <svg class="hero-course" viewBox="0 0 1200 120" aria-hidden="true">
@@ -114,66 +103,6 @@
     </section>
   }
 
-  <!-- ======================= SEASON TEASER ======================= -->
-  <section class="section">
-    <div class="container">
-      <div class="cta-banner reveal">
-        <div>
-          <span class="eyebrow">@Bi("2026–27 season", "موسم 2026–27")</span>
-          <h2>@Bi("One season, eight cities", "موسم واحد، ثماني مدن")</h2>
-          <p>@Bi("Follow the national series on an interactive timeline and map — from the Red Sea to the Gulf, competition and community side by side.", "تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية — من البحر الأحمر إلى الخليج، بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب.")</p>
-        </div>
-        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/timeline")">@Bi("Explore the season", "استكشف الموسم")</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======================= QUICK PATHS ======================= -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head reveal">
-        <div>
-          <span class="eyebrow">@Bi("For every role", "لكل الأدوار")</span>
-          <h2>@Bi("Where do you start?", "من أين تبدأ؟")</h2>
-        </div>
-      </div>
-      <div class="grid grid-4">
-        <a class="card hover reveal" href="@PublicCulture.Url(culture, "join")">
-          <span class="eyebrow">@Bi("Athletes", "الرياضيون")</span>
-          <h3>@Bi("Join the federation", "الانضمام إلى الاتحاد")</h3>
-          <p class="muted" style="font-size:.92rem">@Bi("Registration steps, categories, clubs — and the pathway to the national team.", "خطوات التسجيل والفئات والأندية — والمسار نحو المنتخب الوطني.")</p>
-        </a>
-        <a class="card hover reveal" href="@PublicCulture.Url(culture, "training")">
-          <span class="eyebrow">@Bi("Beginners", "المبتدئون")</span>
-          <h3>@Bi("Training guide", "دليل التدريب")</h3>
-          <p class="muted" style="font-size:.92rem">@Bi("From zero to your first sprint in 12 weeks, one discipline at a time.", "من الصفر إلى أول سباق قصير خلال 12 أسبوعاً، رياضةً تلو الأخرى.")</p>
-        </a>
-        <a class="card hover reveal" href="@PublicCulture.Url(culture, "rules")">
-          <span class="eyebrow">@Bi("Officials & organizers", "الحكام والمنظمون")</span>
-          <h3>@Bi("Rules & regulations", "اللوائح والأنظمة")</h3>
-          <p class="muted" style="font-size:.92rem">@Bi("Competition rules, organizer manuals and officiating handbooks — all downloadable.", "قوانين المنافسات وأدلة المنظمين والحكام — جميعها قابلة للتحميل.")</p>
-        </a>
-        <a class="card hover reveal" href="@PublicCulture.Url(culture, "governance")">
-          <span class="eyebrow">@Bi("Media & partners", "الإعلام والشركاء")</span>
-          <h3>@Bi("Governance & transparency", "الحوكمة والشفافية")</h3>
-          <p class="muted" style="font-size:.92rem">@Bi("Annual reports, financial statements and board minutes in one documents library.", "التقارير السنوية والقوائم المالية ومحاضر مجلس الإدارة في مكتبة مستندات واحدة.")</p>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======================= FINAL CTA ======================= -->
-  <section class="section">
-    <div class="container">
-      <div class="cta-banner reveal">
-        <div>
-          <h2>@Bi("Ready for your first start line?", "جاهز لأول خط انطلاق؟")</h2>
-          <p>@Bi("No racing background needed. Community events welcome every level — and every distance has a first-timer wave.", "لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات — ولكل مسافة دفعة مخصصة للمبتدئين.")</p>
-        </div>
-        <div class="hero-actions" style="margin:0">
-          <a class="btn btn-primary" href="@PublicCulture.Url(culture, "register")">@Bi("Register online", "سجّل إلكترونياً")</a>
-          <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "training")">@Bi("Training guide", "دليل التدريب")</a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ======================= SEASON TEASER / QUICK PATHS / FINAL CTA ======================= -->
+  <!-- The `home` CMS page's remaining blocks: hero (Blocks[0]) is rendered above via _HomeHero. -->
+  <partial name="_Blocks/_Blocks" model="Model.Blocks.Skip(1).ToList()" />

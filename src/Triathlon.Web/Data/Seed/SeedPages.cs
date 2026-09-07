@@ -10,8 +10,9 @@ namespace Triathlon.Web.Data.Seed;
 /// <para>
 /// Each of the three aggregates guards its own table rather than the seeder guarding one of them:
 /// a database seeded by an earlier task already has events and documents in it, and must still pick
-/// up the navigation, the committees and the pages on its next start. The <c>home</c> page is not
-/// here — Task 2.3.A seeds it with the rest of the home page.
+/// up the navigation, the committees and the pages on its next start. Pages are guarded per slug
+/// (rather than the whole table), so a database that already has <c>join</c>/<c>contact</c>/
+/// <c>rules</c>/<c>training</c> still picks up <c>home</c> — added by Task 2.3.A — on its next start.
 /// </para>
 /// </summary>
 public static class SeedPages
@@ -112,11 +113,25 @@ public static class SeedPages
 
     private static async Task ContentPagesAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Pages.AnyAsync(ct)) return;
+        var added = false;
 
-        db.Pages.AddRange(Join(), Contact(), Rules(), Training());
+        async Task SeedIfMissing(string slug, Func<Page> factory)
+        {
+            if (await db.Pages.AnyAsync(p => p.Slug == slug, ct)) return;
+            db.Pages.Add(factory());
+            added = true;
+        }
 
-        await db.SaveChangesAsync(ct);
+        await SeedIfMissing("join", Join);
+        await SeedIfMissing("contact", Contact);
+        await SeedIfMissing("rules", Rules);
+        await SeedIfMissing("training", Training);
+        await SeedIfMissing("home", Home);
+
+        if (added)
+        {
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     private static Page Join()
@@ -405,6 +420,84 @@ public static class SeedPages
                 body: ("Every affiliated club runs beginner-friendly group sessions in all three disciplines.",
                        "كل نادٍ منتسب يقدم حصصاً جماعية مناسبة للمبتدئين في الرياضات الثلاث."),
                 cta: (("Find a club", "اعثر على نادٍ"), "join#clubs")),
+        ]);
+
+        return page;
+    }
+
+    /// <summary>
+    /// The home page: the hero copy that opens <c>Index.cshtml</c>, the season teaser banner, the
+    /// "where do you start" quick-path cards and the final call-to-action — the four sections that
+    /// used to be static markup in <c>Index.cshtml</c>. The hero course diagram, the stat band, the
+    /// upcoming-events grid and the news grid stay out of the CMS: they are rendered by
+    /// <c>IndexModel</c> from the events/stats/news services, not from blocks.
+    /// </summary>
+    private static Page Home()
+    {
+        var page = new Page
+        {
+            Slug = "home",
+            TitleEn = "Home", TitleAr = "الرئيسية",
+            IsPublished = true,
+        };
+
+        page.Blocks.AddRange(
+        [
+            Block(1, BlockType.Hero, variant: "home",
+                eyebrow: ("National Series 2026–27 · Registration open", "السلسلة الوطنية 2026–27 · التسجيل مفتوح"),
+                // The headline keeps the prototype's line break and gradient span; Html.Raw in
+                // _HomeHero.cshtml is what lets this markup through, for this variant only.
+                title: ("Swim. Ride. Run.<br><span class=\"grad\">Forward.</span>",
+                        "اسبح. اركب. اجرِ.<br><span class=\"grad\">نحو الأمام.</span>"),
+                body: ("The Saudi Triathlon Federation is the national home of multisport — from your first community aquathlon to the national team. Find your race, join a club, and follow the series across the Kingdom.",
+                       "الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة — من أول أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ، وتابع السلسلة في جميع مناطق المملكة."),
+                cta: (("Find your race", "اعثر على سباقك"), "events"),
+                secondary: (("Become an athlete", "كن رياضياً"), "join")),
+
+            Block(2, BlockType.Cta, variant: "teaser",
+                eyebrow: ("2026–27 season", "موسم 2026–27"),
+                title: ("One season, eight cities", "موسم واحد، ثماني مدن"),
+                body: ("Follow the national series on an interactive timeline and map — from the Red Sea to the Gulf, competition and community side by side.",
+                       "تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية — من البحر الأحمر إلى الخليج، بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب."),
+                cta: (("Explore the season", "استكشف الموسم"), "events/timeline")),
+
+            Block(3, BlockType.Cards, variant: "grid-4",
+                eyebrow: ("For every role", "لكل الأدوار"),
+                title: ("Where do you start?", "من أين تبدأ؟"),
+                items:
+                [
+                    new BlockItem(
+                        EyebrowEn: "Athletes", EyebrowAr: "الرياضيون",
+                        TitleEn: "Join the federation", TitleAr: "الانضمام إلى الاتحاد",
+                        BodyEn: "Registration steps, categories, clubs — and the pathway to the national team.",
+                        BodyAr: "خطوات التسجيل والفئات والأندية — والمسار نحو المنتخب الوطني.",
+                        Href: "join"),
+                    new BlockItem(
+                        EyebrowEn: "Beginners", EyebrowAr: "المبتدئون",
+                        TitleEn: "Training guide", TitleAr: "دليل التدريب",
+                        BodyEn: "From zero to your first sprint in 12 weeks, one discipline at a time.",
+                        BodyAr: "من الصفر إلى أول سباق قصير خلال 12 أسبوعاً، رياضةً تلو الأخرى.",
+                        Href: "training"),
+                    new BlockItem(
+                        EyebrowEn: "Officials & organizers", EyebrowAr: "الحكام والمنظمون",
+                        TitleEn: "Rules & regulations", TitleAr: "اللوائح والأنظمة",
+                        BodyEn: "Competition rules, organizer manuals and officiating handbooks — all downloadable.",
+                        BodyAr: "قوانين المنافسات وأدلة المنظمين والحكام — جميعها قابلة للتحميل.",
+                        Href: "rules"),
+                    new BlockItem(
+                        EyebrowEn: "Media & partners", EyebrowAr: "الإعلام والشركاء",
+                        TitleEn: "Governance & transparency", TitleAr: "الحوكمة والشفافية",
+                        BodyEn: "Annual reports, financial statements and board minutes in one documents library.",
+                        BodyAr: "التقارير السنوية والقوائم المالية ومحاضر مجلس الإدارة في مكتبة مستندات واحدة.",
+                        Href: "governance"),
+                ]),
+
+            Block(4, BlockType.Cta,
+                title: ("Ready for your first start line?", "جاهز لأول خط انطلاق؟"),
+                body: ("No racing background needed. Community events welcome every level — and every distance has a first-timer wave.",
+                       "لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات — ولكل مسافة دفعة مخصصة للمبتدئين."),
+                cta: (("Register online", "سجّل إلكترونياً"), "register"),
+                secondary: (("Training guide", "دليل التدريب"), "training")),
         ]);
 
         return page;
