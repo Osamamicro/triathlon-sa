@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Domain.Documents;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
 
@@ -26,6 +27,11 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<EventGalleryImage> EventGalleryImages => Set<EventGalleryImage>();
     public DbSet<EventResult> EventResults => Set<EventResult>();
     public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
+
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<RuleOrGuide> Rules => Set<RuleOrGuide>();
+    public DbSet<TrainingGuide> TrainingGuides => Set<TrainingGuide>();
+    public DbSet<TrainingGuideChapter> TrainingGuideChapters => Set<TrainingGuideChapter>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

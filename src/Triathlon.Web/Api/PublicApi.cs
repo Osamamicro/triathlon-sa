@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Net.Http.Headers;
 using Triathlon.Web.Areas.Public;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Infrastructure;
@@ -183,8 +184,27 @@ public static class PublicApi
         // same attributes by hand above and redirect back to the form instead.
         .DisableValidation();
 
+        MapDownload(app, "/documents/{id:guid}/download", DownloadKind.Document);
+        MapDownload(app, "/rules/{id:guid}/download", DownloadKind.Rule);
+        MapDownload(app, "/training/{id:guid}/download", DownloadKind.Guide);
+
         return app;
     }
+
+    /// <summary>
+    /// Records a download and redirects to the file, for the documents library, the rules page and
+    /// the training guides alike — same shape, different table. Never cached: a stale 302 would point
+    /// a returning visitor at a file that no longer exists, and the counter has to increment on every
+    /// real download rather than once per cache window.
+    /// </summary>
+    private static void MapDownload(IEndpointRouteBuilder endpoints, string pattern, DownloadKind kind) =>
+        endpoints.MapGet(pattern, async (Guid id, DocumentsService documents, HttpContext http, CancellationToken ct) =>
+        {
+            http.Response.Headers[HeaderNames.CacheControl] = "no-store";
+            var path = await documents.RecordDownloadAsync(kind, id, ct);
+            return path is null ? Results.NotFound() : Results.Redirect(path);
+        })
+        .CacheOutput(policy => policy.NoCache());
 
     /// <summary>An unknown value is no filter at all, the same reading the events list gives it.</summary>
     private static EventType? ParseType(string? type) => type?.ToLowerInvariant() switch

@@ -14,6 +14,7 @@ public static class SeedContent
     {
         var db = services.GetRequiredService<AppDbContext>();
         await SeedEvents.RunAsync(db, ct);
-        // Later tasks append: SeedDocuments, SeedStats, SeedPages, SeedNews, SeedClubs.
+        await SeedDocuments.RunAsync(db, ct);
+        // Later tasks append: SeedStats, SeedPages, SeedNews, SeedClubs.
     }
 }
