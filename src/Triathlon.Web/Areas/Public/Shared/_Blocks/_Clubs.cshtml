@@ -4,8 +4,10 @@
 @inject ContentService Content
 @*
     The affiliated club list. The block carries only its heading — the clubs themselves are CRM
-    records, so the block reads them rather than storing a copy that would go stale. Pages that use
-    it carry CacheTags.Clubs, so approving a club evicts them.
+    records, so the block reads them rather than storing a copy that would go stale. The generic
+    content page tags its cache entry CacheTags.Clubs when this block is present, so approving a
+    club evicts it; other pages that happen to carry this block fall back to the default 60-second
+    output-cache lifetime.
 *@
 @{
     var clubs = await Content.ClubsAsync(Context.RequestAborted);

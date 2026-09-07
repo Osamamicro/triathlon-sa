@@ -21,7 +21,10 @@
       {
         <span>@mid</span>
       }
-      <span>@Model.Size</span>
+      @if (Model.Size is { } size)
+      {
+        <span>@size</span>
+      }
     </span>
   </span>
   <span class="doc-dl" aria-hidden="true">↓</span>

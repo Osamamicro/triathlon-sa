@@ -15,7 +15,11 @@ namespace Triathlon.Web.Areas.Public;
 /// </summary>
 /// <param name="MetaLeftEn">The first meta cell — a category, or "UPDATED 2026-06".</param>
 /// <param name="MetaMid">The optional middle meta cell; a year, when the row has one.</param>
-/// <param name="Size">Already formatted for the culture by <see cref="PublicText.FileSize"/>.</param>
+/// <param name="Size">
+/// Already formatted for the culture by <see cref="PublicText.FileSize"/>; <c>null</c> when the
+/// file's size is not known, in which case <c>_DocRow</c> omits the size cell rather than showing
+/// a false "0 KB".
+/// </param>
 /// <param name="Color">A discipline token — <c>swim</c>, <c>bike</c> or <c>run</c> — for the icon tint.</param>
 public sealed record DocRowModel(
     string Href,
@@ -24,7 +28,7 @@ public sealed record DocRowModel(
     string MetaLeftEn,
     string MetaLeftAr,
     string? MetaMid,
-    string Size,
+    string? Size,
     string Color,
     string? DescEn = null,
     string? DescAr = null)
@@ -82,7 +86,7 @@ public sealed record DocRowModel(
             MetaLeftEn: guide.LevelEn.ToUpperInvariant(),
             MetaLeftAr: guide.LevelAr,
             MetaMid: null,
-            Size: PublicText.FileSize(guide.FileSize ?? 0),
+            Size: guide.FileSize is { } size ? PublicText.FileSize(size) : null,
             Color: "bike");
     }
 

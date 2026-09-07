@@ -25,8 +25,14 @@
     var gridClass = isPathway ? "pathway reveal" : $"grid {(isMuted ? "grid-3" : variant)}";
 
     // The card's contents are the same whether it is a link or not, and only the element differs.
+    // The prototype's "in preparation" cards (training.html) lead with the chip, ahead of the
+    // eyebrow/title/body — so a muted card renders it first here too.
     void CardBody(string? eyebrow, string? title, string? body, string? accentVar)
     {
+        if (isMuted)
+        {
+            <span class="chip">@Bi("In preparation", "قيد الإعداد")</span>
+        }
         if (eyebrow is not null)
         {
             if (accentVar is not null)
@@ -52,10 +58,6 @@
             {
                 <p class="muted" style="font-size:.92rem">@Html.Raw(body)</p>
             }
-        }
-        if (isMuted)
-        {
-            <span class="chip">@Bi("In preparation", "قيد الإعداد")</span>
         }
     }
 }

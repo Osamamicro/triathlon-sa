@@ -80,20 +80,20 @@ public static class SeedDocuments
             new()
             {
                 SortOrder = 1, TitleEn = "Swim", TitleAr = "سباحة",
-                BodyEn = "<p>Two pool sessions a week. Master breathing and sighting first — open-water calm wins more time than a faster stroke. Join a club session before your first sea swim.</p>",
-                BodyAr = "<p>حصتان في المسبح أسبوعياً. أتقن التنفس والنظر للأمام أولاً — فالهدوء في المياه المفتوحة يكسبك وقتاً أكثر من سرعة الضربات. انضم لحصة نادٍ قبل أول سباحة بحرية.</p>",
+                BodyEn = "<p><strong>Comfort before speed.</strong> Two pool sessions a week. Master breathing and sighting first — open-water calm wins more time than a faster stroke. Join a club session before your first sea swim.</p>",
+                BodyAr = "<p><strong>الارتياح قبل السرعة.</strong> حصتان في المسبح أسبوعياً. أتقن التنفس والنظر للأمام أولاً — فالهدوء في المياه المفتوحة يكسبك وقتاً أكثر من سرعة الضربات. انضم لحصة نادٍ قبل أول سباحة بحرية.</p>",
             },
             new()
             {
                 SortOrder = 2, TitleEn = "Bike", TitleAr = "دراجة",
-                BodyEn = "<p>Your first race needs a safe bike, not an expensive one. One longer weekend ride plus one short mid-week spin. Practice drinking while riding — race mornings are warm.</p>",
-                BodyAr = "<p>سباقك الأول يحتاج دراجة آمنة لا مكلفة. جولة أطول في نهاية الأسبوع وأخرى قصيرة منتصفه. تدرّب على الشرب أثناء القيادة — فصباحات السباق دافئة.</p>",
+                BodyEn = "<p><strong>Any bike will do.</strong> Your first race needs a safe bike, not an expensive one. One longer weekend ride plus one short mid-week spin. Practice drinking while riding — race mornings are warm.</p>",
+                BodyAr = "<p><strong>أي دراجة تكفي.</strong> سباقك الأول يحتاج دراجة آمنة لا مكلفة. جولة أطول في نهاية الأسبوع وأخرى قصيرة منتصفه. تدرّب على الشرب أثناء القيادة — فصباحات السباق دافئة.</p>",
             },
             new()
             {
                 SortOrder = 3, TitleEn = "Run", TitleAr = "جري",
-                BodyEn = "<p>Running off the bike feels strange — train it. Once a week, add a short 10-minute run straight after a ride. Race-day legs will thank you at T2.</p>",
-                BodyAr = "<p>الجري بعد الدراجة شعور غريب — تدرّب عليه. مرة أسبوعياً أضف جرياً قصيراً لعشر دقائق مباشرة بعد الدراجة. ستشكرك ساقاك عند المنطقة الانتقالية الثانية.</p>",
+                BodyEn = "<p><strong>Learn the brick.</strong> Running off the bike feels strange — train it. Once a week, add a short 10-minute run straight after a ride. Race-day legs will thank you at T2.</p>",
+                BodyAr = "<p><strong>تعلّم التمرين المركب.</strong> الجري بعد الدراجة شعور غريب — تدرّب عليه. مرة أسبوعياً أضف جرياً قصيراً لعشر دقائق مباشرة بعد الدراجة. ستشكرك ساقاك عند المنطقة الانتقالية الثانية.</p>",
             },
             new()
             {

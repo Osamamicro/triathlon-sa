@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.OutputCaching;
-using Triathlon.Web.Domain.Content;
 using Triathlon.Web.Domain.Documents;
 using Triathlon.Web.Infrastructure;
 using Triathlon.Web.Services;
@@ -14,12 +13,9 @@ namespace Triathlon.Web.Areas.Public.Pages.Training;
 /// an unpublished slug is a 404 rather than a preview.
 /// </summary>
 [OutputCache(PolicyName = OutputCacheSetup.PublicPolicy, Tags = [CacheTags.Guides])]
-public sealed class GuideModel(DocumentsService documents, ContentService content) : PageModel
+public sealed class GuideModel(DocumentsService documents) : PageModel
 {
     public TrainingGuide Guide { get; private set; } = null!;
-
-    /// <summary>The blocks of the <c>training</c> CMS page — the section's standing material.</summary>
-    public IReadOnlyList<PageBlock> Trailing { get; private set; } = [];
 
     public async Task<IActionResult> OnGetAsync(string slug, CancellationToken ct)
     {
@@ -31,13 +27,8 @@ public sealed class GuideModel(DocumentsService documents, ContentService conten
         }
 
         Guide = found;
-        Trailing = (await content.PageAsync("training", ct))?.Blocks ?? [];
 
         ViewData["Title"] = PublicText.Bi(found.TitleEn, found.TitleAr);
-
-        // The page's own tag is built from a slug, so it goes on the cache entry here: an
-        // [OutputCache] tag has to be a compile-time constant.
-        HttpContext.Features.Get<IOutputCacheFeature>()?.Context.Tags.Add(CacheTags.Page("training"));
 
         return Page();
     }
