@@ -10,12 +10,13 @@ the plan. Everything below is true as of the last commit on branch `docs/platfor
 |---|---|
 | Static prototype (repo root) | Approved look & feel, live on GitHub Pages. Do not restyle it; it becomes the source for the Razor port. |
 | Design spec | `docs/superpowers/specs/2026-09-06-triathlon-platform-design.md` (v2) — decisions final unless the client changes hosting/DB |
-| Implementation plan | `docs/superpowers/plans/2026-09-06-triathlon-platform-ultra-plan.md` — **Week 1 is at step level, start there** |
+| Implementation plan | `docs/superpowers/plans/2026-09-06-triathlon-platform-ultra-plan.md` — Week 1 done; Weeks 2–3 are at task level, expand to step level before coding |
+| Production code (Week 1) | `src/Triathlon.Web` + `tests/Triathlon.Tests` on branch `feat/week-1-foundation` (PR to `main`). 60 tests green (Testcontainers Postgres). Public shell at `/en` `/ar`, dashboard at `/dashboard` (seeded SuperAdmin from `Seed:*`), `/health`, Hangfire at `/dashboard/jobs`, media store with WebP variants, staging Basic-auth, CI in `.github/workflows/ci.yml`, deploy recipe in `deploy/`. Both migration sets (`Data/Migrations/{Postgres,SqlServer}`) in sync with the model. |
 | Proposals (EN) | v3 sent to the client via the agency; awaiting confirmation. Files live in `docs/proposal/` (gitignored — public repo) |
 | Proposals (AR) | **Not built yet.** Build only after the client confirms the English pair. Generator `docs/proposal/build-proposal-ar.js` exists but still carries the v1 content and navy theme; it must be reworked to the v3 brief and green theme. |
-| QA baseline | `docs/qa/2026-09-06-home-timeline-smoke.md` — 3 confirmed prototype defects (F1 toggle label, F2 1024 px overflow, F3 Arabic letter-spacing). Fix them during the Week 1 port, not in the prototype. |
+| QA | Baseline `docs/qa/2026-09-06-home-timeline-smoke.md` (F1/F2/F3) — **all three fixed in the port**, confirmed by `docs/qa/2026-09-07-week1-public-shell.md` (0 P0/P1; 3 P2 carry-overs: mobile nav bleed-through from the prototype, footer heading skips h3, `favicon.ico` 404; unbranded 404 page). |
 | Agents | `.claude/agents/stf-*` + `/stf-polish`. Loaded automatically in a new session. |
-| Branch | Work on `docs/platform-plan-and-agents` until PR #1 merges, then branch from `main` per week: `feat/week-1-foundation`, … |
+| Branch | `feat/week-1-foundation` (from `docs/platform-plan-and-agents`, which is `main` + this handover). Next: `feat/week-2-public-site` from `main` once the Week 1 PR merges. |
 
 ## 2. Decisions already made (do not reopen without a reason)
 
@@ -68,6 +69,12 @@ the failing test, and the acceptance check. Expand any task that feels under-spe
 - Word treats `jc=right` on bidi paragraphs as "end"; use `AlignmentType.START` for Arabic docx-js paragraphs.
 - The repo is public. Never commit anything under `docs/proposal/` or the client PDFs at root; `.gitignore` enforces it.
 - Commit messages: plain prose, no AI attribution trailers (user's global rule).
+- Docker Desktop on this machine crashes at start-up with "The file cannot be accessed by the system" on stale AF_UNIX socket files (`%LOCALAPPDATA%\Docker\run\dockerInference`, `%LOCALAPPDATA%\docker-secrets-engine\engine.sock`). Fix: stop Docker, rename the parent folder (`run` → `run.stale.*`), start again. Testcontainers then works.
+- The dashboard auth cookie is `Secure`-only: run the app with the **https** launch profile (or `--urls https://localhost:7052`) or the seeded login will not stick over plain http.
+- `dotnet-ef` 10.0.5 warns about the 10.0.11 runtime on every command; harmless. Migrations: `dotnet ef migrations add <Name> --context PostgresDbContext -o Data/Migrations/Postgres` and the same with `SqlServerDbContext` / `SqlServer` — always add both.
+- The bootstrap the `dotnet new blazor` template vendors (60k lines) was added in Task 1.1 and deleted in 1.3; per-task review diffs that include `wwwroot/lib` are unreadable — exclude that path from review packages.
+- Every dashboard mutation later must call `IActivityLogger.LogAsync`; it saves the shared scoped `AppDbContext`, so call it as the single save of the unit of work (or refactor to Add-only first).
+- Deferred review findings from Week 1 (media/decode test fixture, rate-limit "unknown" bucket, EvictAsync partial failure, backup.ps1 layout, Shared.cs resx marker naming, public 404 page, favicon) are listed in the Week 1 PR description — pick them up in Weeks 2–3 where the touched area comes up.
 
 ## 7. Session chain protocol (every session must do this)
 
@@ -133,6 +140,7 @@ next stage in the same session only if context is still small; otherwise chain.
 ## 9. Stage log
 
 - 2026-09-06 — Planning done. Commits `bd0843e`, `b85d3ab` on `docs/platform-plan-and-agents` (PR #1). No code yet.
+- 2026-09-07 — **Stage 1 (Week 1 — Foundation) done.** Branch `feat/week-1-foundation`, code head `0e6fa84` (Tasks 1.1–1.5 + two review fix waves), PR to `main` open. 80 tests green against Testcontainers Postgres; live gate verified (`/health` 200, `/en` ltr + `/ar` rtl, seeded SuperAdmin login → `/dashboard`, Hangfire `/dashboard/jobs` admin-only, WebP variants, CI file, both migration sets in sync). QA: `docs/qa/2026-09-07-week1-public-shell.md` (F1/F2/F3 fixed). Not done: staging deployment (no server yet). Carried into Weeks 2–3: public 404 page, single-culture server markup (`@Bi(en, ar)`), bilingual login page before client review 1, SQL Server Testcontainers CI job, `site.js` innerHTML hardening, soft-delete cascade decision, migration bundles in CI, security headers + `AllowedHosts`, QA N2/N3, dashboard i18n in Week 4.
 
 ## 10. After Week 1
 

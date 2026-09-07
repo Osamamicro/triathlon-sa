@@ -77,7 +77,7 @@ pages `users`, `activity`, `settings`.
 
 | Week | Exit criteria |
 |---|---|
-| 1 | Staging site online (both DB providers migrate), login with seeded SuperAdmin, home page renders from DB with prototype look, CI green |
+| 1 | Both DB providers migrate, login with seeded SuperAdmin, home page renders the prototype look (static `data.js` content — DB-backed from Task 2.1), `/health`, media store, CI workflow present; staging site online once the client names the host (deploy recipe in `deploy/`) |
 | 2–3 | All 10 sections live in ar + en from DB; Playwright matrix clean; Lighthouse mobile perf ≥ 85 / a11y ≥ 95 on home, events, event, governance — **client review 1** |
 | 4 | Editor creates/edits/publishes every content type; publish visible ≤ 5 s; activity log records it |
 | 5 | Registration → Pending athlete → approve → licence email; event entries export to Excel with Arabic intact; bulk email to a filtered group; users/roles/settings — **client review 2** |

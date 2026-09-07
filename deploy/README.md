@@ -41,7 +41,7 @@ variables — never in `appsettings.json`, which is in source control.
 | `Database__Provider` | `Postgres` | Or `SqlServer`. Chooses the EF provider *and* the Hangfire storage. |
 | `Database__MigrateOnStartup` | `false` | Keep it off on a server; migrations are a deployment step (below). |
 | `Seed__AdminEmail` | `admin@triathlon.sa` | Only used when the user table is empty. |
-| `Seed__AdminPassword` | *(strong, one-time)* | Change it through the dashboard after the first sign-in. |
+| `Seed__AdminPassword` | *(strong, one-time)* | Change it through the dashboard after the first sign-in. The app refuses to start outside Development if this still equals the committed local-dev value, even when users already exist. |
 | `Site__Staging` | `false` / `true` | `true` turns on the Basic-auth gate and `noindex`. |
 | `Site__BasicAuth__User` | `stf` | Required when `Site__Staging` is `true`; the app refuses to start without it. |
 | `Site__BasicAuth__Password` | *(shared with the client)* | One shared credential — a keep-out sign, not an account. |
