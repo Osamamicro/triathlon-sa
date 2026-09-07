@@ -806,11 +806,11 @@ html[dir="rtl"] .footer-tri{transform:scaleX(-1)}
 .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:34px;padding-block:54px 28px}
 @media (max-width:860px){.footer-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.footer-grid{grid-template-columns:1fr}}
-.footer-grid h3{
+.footer-grid h2{
   font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--faint);margin:0 0 16px;font-weight:400;letter-spacing:.18em;
 }
-html[lang="ar"] .footer-grid h3{letter-spacing:0;font-size:.8rem;text-transform:none;font-family:var(--body)}
+html[lang="ar"] .footer-grid h2{letter-spacing:0;font-size:.8rem;text-transform:none;font-family:var(--body)}
 .footer-grid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 /* 24px minimum line box (SC 2.5.8): thirteen footer links were 19px tall at 390. */
 .footer-grid a{

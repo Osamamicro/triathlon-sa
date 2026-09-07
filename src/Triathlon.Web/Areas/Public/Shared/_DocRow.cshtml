@@ -1,3 +1,4 @@
+@using System.Net
 @model DocRowModel
 @*
     One downloadable file, the prototype's .doc-row anchor. The href is the counting redirect rather
@@ -6,10 +7,16 @@
 *@
 @* The badge is one accent for every row. Tinting it by filing category made cyan mean
    "board minutes" and amber mean "financial", which is the run colour spent on a PDF. *@
+@{
+    // The title's heading tag is chosen by the caller (Model.HeadingLevel) so a document list keeps
+    // the page's heading order sequential wherever it is dropped in — see DocRowModel.HeadingLevel.
+    var headingTag = "h" + Model.HeadingLevel;
+    var headingHtml = $"<{headingTag}>{WebUtility.HtmlEncode(Bi(Model.TitleEn, Model.TitleAr))}</{headingTag}>";
+}
 <a class="doc-row reveal" href="@Model.Href">
   <span class="doc-icon">PDF</span>
   <span class="doc-main">
-    <h4>@Bi(Model.TitleEn, Model.TitleAr)</h4>
+    @Html.Raw(headingHtml)
     @if (Model.DescEn is { } descEn && Model.DescAr is { } descAr)
     {
       <p class="muted" style="margin:4px 0 6px;font-size:.86rem">@Bi(descEn, descAr)</p>

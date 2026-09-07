@@ -63,7 +63,7 @@
         <div class="doc-list">
           @foreach (var document in Model.Documents)
           {
-            <partial name="_DocRow" model="DocRowModel.For(document)" />
+            <partial name="_DocRow" model="DocRowModel.For(document) with { HeadingLevel = 2 }" />
           }
         </div>
       }

@@ -51,7 +51,7 @@
         <div class="doc-list">
           @foreach (var rule in Model.Rules)
           {
-            <partial name="_DocRow" model="DocRowModel.For(rule)" />
+            <partial name="_DocRow" model="DocRowModel.For(rule) with { HeadingLevel = 3 }" />
           }
         </div>
       }
