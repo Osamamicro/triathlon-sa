@@ -42,6 +42,20 @@ public sealed class PublicTextTests
     }
 
     [Fact]
+    public void Distances_speak_one_numeral_system_per_culture()
+    {
+        // English keeps the seeded string; Arabic gets Arabic-Indic digits, the Arabic decimal
+        // separator and the Arabic unit, so a card no longer carries an Arabic date beside a
+        // Latin-digit distance.
+        Assert.Equal("750m", Under("en", () => PublicText.Distance("750m")));
+        Assert.Equal("٧٥٠م", Under("ar", () => PublicText.Distance("750m")));
+        Assert.Equal("٢٠كم", Under("ar", () => PublicText.Distance("20km")));
+        Assert.Equal("٢٫٥كم", Under("ar", () => PublicText.Distance("2.5km")));
+        Assert.Equal("٥كم + ٢٫٥كم", Under("ar", () => PublicText.Distance("5km + 2.5km")));
+        Assert.Equal(string.Empty, Under("ar", () => PublicText.Distance(null)));
+    }
+
+    [Fact]
     public void Editor_written_links_keep_absolute_targets_and_gain_the_culture_segment()
     {
         // Paths inside the site, including the home page and a path carrying a fragment.

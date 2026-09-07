@@ -19,7 +19,7 @@
   <div class="container">
     <span class="eyebrow">@Bi("Key indicators", "المؤشرات الرئيسية")</span>
     <h1>@Bi("Federation Statistics", "إحصائيات الاتحاد")</h1>
-    <p class="hero-lead">@Bi("The state of Saudi triathlon in numbers. Figures are managed from the federation dashboard and update here the moment they are published.", "واقع الترايثلون السعودي بالأرقام. تُدار هذه الأرقام من لوحة تحكم الاتحاد وتُحدَّث هنا فور نشرها.")</p>
+    <p class="hero-lead">@Bi("Who races, where they race, and how fast the sport is growing. Updated each time a season closes.", "من يسابق، وأين، وكم تنمو اللعبة. تُحدَّث مع ختام كل موسم.")</p>
   </div>
 </section>
 
@@ -43,7 +43,7 @@
             var w = (int)Math.Round(r.Athletes / (double)maxRegion * 100);
             <div class="bar-row">
               <span class="bar-label">@Bi(r.NameEn, r.NameAr)</span>
-              <span class="bar-track"><span class="bar-fill" data-w="@w"></span></span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w" style="width:@w%"></span></span>
               <span class="bar-val mono">@Number(r.Athletes)</span>
             </div>
           }
@@ -59,7 +59,7 @@
             <div class="bar-row">
               @* A year is a label, not a quantity: no thousands separator. *@
               <span class="bar-label mono">@Digits(g.Year.ToString(CultureInfo.InvariantCulture))</span>
-              <span class="bar-track"><span class="bar-fill" data-w="@w"></span></span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w" style="width:@w%"></span></span>
               <span class="bar-val mono">@Number(g.Athletes)</span>
             </div>
           }
@@ -74,8 +74,8 @@
   <div class="container">
     <div class="cta-banner reveal">
       <div>
-        <h2>@Bi("Numbers that update themselves", "أرقام تُحدَّث ذاتياً")</h2>
-        <p>@Bi("Every figure on this page reads from a single data source — the dashboard updates it without touching the site's code.", "كل رقم في هذه الصفحة يُقرأ من مصدر بيانات واحد — تُحدّثه لوحة التحكم دون المساس بشيفرة الموقع.")</p>
+        <h2>@Bi("Four times the athletes since 2023", "أربعة أضعاف الرياضيين منذ 2023")</h2>
+        <p>@Bi("Six national rounds, forty-six community races and nine active regions built that growth. The audited numbers behind it are published in full.", "ست جولات وطنية، وست وأربعون سباقاً مجتمعياً، وتسع مناطق نشطة صنعت هذا النمو. والأرقام المدققة وراءه منشورة بالكامل.")</p>
       </div>
       <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "governance")">@Bi("Transparency reports", "تقارير الشفافية")</a>
     </div>

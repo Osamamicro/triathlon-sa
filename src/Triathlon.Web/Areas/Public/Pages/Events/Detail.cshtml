@@ -39,35 +39,33 @@
           <div class="tri-strip" style="margin-top:20px">
             @if (ev.SwimDistance is { } swim)
             {
-              <div class="tri-leg leg-swim"><span class="leg-name">@Bi("Swim", "سباحة")</span><span class="leg-data mono">@swim</span></div>
+              <div class="tri-leg leg-swim"><span class="leg-name">@Bi("Swim", "سباحة")</span><span class="leg-data mono">@Distance(swim)</span></div>
             }
             @if (ev.BikeDistance is { } bike)
             {
-              <div class="tri-leg leg-bike"><span class="leg-name">@Bi("Bike", "دراجة")</span><span class="leg-data mono">@bike</span></div>
+              <div class="tri-leg leg-bike"><span class="leg-name">@Bi("Bike", "دراجة")</span><span class="leg-data mono">@Distance(bike)</span></div>
             }
             @if (ev.RunDistance is { } run)
             {
-              <div class="tri-leg leg-run"><span class="leg-name">@Bi("Run", "جري")</span><span class="leg-data mono">@run</span></div>
+              <div class="tri-leg leg-run"><span class="leg-name">@Bi("Run", "جري")</span><span class="leg-data mono">@Distance(run)</span></div>
             }
           </div>
 
-          <div style="margin-top:20px">
-            <span class="eyebrow">@Bi("Gallery", "معرض الصور")</span>
-            <div class="gallery">
-              @if (ev.Gallery.Count > 0)
-              {
-                foreach (var image in ev.Gallery)
+          @* An empty gallery is no gallery. Three dashed frames labelled SWIM, BIKE and RUN
+             read as unfinished rather than as a considered placeholder, so the block only
+             exists once the event has photographs. *@
+          @if (ev.Gallery.Count > 0)
+          {
+            <div style="margin-top:20px">
+              <span class="eyebrow">@Bi("Gallery", "معرض الصور")</span>
+              <div class="gallery">
+                @foreach (var image in ev.Gallery)
                 {
                   <img src="@image.Path" loading="lazy" alt="@Bi(image.AltEn ?? string.Empty, image.AltAr ?? string.Empty)">
                 }
-              }
-              else
-              {
-                @* No photos uploaded yet: the discipline placeholders keep the layout intact. *@
-                <div class="ph">SWIM</div><div class="ph">BIKE</div><div class="ph">RUN</div>
-              }
+              </div>
             </div>
-          </div>
+          }
         </div>
 
         <aside class="card">

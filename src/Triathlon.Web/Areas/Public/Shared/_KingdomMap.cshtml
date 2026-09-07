@@ -40,6 +40,10 @@
         var name = Bi(city.NameEn, city.NameAr);
         <g class="marker m-@markerType" data-city="@city.Key" data-type="@dataType"
            tabindex="0" role="button" aria-label="@name">
+          @* The visible dot is 9 user units; this transparent circle is the pointer target.
+             r=26 on a 1000-unit viewBox is a 27px target at 1440 (WCAG 2.2 SC 2.5.8) and is the
+             largest radius that keeps Jeddah and Taif, 56 units apart, from overlapping. *@
+          <circle class="hit" cx="@city.SvgX" cy="@city.SvgY" r="26"></circle>
           <circle class="halo" cx="@city.SvgX" cy="@city.SvgY" r="14"></circle>
           <circle class="core" cx="@city.SvgX" cy="@city.SvgY" r="9"></circle>
           <text x="@(city.LabelAtEnd ? city.SvgX - 20 : city.SvgX + 20)" y="@(city.SvgY + 7 + city.LabelDy)"
@@ -48,12 +52,18 @@
       }
     </g>
   </svg>
-  @* The legend reads the same tokens the markers do: the national series in the Federation
-     green, community races in the run amber, and the selected city as a ring. *@
+  @* The legend reads the same marks the map does. Both calendars are the Federation green:
+     the community calendar used to be the run amber, which meant amber said "run" on a distance
+     pill and "community" on the marker beside it. The calendars are told apart by fill instead —
+     solid for the national series, hollow for community — and the selected city by its halo. *@
   <div class="map-legend">
-    <span><i style="background:var(--accent)"></i>@Bi("Competition", "بطولات")</span>
-    <span><i style="background:var(--run)"></i>@Bi("Community", "مجتمعي")</span>
-    <span><i class="i-ring"></i>@Bi("Selected", "المحدد")</span>
+    <span><i class="i-solid"></i>@Bi("Competition", "بطولات")</span>
+    <span><i class="i-hollow"></i>@Bi("Community", "مجتمعي")</span>
+    <span><i class="i-sel"></i>@Bi("Selected", "المحدد")</span>
   </div>
-  <p class="map-caption">@Bi("Stylized map — for event navigation, not geographic accuracy", "خريطة تعبيرية — للتنقل بين الفعاليات وليست مرجعاً جغرافياً")</p>
+  <p class="map-caption">@Bi("Stylized map: for event navigation, not geographic accuracy", "خريطة تعبيرية للتنقل بين الفعاليات، وليست مرجعاً جغرافياً")</p>
+  @* timeline.js writes the city the reader has scrolled to here, so the map's highlight is
+     announced rather than being a purely visual change. The template travels with the culture. *@
+  <p class="visually-hidden" id="timelineLive" role="status" aria-live="polite"
+     data-template="@Bi("{city}, events: {n}", "{city}، الفعاليات: {n}")"></p>
 </div>

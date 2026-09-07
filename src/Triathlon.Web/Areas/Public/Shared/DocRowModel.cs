@@ -20,7 +20,6 @@ namespace Triathlon.Web.Areas.Public;
 /// file's size is not known, in which case <c>_DocRow</c> omits the size cell rather than showing
 /// a false "0 KB".
 /// </param>
-/// <param name="Color">A discipline token — <c>swim</c>, <c>bike</c> or <c>run</c> — for the icon tint.</param>
 public sealed record DocRowModel(
     string Href,
     string TitleEn,
@@ -29,11 +28,10 @@ public sealed record DocRowModel(
     string MetaLeftAr,
     string? MetaMid,
     string? Size,
-    string Color,
     string? DescEn = null,
     string? DescAr = null)
 {
-    /// <summary>A library document: category on the left, year in the middle, category colour.</summary>
+    /// <summary>A library document: category on the left, year in the middle.</summary>
     public static DocRowModel For(Document document)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -47,8 +45,7 @@ public sealed record DocRowModel(
             MetaLeftEn: labelEn,
             MetaLeftAr: labelAr,
             MetaMid: PublicText.Digits(document.Year.ToString(CultureInfo.InvariantCulture)),
-            Size: PublicText.FileSize(document.FileSize),
-            Color: CategoryColor(document.Category));
+            Size: PublicText.FileSize(document.FileSize));
     }
 
     /// <summary>A rule or handbook: its description under the title, and the month it was last revised.</summary>
@@ -66,7 +63,6 @@ public sealed record DocRowModel(
             MetaLeftAr: "تحديث " + PublicText.Digits(month),
             MetaMid: null,
             Size: PublicText.FileSize(rule.FileSize),
-            Color: "bike",
             DescEn: rule.DescriptionEn,
             DescAr: rule.DescriptionAr);
     }
@@ -86,8 +82,7 @@ public sealed record DocRowModel(
             MetaLeftEn: guide.LevelEn.ToUpperInvariant(),
             MetaLeftAr: guide.LevelAr,
             MetaMid: null,
-            Size: guide.FileSize is { } size ? PublicText.FileSize(size) : null,
-            Color: "bike");
+            Size: guide.FileSize is { } size ? PublicText.FileSize(size) : null);
     }
 
     /// <summary>The library's filing categories as the prototype labelled them.</summary>
@@ -97,12 +92,5 @@ public sealed record DocRowModel(
         DocumentCategory.Finance => ("FINANCIAL", "مالية"),
         DocumentCategory.Minutes => ("MINUTES", "محاضر"),
         _ => (category.ToString().ToUpperInvariant(), category.ToString()),
-    };
-
-    private static string CategoryColor(DocumentCategory category) => category switch
-    {
-        DocumentCategory.Finance => "run",
-        DocumentCategory.Minutes => "swim",
-        _ => "bike",
     };
 }

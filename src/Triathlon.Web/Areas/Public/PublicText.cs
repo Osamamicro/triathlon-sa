@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Triathlon.Web.Domain.Common;
 
 namespace Triathlon.Web.Areas.Public;
@@ -9,7 +10,7 @@ namespace Triathlon.Web.Areas.Public;
 /// the paired <c>.en/.ar</c> spans of the prototype are gone from server markup (Week 1 ruling).
 /// Dates are Gregorian in both languages; Arabic shows Arabic-Indic digits, as the prototype did.
 /// </summary>
-public static class PublicText
+public static partial class PublicText
 {
     private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-GB");
     // Neutral "ar", not "ar-SA": ar-SA defaults to the Umm al-Qura calendar.
@@ -56,6 +57,31 @@ public static class PublicText
     /// </summary>
     public static string Number(long value) =>
         IsArabic ? Digits(value.ToString("N0", English)).Replace(',', '\u066C') : value.ToString("N0", English);
+
+    /// <summary>
+    /// A race distance the way the site prints it everywhere: "750m", "20km", "5km + 2.5km".
+    /// In English the seeded string is already right. In Arabic it is the one place the site used
+    /// to speak two numeral systems at once — an Arabic-Indic date beside a Latin-digit distance on
+    /// the same card — so the digits, the decimal separator and the unit are all converted here:
+    /// "٧٥٠م", "٢٠كم", "٢٫٥كم". One system per page (Arabic-Indic), which is what the dates, the
+    /// times and the KPI values already use.
+    /// </summary>
+    public static string Distance(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw) || !IsArabic)
+        {
+            return raw ?? string.Empty;
+        }
+
+        // Unit first, while the digits are still Latin and the lookbehind can find them.
+        var text = UnitPattern().Replace(raw, m => m.Groups[1].Value.Equals("km", StringComparison.OrdinalIgnoreCase) ? "كم" : "م");
+
+        return Digits(text).Replace('.', '٫');
+    }
+
+    /// <summary>A metric distance unit that follows a number: the "m" of "750m", the "km" of "20km".</summary>
+    [GeneratedRegex(@"(?<=\d\s*)(km|m)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex UnitPattern();
 
     public static string LongDate(DateOnly date) =>
         IsArabic ? Digits(date.ToString("dddd d MMMM yyyy", Arabic)) : date.ToString("ddd d MMMM yyyy", English);

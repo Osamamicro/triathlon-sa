@@ -15,17 +15,19 @@
 <section class="section" id="@Model.Anchor">
     <div class="container">
         <partial name="_Blocks/_SectionHead" model="Model" />
-        <div class="grid grid-3">
+        @* A register, not six cards. Every club carried the same stand-in sentence about coached
+           sessions, which made real content look like filler; without it a card is two lines in
+           a 120px box. The clubs are a list the federation keeps, so they are filed the way the
+           documents library files its PDFs: one hairline row each, name and city. A real
+           sentence per club can come back as a third column when the Federation writes them. *@
+        <ul class="club-list reveal">
             @foreach (var club in clubs)
             {
-                <div class="card reveal">
-                    <span class="eyebrow">@Bi(club.CityEn, club.CityAr)</span>
-                    <h3>@Bi(club.NameEn, club.NameAr)</h3>
-                    <p class="muted" style="font-size:.9rem;margin:0">
-                        @Bi("Coached swim, bike and run sessions · beginner friendly", "حصص سباحة ودراجة وجري بإشراف مدربين · مناسبة للمبتدئين")
-                    </p>
-                </div>
+                <li class="club-row">
+                    <span class="club-name">@Bi(club.NameEn, club.NameAr)</span>
+                    <span class="club-city mono">@(IsArabic ? Bi(club.CityEn, club.CityAr) : club.CityEn.ToUpperInvariant())</span>
+                </li>
             }
-        </div>
+        </ul>
     </div>
 </section>

@@ -27,8 +27,20 @@
   --ground-2:#0A2015;               /* the hero band */
   --surface:#0E2A1C;
   --surface-2:#133523;
-  --line:rgba(160,214,184,.18);
-  --line-strong:rgba(160,214,184,.32);
+  /* Three boundary weights, because WCAG 1.4.11 asks 3:1 of a boundary that carries
+     meaning and nothing of one that is decoration.
+       --line        hairline between rows, cards and sections. Decorative: nothing is identified
+                     by it, so it is raised for legibility rather than to 3:1 (measured on
+                     --surface: 1.54 -> 1.99 dark, 1.37 -> 1.63 light) and the light theme gets a
+                     tinted shadow so a card is bounded by more than a 1.11:1 tone step.
+       --line-strong dividers that structure a block: the timing board's cells, the leg strip's
+                     gaps, a table head (2.44 dark, 2.06 light).
+       --edge        every user-interface component: inputs, selects, segmented controls, the
+                     ghost button, the header pills, the download affordance. Measured 3.13:1
+                     dark and 3.12:1 light on --surface, which is what 1.4.11 asks. */
+  --line:rgba(160,214,184,.28);
+  --line-strong:rgba(160,214,184,.36);
+  --edge:rgba(160,214,184,.46);
 
   /* ---- ink ---- */
   --ink:#E9F2EC;
@@ -94,8 +106,9 @@
   --ground-2:#E1ECE4;               /* the hero band */
   --surface:#FFFFFF;
   --surface-2:#F5F9F6;
-  --line:rgba(10,45,26,.16);
-  --line-strong:rgba(10,45,26,.30);
+  --line:rgba(10,45,26,.24);
+  --line-strong:rgba(10,45,26,.34);
+  --edge:rgba(10,45,26,.50);
 
   --ink:#0A1D13;
   --muted:#42564A;
@@ -125,6 +138,18 @@
   --mark-o:.10;
   --cta-ground:#00532A;
   color-scheme:light;
+}
+
+/* Race Day's surface is white on a #EFF4F0 ground, 1.11:1, so a card needs something other
+   than tone to sit above the page. One soft tinted shadow, on the surfaces that are containers. */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .stat-band,
+:root[data-theme="light"] .map-wrap,
+:root[data-theme="light"] .table-wrap,
+:root[data-theme="light"] .tri-strip,
+:root[data-theme="light"] .step,
+:root[data-theme="light"] .cta-banner{
+  box-shadow:0 1px 2px rgba(10,45,26,.05),0 10px 26px -14px rgba(10,45,26,.28);
 }
 
 *{box-sizing:border-box}
@@ -164,13 +189,18 @@ img{max-width:100%;display:block}
 /* keyboard-only jump past the header; visually hidden until it takes focus */
 .skip-link{
   position:absolute;inset-block-start:-100px;inset-inline-start:12px;z-index:80;
-  background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);
+  background:var(--surface);color:var(--ink);border:1px solid var(--edge);
   border-radius:var(--radius-sm);padding:10px 16px;font-family:var(--display);font-weight:700;
 }
 .skip-link:focus{inset-block-start:12px}
 ::selection{background:var(--accent-soft);color:var(--ink)}
 
 .container{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--pad)}
+/* announced, never drawn: the timeline's live region */
+.visually-hidden{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0;
+}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
 
@@ -185,6 +215,9 @@ img{max-width:100%;display:block}
   inset-inline-start:max(var(--pad),calc((100% - var(--maxw)) / 2 + var(--pad)));
   inline-size:clamp(64px,10vw,132px);block-size:3px;background:var(--brand);
 }
+/* a footnote to the section above it: no rule, no band, no lane mark */
+.section-note{padding-block:0 clamp(40px,6vw,72px);margin-block-start:-18px}
+.section-note .rich-text p{max-width:64ch;font-size:.9rem}
 .section-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:18px;margin-bottom:34px}
 .section-head p{margin:0;color:var(--muted)}
 
@@ -231,7 +264,7 @@ html[lang="ar"] .brand-name small{letter-spacing:0;font-size:.66rem;font-family:
 .lang-toggle{
   /* a link, not a button: the culture is a route segment, so switching language is navigation */
   margin-inline-start:6px;flex:none;display:inline-flex;align-items:center;line-height:1.2;
-  border:1px solid var(--line-strong);background:transparent;color:var(--ink);
+  border:1px solid var(--edge);background:transparent;color:var(--ink);
   font-family:var(--display);font-weight:700;font-size:.92rem;
   padding:7px 14px;border-radius:999px;cursor:pointer;
   transition:border-color .18s var(--ease),background .18s var(--ease);
@@ -240,7 +273,7 @@ html[lang="ar"] .brand-name small{letter-spacing:0;font-size:.66rem;font-family:
 .theme-toggle{
   margin-inline-start:6px;flex:none;width:38px;height:38px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--line-strong);background:transparent;color:var(--muted);
+  border:1px solid var(--edge);background:transparent;color:var(--muted);
   border-radius:999px;cursor:pointer;
   transition:border-color .18s var(--ease),background .18s var(--ease),color .18s var(--ease);
 }
@@ -252,7 +285,7 @@ html[lang="ar"] .brand-name small{letter-spacing:0;font-size:.66rem;font-family:
 :root[data-theme="light"] .theme-toggle .i-moon{display:none}
 .nav-burger{
   display:none;flex:none;
-  width:40px;height:40px;border:1px solid var(--line-strong);border-radius:999px;
+  width:40px;height:40px;border:1px solid var(--edge);border-radius:999px;
   background:transparent;color:var(--ink);cursor:pointer;font-size:1.05rem;line-height:1;
 }
 /* Between the 920px hamburger cutover and ~1120px the eight nav items, the theme
@@ -307,7 +340,7 @@ html[lang="ar"] .brand-name small{letter-spacing:0;font-size:.66rem;font-family:
 .btn-primary{background:var(--accent-fill);color:var(--on-accent)}
 .btn-primary:hover{background:var(--brand);color:#FFFFFF;transform:translateY(-1px)}
 :root[data-theme="light"] .btn-primary:hover{background:#004E24;color:#FFFFFF}
-.btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+.btn-ghost{border-color:var(--edge);color:var(--ink);background:transparent}
 .btn-ghost:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
 .btn:active{transform:translateY(0) scale(.985)}
 .btn-sm{padding:8px 16px;font-size:.88rem}
@@ -374,6 +407,17 @@ html[lang="ar"] .tri-leg .leg-data{font-family:var(--body);letter-spacing:0;font
 .hero-course .course-mark{fill:var(--faint)}
 .hero-course .dot-start{fill:var(--swim)}
 .hero-course .dot-end{fill:var(--run)}
+/* Arabic reads right to left, and so does the race. The legs mirror as one group about the
+   viewBox centre, which puts the swim wave over the swim cell of the strip below and the finish
+   dot at the inline end; the T1/T2 group mirrors with them so the transitions stay in sequence,
+   and each label flips back inside so it is still read left to right. The draw animation is
+   untouched: stroke-dashoffset runs from the path's own start, which is now on the right. */
+html[dir="rtl"] .hero-course .course-legs,
+html[dir="rtl"] .hero-course .course-marks{transform:scaleX(-1);transform-origin:50% 50%}
+html[dir="rtl"] .hero-course .course-marks text{
+  transform:scaleX(-1);transform-box:fill-box;transform-origin:center;
+}
+
 @media (prefers-reduced-motion:no-preference){
   .hero-course .draw{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.2s var(--ease) forwards}
   .hero-course .draw.d2{animation-delay:.45s}
@@ -414,8 +458,12 @@ a.card:hover,.card.hover:hover{transform:translateY(-2px);border-color:var(--lin
   padding:5px 12px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);
 }
 html[lang="ar"] .chip{letter-spacing:0;font-size:.78rem;text-transform:none;font-family:var(--body)}
-.chip-competition{color:var(--accent);border-color:transparent;background:var(--accent-soft)}
-.chip-community{color:var(--run);border-color:transparent;background:var(--run-soft)}
+/* Which calendar an event belongs to is a word, not a hue. Community used to be the run amber,
+   so an amber COMMUNITY chip sat 30px above an amber "Run 2.5km" pill on the same card and the
+   colour said two different things at once. Both calendars now read as one outline chip in the
+   ink; amber only ever means the run leg. On the map, where there is no room for a word, the
+   two calendars are told apart by fill instead. */
+.chip-competition,.chip-community{color:var(--ink);border-color:var(--line-strong);background:transparent}
 .chip-open::before{content:"";inline-size:7px;block-size:7px;border-radius:50%;background:var(--accent)}
 .chip-open{color:var(--accent);border-color:var(--line-strong)}
 .chip-done{color:var(--faint)}
@@ -432,11 +480,9 @@ html[lang="ar"] .chip{letter-spacing:0;font-size:.78rem;text-transform:none;font
 .stat-band.wide{grid-template-columns:repeat(5,1fr)}
 @media (max-width:1080px){.stat-band.wide{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:640px){.stat-band.wide{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(--surface);padding:22px 22px 20px;position:relative}
-.stat::before{
-  content:"";position:absolute;inset-block-start:0;inset-inline-start:0;
-  inline-size:34px;block-size:2px;background:var(--stat-c,var(--brand));
-}
+/* No coloured tab per cell: the hairline grid is the whole device, and a KPI is not a
+   discipline. What varies from tile to tile is the number. */
+.stat{background:var(--surface);padding:22px 22px 20px}
 .stat-value{
   font-family:var(--display);font-weight:800;font-size:clamp(2rem,3.4vw,2.9rem);
   line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em;
@@ -448,7 +494,10 @@ html[lang="ar"] .stat-note{font-family:var(--body);letter-spacing:0;font-size:.7
 
 /* ---------- event cards ---------- */
 .event-card{display:flex;flex-direction:column;gap:13px;position:relative}
-.event-card .date-block{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+/* Column, unconditionally. Side by side, a short chip pair ("OPENS SOON") stayed on the date
+   line while a long one ("REGISTRATION OPEN") wrapped below it, so titles in the same row of
+   the grid sat 30px apart. One layout for every card. */
+.event-card .date-block{display:flex;flex-direction:column;align-items:flex-start;gap:11px}
 .date-tile{
   flex:none;width:60px;text-align:center;border:1px solid var(--line-strong);
   border-radius:var(--radius-sm);overflow:hidden;background:var(--surface-2);
@@ -488,7 +537,7 @@ html[dir="rtl"] a.event-card:hover .card-cta .cta-arrow{transform:scaleX(-1) tra
 /* ---------- filter / toggle pills ---------- */
 .filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:28px}
 .seg{
-  display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;
+  display:inline-flex;border:1px solid var(--edge);border-radius:999px;overflow:hidden;
   background:var(--surface);
 }
 .seg button,.seg a{
@@ -502,7 +551,7 @@ html[dir="rtl"] a.event-card:hover .card-cta .cta-arrow{transform:scaleX(-1) tra
 /* how many documents sit behind a filter chip; quiet enough to read as an annotation */
 .seg .count{font-family:var(--mono);font-size:.78em;opacity:.72;margin-inline-start:6px}
 .select{
-  appearance:none;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);
+  appearance:none;border:1px solid var(--edge);border-radius:999px;background:var(--surface);
   color:var(--ink);font-family:var(--body);font-size:.9rem;padding:10px 38px 10px 18px;cursor:pointer;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2393AC9E' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 16px center;
@@ -518,7 +567,6 @@ html[dir="rtl"] .select{padding:10px 18px 10px 38px;background-position:left 16p
 .season-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:start}
 @media (max-width:920px){
   .season-grid{grid-template-columns:1fr}
-  .map-wrap{position:static;order:-1;margin-bottom:10px}
 }
 .season-timeline{position:relative;margin-block:22px;padding-inline-start:32px}
 .season-timeline::before{
@@ -531,8 +579,10 @@ html[dir="rtl"] .select{padding:10px 18px 10px 38px;background-position:left 16p
   background:var(--ground);border:3px solid var(--tl-c,var(--accent));
   transition:box-shadow .2s var(--ease);
 }
-.tl-item.t-community{--tl-c:var(--run)}
-.tl-item.t-competition{--tl-c:var(--accent)}
+/* Solid for the national series, hollow for community: the rail's dots say the same thing
+   the map's markers do, in the Federation green rather than in a discipline colour. */
+.tl-item{--tl-c:var(--accent)}
+.tl-item.t-competition::before{background:var(--tl-c)}
 .tl-item:hover::before,.tl-item.active::before{box-shadow:0 0 0 5px color-mix(in srgb,var(--tl-c) 22%,transparent)}
 .tl-card{cursor:pointer;padding:18px}
 .tl-card h3{font-size:1.05rem;margin:0 0 4px}
@@ -543,7 +593,14 @@ html[dir="rtl"] .select{padding:10px 18px 10px 38px;background-position:left 16p
   font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
   color:var(--faint);margin:24px 0 2px;padding-inline-start:2px;
 }
-html[lang="ar"] .tl-month{letter-spacing:0;font-size:.82rem;text-transform:none;font-family:var(--body)}
+/* MonthShort refuses to abbreviate Arabic month names, so the Arabic heading cannot borrow the
+   mono face's calendar feel; it gets weight and a short rule instead, so months separate as
+   clearly as they do in English. */
+html[lang="ar"] .tl-month{
+  letter-spacing:0;font-size:.9rem;text-transform:none;font-family:var(--display);
+  font-weight:700;color:var(--muted);display:flex;align-items:center;gap:12px;
+}
+html[lang="ar"] .tl-month::after{content:"";height:1px;flex:1;background:var(--line)}
 
 /* ---------- Kingdom map ---------- */
 .map-wrap{
@@ -551,13 +608,26 @@ html[lang="ar"] .tl-month{letter-spacing:0;font-size:.82rem;text-transform:none;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   padding:20px 20px 16px;
 }
+/* One column, one scroll. This override used to sit above the rule it overrides, so the map
+   stayed pinned at 390: 389px of an 844px viewport were permanently a map, and the card stack
+   painted through its legend and caption. It reads as the season's overview once, then scrolls
+   away and lets the timeline have the screen. */
+@media (max-width:920px){
+  .map-wrap{position:static;order:-1;margin-block-end:24px}
+}
 .ksa-map{width:100%;height:auto;display:block}
 .ksa-map .land{fill:var(--map-land);stroke:var(--brand);stroke-width:2.5;stroke-linejoin:round;opacity:.95}
 .ksa-map .marker{cursor:pointer}
-.ksa-map .marker circle.core{fill:var(--m-c,var(--accent));transition:r .2s var(--ease)}
-.ksa-map .marker circle.halo{fill:none;stroke:var(--m-c,var(--accent));stroke-width:2;opacity:0;transition:opacity .2s var(--ease)}
-.ksa-map .marker.m-community{--m-c:var(--run)}
-.ksa-map .marker.m-competition{--m-c:var(--accent)}
+/* The visible dot stays 9 units; this is the pointer target, 27px at 1440 (SC 2.5.8). At 390 the
+   whole map is 350px wide, so the same circle is 18px: below that width the equivalent control is
+   the timeline card itself, which is full-bleed and carries the same city. */
+.ksa-map .marker circle.hit{fill:transparent}
+.ksa-map .marker circle.core{fill:var(--accent);transition:r .2s var(--ease)}
+.ksa-map .marker circle.halo{fill:none;stroke:var(--accent);stroke-width:2;opacity:0;transition:opacity .2s var(--ease)}
+/* Community races used to be the run amber here, which made amber mean both "run leg" and
+   "community calendar" on the same page. Both calendars are the Federation green now and the
+   fill carries the difference: solid for the national series, hollow for community. */
+.ksa-map .marker.m-community circle.core{fill:var(--surface);stroke:var(--accent);stroke-width:3.5}
 .ksa-map .marker text{fill:var(--muted);font-family:var(--mono);font-size:24px;pointer-events:none}
 .ksa-map .marker.active text,.ksa-map .marker:hover text{fill:var(--ink)}
 .ksa-map .marker.active circle.core{r:11}
@@ -580,7 +650,9 @@ html[lang="ar"] .tl-month{letter-spacing:0;font-size:.82rem;text-transform:none;
 .map-legend{display:flex;gap:16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--muted);flex-wrap:wrap}
 .map-legend span{display:inline-flex;align-items:center;gap:8px}
 .map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
-.map-legend i.i-ring{background:transparent;border:2px solid var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.map-legend i.i-solid{background:var(--accent)}
+.map-legend i.i-hollow{background:var(--surface);border:2px solid var(--accent)}
+.map-legend i.i-sel{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 .map-caption{font-family:var(--mono);font-size:.66rem;color:var(--faint);margin-top:10px}
 html[lang="ar"] .map-legend,html[lang="ar"] .map-caption{font-family:var(--body);font-size:.8rem}
 
@@ -598,9 +670,9 @@ html[lang="ar"] .map-legend,html[lang="ar"] .map-caption{font-family:var(--body)
   flex:none;width:42px;height:42px;border-radius:var(--radius-sm);
   background:var(--surface-2);border:1px solid var(--line-strong);
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--doc-c,var(--accent));
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--accent);
 }
-.doc-row:hover .doc-icon{border-color:var(--doc-c,var(--accent))}
+.doc-row:hover .doc-icon{border-color:var(--accent)}
 .doc-main{flex:1;min-width:0}
 .doc-main h4{margin:0;font-family:var(--body);font-weight:600;font-size:1rem;letter-spacing:0;line-height:1.4}
 .doc-main .doc-meta{
@@ -609,11 +681,27 @@ html[lang="ar"] .map-legend,html[lang="ar"] .map-caption{font-family:var(--body)
 }
 html[lang="ar"] .doc-main .doc-meta{font-family:var(--body);letter-spacing:0;font-size:.8rem}
 .doc-dl{
-  flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);
+  flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--edge);
   display:flex;align-items:center;justify-content:center;color:var(--muted);
   transition:background .16s var(--ease),border-color .16s var(--ease),color .16s var(--ease);
 }
 .doc-row:hover .doc-dl{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--on-accent)}
+
+/* ---------- affiliated clubs ----------
+   The documents library's filing device, reused: the club list is a register the Federation
+   keeps, so it reads as rows rather than as six cards each carrying two lines. */
+.club-list{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:0 clamp(24px,4vw,56px);
+}
+.club-row{
+  display:flex;align-items:baseline;justify-content:space-between;gap:18px;
+  padding-block:16px;border-bottom:1px solid var(--line);
+}
+.club-name{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.club-city{font-size:.7rem;letter-spacing:.12em;color:var(--faint);text-align:end;flex:none}
+html[lang="ar"] .club-city{font-family:var(--body);letter-spacing:0;font-size:.82rem}
 
 /* ---------- steps / pathway ---------- */
 .steps{display:grid;gap:16px}
@@ -724,7 +812,11 @@ html[dir="rtl"] .footer-tri{transform:scaleX(-1)}
 }
 html[lang="ar"] .footer-grid h3{letter-spacing:0;font-size:.8rem;text-transform:none;font-family:var(--body)}
 .footer-grid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.footer-grid a{color:var(--muted);font-size:.94rem;transition:color .15s var(--ease)}
+/* 24px minimum line box (SC 2.5.8): thirteen footer links were 19px tall at 390. */
+.footer-grid a{
+  color:var(--muted);font-size:.94rem;transition:color .15s var(--ease);
+  display:inline-block;min-height:24px;line-height:24px;
+}
 .footer-grid a:hover{color:var(--accent)}
 .footer-bottom{
   border-top:1px solid var(--line);padding-block:22px;
@@ -769,33 +861,45 @@ html[lang="ar"] .info-list .v{font-family:var(--body);font-size:.92rem}
 .pos-1{color:#E8B84B}.pos-2{color:#AFBDB4}.pos-3{color:#C98A4B}
 :root[data-theme="light"] .pos-1{color:#9A7514}:root[data-theme="light"] .pos-2{color:#5F6F66}:root[data-theme="light"] .pos-3{color:#8A5620}
 
-/* gallery: a ruled frame while the federation's own photography is still coming */
+/* gallery: only rendered once the event has photographs. The dashed SWIM/BIKE/RUN frames that
+   used to stand in for them went with the .ph rule; an empty state that ships is not a plan. */
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media (max-width:620px){.gallery{grid-template-columns:repeat(2,1fr)}}
 .gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line)}
-.ph{
-  aspect-ratio:4/3;border-radius:var(--radius-sm);border:1px dashed var(--line-strong);
-  background:var(--surface-2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
-}
 
 /* ---------- forms ---------- */
 .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
 .field label{font-family:var(--body);font-weight:600;font-size:.88rem;color:var(--ink)}
 .input{
-  border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);
+  border:1px solid var(--edge);background:var(--surface-2);color:var(--ink);
   border-radius:var(--radius-sm);padding:12px 14px;font-family:var(--body);font-size:.97rem;
   transition:border-color .15s var(--ease),background .15s var(--ease);width:100%;
 }
 .input::placeholder{color:var(--faint)}
-input[type="checkbox"],input[type="radio"]{accent-color:var(--accent-fill);width:17px;height:17px}
-.input:hover{border-color:var(--line-strong)}
+/* 24px, the SC 2.5.8 target size: the consent box was 17px and it is the control that decides
+   whether the form can be submitted at all. */
+input[type="checkbox"],input[type="radio"]{accent-color:var(--accent-fill);width:24px;height:24px;flex:none}
+.input:hover{border-color:var(--edge)}
 .input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
-select.input{appearance:none}
+/* The registration form's four dropdowns computed appearance:none with no background image, so
+   city, category, club and event rendered as plain boxes, identical to the name field, while the
+   documents filter one had a chevron. One chevron, positioned logically so it mirrors. */
+select.input{
+  appearance:none;padding-inline-end:40px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2393AC9E' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;
+}
+:root[data-theme="light"] select.input{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2342564A' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+}
+html[dir="rtl"] select.input{background-position:left 16px center}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
 @media (max-width:640px){.form-grid{grid-template-columns:1fr}}
 .field .hint{font-size:.8rem;color:var(--faint)}
+/* Four required fields shipped with nothing marking them. The asterisk is aria-hidden: the
+   required attribute is what assistive technology reads, and the note explains the glyph. */
+.field label .req{color:var(--danger);margin-inline-start:4px;font-weight:700}
+.form-note{font-size:.82rem;color:var(--faint);margin:0 0 14px}
 .field.invalid .input{border-color:var(--danger);background:var(--danger-soft)}
 .field .err{display:none;font-size:.82rem;color:var(--danger)}
 .field.invalid .err{display:block}
@@ -843,7 +947,11 @@ html[lang="ar"] .back-link{font-family:var(--body);font-size:.88rem}
 .faq > div > :last-child{margin-bottom:0}
 
 /* Rich text: editor prose, styled so no class names are needed in the editor. */
-.rich-text{max-width:72ch;overflow-x:auto}
+/* The measure belongs to the prose, not to the block: as a max-width on the container itself it
+   centred the whole column and left an article, and the rules page's one-sentence note, indented
+   to nothing on the page. The container keeps the page's gutters; the paragraphs keep 72ch. */
+.rich-text{overflow-x:auto}
+.rich-text > p,.rich-text > ul,.rich-text > ol,.rich-text > h2,.rich-text > h3{max-width:72ch}
 .rich-text > :first-child{margin-top:0}
 .rich-text > :last-child{margin-bottom:0}
 .rich-text h2{font-size:clamp(1.4rem,2.4vw,1.9rem);margin:1.6em 0 .5em}

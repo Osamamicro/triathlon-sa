@@ -34,8 +34,13 @@
     });
   }
 
-  /* ---------------- counters ---------------- */
+  /* ---------------- counters ----------------
+     The tile already carries the real figure, rendered by the server: a crawler, a printout and
+     a no-JS visitor all read it. The count-up is decoration on top, so it resets the number to
+     zero itself and only when motion is allowed. Under prefers-reduced-motion this function
+     touches nothing and the served value stands. */
   function animateCounter(el) {
+    if (reduced) return;
     const target = parseFloat(el.dataset.count || "0");
     const suffix = el.dataset.suffix || "";
     const locale = document.documentElement.lang === "ar" ? "ar-SA-u-ca-gregory" : "en-US";
@@ -45,7 +50,7 @@
       ? el.firstChild
       : el.insertBefore(document.createTextNode(""), el.firstChild);
     const render = v => { node.nodeValue = Math.round(v).toLocaleString(locale) + suffix; };
-    if (reduced) { render(target); return; }
+    render(0);
     const dur = 1400, t0 = performance.now();
     (function tick(t) {
       const p = Math.min((t - t0) / dur, 1);
@@ -98,17 +103,26 @@
       counters.forEach(animateCounter);
     }
 
-    /* ---------------- statistics bars ---------------- */
-    /* server-rendered .bar-fill spans carry their target width in data-w; this only sets the
-       CSS width once the bar scrolls into view so the site.css transition animates it */
+    /* ---------------- statistics bars ----------------
+       The server writes each bar's real width into the style attribute as well as into data-w,
+       so the charts are drawn in the served HTML. Where motion is allowed the bars are collapsed
+       to zero without a transition, then grown back as each one scrolls into view. Reduced
+       motion, or no IntersectionObserver, leaves the served widths exactly as they are. */
     function setBarWidth(el) { el.style.width = el.dataset.w + "%"; }
     const fills = document.querySelectorAll(".bar-fill");
-    if (reduced || !("IntersectionObserver" in window)) {
-      fills.forEach(setBarWidth);
-    } else {
+    if (!reduced && "IntersectionObserver" in window && fills.length) {
       const io3 = new IntersectionObserver(entries => {
         entries.forEach(en => {
-          if (en.isIntersecting) { setBarWidth(en.target); io3.unobserve(en.target); }
+          if (en.isIntersecting) { en.target.style.width = ""; setBarWidth(en.target); io3.unobserve(en.target); }
+          else if (!en.target.dataset.reset) {
+            /* collapse on the observer's first word about this bar, not before it: if the
+               observer never reports, the width the server wrote is what stays on screen */
+            en.target.dataset.reset = "1";
+            en.target.style.transition = "none";
+            en.target.style.width = "0%";
+            void en.target.offsetWidth;
+            en.target.style.transition = "";
+          }
         });
       }, { threshold: 0.4 });
       fills.forEach(el => io3.observe(el));

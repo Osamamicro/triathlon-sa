@@ -4,10 +4,9 @@
     than the PDF, so there is no download attribute: the endpoint increments the counter and then
     sends the browser to the file.
 *@
-@{
-    var accent = PublicText.AccentVar(Model.Color) ?? "var(--bike)";
-}
-<a class="doc-row reveal" href="@Model.Href" style="--doc-c:@accent">
+@* The badge is one accent for every row. Tinting it by filing category made cyan mean
+   "board minutes" and amber mean "financial", which is the run colour spent on a PDF. *@
+<a class="doc-row reveal" href="@Model.Href">
   <span class="doc-icon">PDF</span>
   <span class="doc-main">
     <h4>@Bi(Model.TitleEn, Model.TitleAr)</h4>

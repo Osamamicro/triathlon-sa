@@ -15,32 +15,40 @@
       }
 
       @* The course, drawn once on load: swim → T1 → bike → T2 → run. Strokes are classed
-         rather than hard-coded so the discipline code follows the theme. *@
+         rather than hard-coded so the discipline code follows the theme.
+
+         Two groups, because the graphic has to mirror in Arabic. .course-legs carries everything
+         that has a direction — the three strokes and the start and finish dots — and site.css
+         flips it under html[dir=rtl] so the swim wave sits above the swim cell of the strip below
+         and the finish dot sits at the inline end. .course-marks flips with it, and each label
+         counter-flips inside, so T1 and T2 land in the right places and still read left to right. *@
       <svg class="hero-course" viewBox="0 0 1200 120" aria-hidden="true">
-        <path class="course-base" d="M10 70 H1190" stroke-dasharray="1 7"></path>
-        <path class="draw c-swim" d="M10 70 q 30 -26 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0"></path>
-        <path class="draw d2 c-bike" d="M400 70 L470 40 L540 88 L610 36 L680 84 L750 48 L790 70"></path>
-        <path class="draw d3 c-run" d="M800 70 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36"></path>
-        <g class="course-mark" font-family="IBM Plex Mono,monospace" font-size="15">
+        <g class="course-legs">
+          <path class="course-base" d="M10 70 H1190" stroke-dasharray="1 7"></path>
+          <path class="draw c-swim" d="M10 70 q 30 -26 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0"></path>
+          <path class="draw d2 c-bike" d="M400 70 L470 40 L540 88 L610 36 L680 84 L750 48 L790 70"></path>
+          <path class="draw d3 c-run" d="M800 70 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36 m18 0 h36"></path>
+          <circle class="dot-start" cx="10" cy="70" r="5"></circle>
+          <circle class="dot-end" cx="1190" cy="70" r="5"></circle>
+        </g>
+        <g class="course-mark course-marks" font-family="IBM Plex Mono,monospace" font-size="15">
           <text x="396" y="112" text-anchor="middle">T1</text>
           <text x="796" y="112" text-anchor="middle">T2</text>
         </g>
-        <circle class="dot-start" cx="10" cy="70" r="5"></circle>
-        <circle class="dot-end" cx="1190" cy="70" r="5"></circle>
       </svg>
 
       <div class="tri-strip reveal">
         <div class="tri-leg leg-swim">
           <span class="leg-name">@Bi("Swim", "سباحة")</span>
-          <span class="leg-data mono">@Bi("750M – 1500M · OPEN WATER", "750م – 1500م · مياه مفتوحة")</span>
+          <span class="leg-data mono">@Bi("750M – 1500M · OPEN WATER", "٧٥٠م – ١٥٠٠م · مياه مفتوحة")</span>
         </div>
         <div class="tri-leg leg-bike">
           <span class="leg-name">@Bi("Bike", "دراجة")</span>
-          <span class="leg-data mono">@Bi("20KM – 40KM · CLOSED ROADS", "20كم – 40كم · طرق مغلقة")</span>
+          <span class="leg-data mono">@Bi("20KM – 40KM · CLOSED ROADS", "٢٠كم – ٤٠كم · طرق مغلقة")</span>
         </div>
         <div class="tri-leg leg-run">
           <span class="leg-name">@Bi("Run", "جري")</span>
-          <span class="leg-data mono">@Bi("5KM – 10KM · CITY CIRCUITS", "5كم – 10كم · مسارات المدن")</span>
+          <span class="leg-data mono">@Bi("5KM – 10KM · CITY CIRCUITS", "٥كم – ١٠كم · مسارات المدن")</span>
         </div>
       </div>
     </div>

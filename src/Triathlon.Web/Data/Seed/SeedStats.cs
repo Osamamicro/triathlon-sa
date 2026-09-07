@@ -16,11 +16,11 @@ public static class SeedStats
 
         Kpi K(string key, long value, (string En, string Ar) label, int sortOrder,
             string? suffix = null, bool showPlus = false, (string En, string Ar)? note = null,
-            string? color = null, bool showOnHome = false, int homeOrder = 0) => new()
+            bool showOnHome = false, int homeOrder = 0) => new()
         {
             Key = key, LabelEn = label.En, LabelAr = label.Ar, Value = value, SortOrder = sortOrder,
             Suffix = suffix, ShowPlus = showPlus, NoteEn = note?.En, NoteAr = note?.Ar,
-            Color = color, ShowOnHome = showOnHome, HomeOrder = homeOrder, Source = KpiSource.Manual,
+            ShowOnHome = showOnHome, HomeOrder = homeOrder, Source = KpiSource.Manual,
         };
 
         var kpis = new List<Kpi>
@@ -29,13 +29,13 @@ public static class SeedStats
                 showPlus: true, note: ("+31% VS 2025", "‎+31% مقارنة بـ2025"),
                 showOnHome: true, homeOrder: 1),
             K("elite", 42, ("Elite athletes", "رياضيو النخبة"), 2,
-                note: ("NATIONAL SQUAD POOL", "قاعدة المنتخب الوطني"), color: "swim",
+                note: ("NATIONAL SQUAD POOL", "قاعدة المنتخب الوطني"),
                 showOnHome: true, homeOrder: 2),
             K("participants", 18650, ("Race participations", "مشاركة في السباقات"), 3,
-                showPlus: true, note: ("SINCE 2023", "منذ 2023"), color: "run",
+                showPlus: true, note: ("SINCE 2023", "منذ 2023"),
                 showOnHome: true, homeOrder: 4),
             K("tournaments", 24, ("Tournaments held", "بطولة أقيمت"), 4,
-                note: ("ACROSS 9 REGIONS", "في 9 مناطق"), color: "bike",
+                note: ("ACROSS 9 REGIONS", "في 9 مناطق"),
                 showOnHome: true, homeOrder: 3),
             K("community", 46, ("Community events", "فعالية مجتمعية"), 5),
             K("clubs", 17, ("Affiliated clubs", "نادياً منتسباً"), 6),

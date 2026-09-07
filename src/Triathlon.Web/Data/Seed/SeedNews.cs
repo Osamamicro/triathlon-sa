@@ -25,11 +25,11 @@ public static class SeedNews
                 SummaryEn = "An evening swim-run at King Abdullah Sports City drew the largest first-timer field the federation has hosted.",
                 SummaryAr = "سباق مسائي للسباحة والجري في مدينة الملك عبدالله الرياضية يجمع أكبر عدد من المشاركين الجدد في تاريخ الاتحاد.",
                 BodyEn = """
-                    <p>Three hundred and forty athletes finished their first multisport race on Saturday evening in Jeddah, where a 300m sea swim and a 2km run along the King Abdullah Sports City promenade made up the shortest event on the federation's calendar — and, by entries, its most popular.</p>
+                    <p>Three hundred and forty athletes finished their first multisport race on Saturday evening in Jeddah, where a 300m sea swim and a 2km run along the King Abdullah Sports City promenade made up the shortest event on the federation's calendar and, by entries, its most popular.</p>
                     <p>Two thirds of the field had never raced before. Every wave started behind a pacing volunteer, club coaches ran a warm-up on the beach an hour before the gun, and finishers left with a timing chip result and an invitation to the nearest affiliated club. The federation will repeat the format in Yanbu and Dammam next season.</p>
                     """,
                 BodyAr = """
-                    <p>أنهى 340 رياضياً أول سباق متعدد الرياضات في حياتهم مساء السبت في جدة، في سباق يجمع 300 متر سباحة في البحر و2 كيلومتر جرياً على ممشى مدينة الملك عبدالله الرياضية — وهو أقصر سباقات تقويم الاتحاد، وأكثرها إقبالاً بعدد المسجلين.</p>
+                    <p>أنهى 340 رياضياً أول سباق متعدد الرياضات في حياتهم مساء السبت في جدة، في سباق يجمع 300 متر سباحة في البحر و2 كيلومتر جرياً على ممشى مدينة الملك عبدالله الرياضية، وهو أقصر سباقات تقويم الاتحاد وأكثرها إقبالاً بعدد المسجلين.</p>
                     <p>لم يسبق لثلثي المشاركين خوض أي سباق من قبل. انطلقت كل دفعة خلف متطوع يضبط الإيقاع، وأدار مدربو الأندية إحماءً على الشاطئ قبل الانطلاق بساعة، وغادر المشاركون بنتيجة موثقة بشريحة توقيت ودعوة لأقرب نادٍ منتسب. ويعتزم الاتحاد تكرار هذه الصيغة في ينبع والدمام الموسم المقبل.</p>
                     """,
             },
@@ -44,11 +44,11 @@ public static class SeedNews
                 SummaryAr = "الموسم يمتد من سبتمبر إلى مارس ويختتم ببطولة المملكة في الرياض.",
                 BodyEn = """
                     <p>The federation has approved the 2026–27 national series: six scoring rounds across Riyadh, Jeddah, AlUla, Dammam, Yanbu and NEOM, opening with the Riyadh Sprint Triathlon in October and closing with the national championship in March.</p>
-                    <p>Alongside the series, the calendar carries community events in every host city — aquathlons, try-a-tri waves and open-water festivals that need no licence to enter. The Dammam round hosts this season's para-triathlon championship on a fully accessible course, and series points from all six rounds feed national-team selection.</p>
+                    <p>Alongside the series, the calendar carries community events in every host city: aquathlons, try-a-tri waves and open-water festivals that need no licence to enter. The Dammam round hosts this season's para-triathlon championship on a fully accessible course, and series points from all six rounds feed national-team selection.</p>
                     """,
                 BodyAr = """
                     <p>اعتمد الاتحاد تقويم السلسلة الوطنية لموسم 2026–27: ست جولات محتسبة في الرياض وجدة والعُلا والدمام وينبع ونيوم، تنطلق بترايثلون الرياض للمسافة القصيرة في أكتوبر وتختتم ببطولة المملكة في مارس.</p>
-                    <p>وإلى جانب السلسلة، يضم التقويم فعاليات مجتمعية في كل مدينة مستضيفة — سباقات أكواثلون ودفعات تجريبية ومهرجانات للسباحة في المياه المفتوحة لا تتطلب رخصة للمشاركة. وتستضيف جولة الدمام بطولة ترايثلون ذوي الإعاقة هذا الموسم على مسار مهيأ بالكامل، فيما تدخل نقاط الجولات الست جميعها في اختيار المنتخب الوطني.</p>
+                    <p>وإلى جانب السلسلة، يضم التقويم فعاليات مجتمعية في كل مدينة مستضيفة: سباقات أكواثلون ودفعات تجريبية ومهرجانات للسباحة في المياه المفتوحة لا تتطلب رخصة للمشاركة. وتستضيف جولة الدمام بطولة ترايثلون ذوي الإعاقة هذا الموسم على مسار مهيأ بالكامل، فيما تدخل نقاط الجولات الست جميعها في اختيار المنتخب الوطني.</p>
                     """,
             },
             new NewsPost
@@ -62,11 +62,11 @@ public static class SeedNews
                 SummaryAr = "الجولة الأولى من السلسلة الوطنية تقام على طرق مغلقة في حديقة الملك سلمان يوم 17 أكتوبر.",
                 BodyEn = """
                     <p>Entries are open for the season opener: a 750m swim, a 20km closed-road bike and a 5km run through King Salman Park on 17 October, raced under World Triathlon sprint rules with a wave start at 06:00.</p>
-                    <p>Elite, age-group and junior categories are all on the start list, and a licensed federation athlete can enter online in a few minutes. Athletes without a licence can register with the federation first — the four steps take about a week — or start with a community aquathlon later in the month.</p>
+                    <p>Elite, age-group and junior categories are all on the start list, and a licensed federation athlete can enter online in a few minutes. Athletes without a licence can register with the federation first (the four steps take about a week) or start with a community aquathlon later in the month.</p>
                     """,
                 BodyAr = """
                     <p>فُتح باب التسجيل في افتتاحية الموسم: 750 متر سباحة، و20 كيلومتراً على الدراجة في طرق مغلقة، و5 كيلومترات جرياً داخل حديقة الملك سلمان يوم 17 أكتوبر، وفق قوانين الاتحاد الدولي للمسافة القصيرة وبانطلاقة على دفعات في تمام السادسة صباحاً.</p>
-                    <p>يشمل السباق فئات النخبة والفئات العمرية والناشئين، ويستطيع الرياضي المرخّص من الاتحاد إتمام تسجيله إلكترونياً خلال دقائق. أما من لا يملك رخصة فبإمكانه التسجيل لدى الاتحاد أولاً — وتستغرق الخطوات الأربع نحو أسبوع — أو البدء بسباق أكواثلون مجتمعي في وقت لاحق من الشهر.</p>
+                    <p>يشمل السباق فئات النخبة والفئات العمرية والناشئين، ويستطيع الرياضي المرخّص من الاتحاد إتمام تسجيله إلكترونياً خلال دقائق. أما من لا يملك رخصة فبإمكانه التسجيل لدى الاتحاد أولاً، وتستغرق الخطوات الأربع نحو أسبوع، أو البدء بسباق أكواثلون مجتمعي في وقت لاحق من الشهر.</p>
                     """,
             });
 

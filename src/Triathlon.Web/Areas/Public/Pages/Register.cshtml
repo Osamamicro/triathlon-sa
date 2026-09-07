@@ -34,10 +34,11 @@
             <p class="form-error" role="alert">@Bi("The security check did not pass. Please try again.", "لم يجتز التحقق الأمني. فضلاً حاول مرة أخرى.")</p>
           }
 
-          <span class="eyebrow">@Bi("Step 1 — Personal details", "الخطوة 1 — البيانات الشخصية")</span>
+          <span class="eyebrow">@Bi("Step 1: Personal details", "الخطوة ١: البيانات الشخصية")</span>
+          <p class="form-note">@Bi("Fields marked * are required.", "الحقول المعلمة بـ * مطلوبة.")</p>
           <div class="form-grid">
             <div class="@Model.FieldClass("fullName")">
-              <label for="fullName">@Bi("Full name", "الاسم الكامل")</label>
+              <label for="fullName">@Bi("Full name", "الاسم الكامل")<span class="req" aria-hidden="true">*</span></label>
               <input class="input" id="fullName" name="fullName" autocomplete="name" required maxlength="128" value="@Model.Value("fullName")">
               @if (Model.InvalidFields.Contains("fullName"))
               {
@@ -45,7 +46,7 @@
               }
             </div>
             <div class="@Model.FieldClass("email")">
-              <label for="email">@Bi("Email", "البريد الإلكتروني")</label>
+              <label for="email">@Bi("Email", "البريد الإلكتروني")<span class="req" aria-hidden="true">*</span></label>
               <input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="256" value="@Model.Value("email")">
               @if (Model.InvalidFields.Contains("email"))
               {
@@ -53,9 +54,12 @@
               }
             </div>
             <div class="@Model.FieldClass("dateOfBirth")">
-              <label for="dateOfBirth">@Bi("Date of birth", "تاريخ الميلاد")</label>
+              <label for="dateOfBirth">@Bi("Date of birth", "تاريخ الميلاد")<span class="req" aria-hidden="true">*</span></label>
               <input class="input" id="dateOfBirth" name="dateOfBirth" type="date" required
                      min="@Model.EarliestDateOfBirth" max="@Model.LatestDateOfBirth" value="@Model.Value("dateOfBirth")">
+              @* The date control keeps the browser's own format, which is the only left-to-right
+                 field in an otherwise mirrored form; the hint says what the three boxes are. *@
+              <span class="hint">@Bi("Day, month and year.", "يوم / شهر / سنة.")</span>
               @if (Model.InvalidFields.Contains("dateOfBirth"))
               {
                 <span class="err">@Bi("Please enter your date of birth. Athletes register from the age of six.",
@@ -75,10 +79,10 @@
 
           <hr class="tri" style="margin-block:20px">
 
-          <span class="eyebrow">@Bi("Step 2 — Your sport", "الخطوة 2 — رياضتك")</span>
+          <span class="eyebrow">@Bi("Step 2: Your sport", "الخطوة ٢: رياضتك")</span>
           <div class="form-grid">
             <div class="@Model.FieldClass("category")">
-              <label for="category">@Bi("Category", "الفئة")</label>
+              <label for="category">@Bi("Category", "الفئة")<span class="req" aria-hidden="true">*</span></label>
               <select class="input" id="category" name="category" required>
                 @foreach (var category in RegisterModel.Categories)
                 {
@@ -123,7 +127,7 @@
 
           <hr class="tri" style="margin-block:20px">
 
-          <span class="eyebrow">@Bi("Step 3 — Declarations", "الخطوة 3 — الإقرارات")</span>
+          <span class="eyebrow">@Bi("Step 3: Declarations", "الخطوة ٣: الإقرارات")</span>
           <div class="@Model.FieldClass("declaration")">
             <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.9rem;color:var(--muted)">
               <input type="checkbox" id="declaration" name="declaration" value="on" required style="margin-top:3px">

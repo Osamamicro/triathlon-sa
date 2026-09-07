@@ -66,7 +66,7 @@ public static class SeedPages
 
             // Footer, second column.
             N(NavLocation.FooterInvolved, "register", ("Athlete registration", "تسجيل الرياضيين")),
-            N(NavLocation.FooterInvolved, "join", ("Become an athlete", "كن رياضياً")),
+            N(NavLocation.FooterInvolved, "join", ("Become an athlete", "سجّل كرياضي")),
             N(NavLocation.FooterInvolved, "training", ("Training guide", "دليل التدريب")),
             N(NavLocation.FooterInvolved, "join#clubs", ("Affiliated clubs", "الأندية المنتسبة")),
             N(NavLocation.FooterInvolved, "governance", ("Governance & transparency", "الحوكمة والشفافية")));
@@ -139,7 +139,7 @@ public static class SeedPages
         var page = new Page
         {
             Slug = "join",
-            TitleEn = "Become an Athlete", TitleAr = "كن رياضياً",
+            TitleEn = "Become an Athlete", TitleAr = "سجّل كرياضي",
             MetaDescriptionEn = "Four steps from curious to licensed: pick a club, register with the federation, receive your athlete licence and enter your first event.",
             MetaDescriptionAr = "أربع خطوات من الفضول إلى الرخصة: اختر نادياً، وسجّل لدى الاتحاد، واستلم رخصتك الرياضية، وشارك في أول فعالية.",
             IsPublished = true,
@@ -149,9 +149,9 @@ public static class SeedPages
         [
             Block(1, BlockType.Hero,
                 eyebrow: ("Start your journey", "ابدأ رحلتك"),
-                title: ("Become an Athlete", "كن رياضياً"),
-                body: ("You don't need a racing background — you need a start line. Four steps take you from curious to licensed, and a clear pathway leads from community events to the national team.",
-                       "لا تحتاج إلى خلفية تنافسية — تحتاج فقط إلى خط انطلاق. أربع خطوات تنقلك من الفضول إلى الرخصة الرياضية، ومسار واضح يمتد من الفعاليات المجتمعية إلى المنتخب الوطني."),
+                title: ("Become an Athlete", "سجّل كرياضي"),
+                body: ("You don't need a racing background. You need a start line. Four steps take you from curious to licensed, and a clear pathway leads from community events to the national team.",
+                       "لا تحتاج إلى خلفية تنافسية، بل إلى خط انطلاق فقط. أربع خطوات تنقلك من الفضول إلى الرخصة الرياضية، ومسار واضح يمتد من الفعاليات المجتمعية إلى المنتخب الوطني."),
                 cta: (("Register online", "سجّل إلكترونياً"), "register"),
                 secondary: (("Find a club first", "اعثر على نادٍ أولاً"), "#clubs")),
 
@@ -162,24 +162,20 @@ public static class SeedPages
                 [
                     new BlockItem(
                         TitleEn: "Pick a club near you", TitleAr: "اختر نادياً قريباً منك",
-                        BodyEn: "Seventeen affiliated clubs across nine regions run coached sessions for every level — see the list below.",
-                        BodyAr: "سبعة عشر نادياً منتسباً في تسع مناطق تقدم حصصاً بإشراف مدربين لجميع المستويات — انظر القائمة أدناه.",
-                        Color: "swim"),
+                        BodyEn: "Seventeen affiliated clubs across nine regions run coached sessions for every level; the list is below.",
+                        BodyAr: "سبعة عشر نادياً منتسباً في تسع مناطق تقدم حصصاً بإشراف مدربين لجميع المستويات، والقائمة أدناه."),
                     new BlockItem(
                         TitleEn: "Register with the federation", TitleAr: "سجّل لدى الاتحاد",
                         BodyEn: "Submit your national ID / iqama, a medical declaration, and your category. Registration is done once and renewed each season.",
-                        BodyAr: "قدّم الهوية الوطنية / الإقامة وإقراراً طبياً وفئتك. يتم التسجيل مرة واحدة ويُجدد كل موسم.",
-                        Color: "bike"),
+                        BodyAr: "قدّم الهوية الوطنية / الإقامة وإقراراً طبياً وفئتك. يتم التسجيل مرة واحدة ويُجدد كل موسم."),
                     new BlockItem(
                         TitleEn: "Receive your athlete license", TitleAr: "استلم رخصتك الرياضية",
-                        BodyEn: "Your license number is your entry key to every sanctioned race — competition and community alike.",
-                        BodyAr: "رقم رخصتك هو مفتاح دخولك لكل سباق معتمد — في البطولات والفعاليات المجتمعية على حد سواء.",
-                        Color: "run"),
+                        BodyEn: "Your license number is your entry key to every sanctioned race, competition and community alike.",
+                        BodyAr: "رقم رخصتك هو مفتاح دخولك لكل سباق معتمد، في البطولات والفعاليات المجتمعية على حد سواء."),
                     new BlockItem(
                         TitleEn: "Enter your first event", TitleAr: "شارك في أول فعالية",
-                        BodyEn: "Start with an aquathlon or a try-a-tri — every community event has a first-timer wave with pacing volunteers.",
-                        BodyAr: "ابدأ بأكواثلون أو سباق تجريبي — كل فعالية مجتمعية تضم دفعة للمبتدئين يرافقهم متطوعون.",
-                        Color: "bike"),
+                        BodyEn: "Start with an aquathlon or a try-a-tri. Every community event has a first-timer wave with pacing volunteers.",
+                        BodyAr: "ابدأ بأكواثلون أو سباق تجريبي. فكل فعالية مجتمعية تضم دفعة للمبتدئين يرافقهم متطوعون."),
                 ]),
 
             Block(3, BlockType.Table,
@@ -198,8 +194,8 @@ public static class SeedPages
                         ["النخبة", "16+", "Sprint · Olympic (draft-legal)", "معيار تأهيل"]),
                     Row(["Para triathlon", "16+", "Sprint (adapted)", "Classification + open registration"],
                         ["ترايثلون ذوي الإعاقة", "16+", "Sprint (adapted)", "تصنيف + تسجيل مفتوح"]),
-                    Row(["Community / Open", "8+", "Try-a-tri · Aquathlon", "No license needed — day pass"],
-                        ["مجتمعي / مفتوح", "8+", "Try-a-tri · Aquathlon", "دون رخصة — تصريح يوم واحد"]),
+                    Row(["Community / Open", "8+", "Try-a-tri · Aquathlon", "No license needed: day pass"],
+                        ["مجتمعي / مفتوح", "8+", "Try-a-tri · Aquathlon", "دون رخصة: تصريح يوم واحد"]),
                 ]),
 
             Block(4, BlockType.Cards, variant: "pathway",
@@ -211,27 +207,23 @@ public static class SeedPages
                         EyebrowEn: "01", EyebrowAr: "01",
                         TitleEn: "Community", TitleAr: "المجتمع",
                         BodyEn: "Try-a-tri, aquathlons, club sessions",
-                        BodyAr: "سباقات تجريبية وأكواثلون وحصص الأندية",
-                        Color: "run"),
+                        BodyAr: "سباقات تجريبية وأكواثلون وحصص الأندية"),
                     new BlockItem(
                         EyebrowEn: "02", EyebrowAr: "02",
                         TitleEn: "Regional", TitleAr: "المناطق",
                         BodyEn: "Regional championships and rankings",
-                        BodyAr: "بطولات المناطق والتصنيف",
-                        Color: "swim"),
+                        BodyAr: "بطولات المناطق والتصنيف"),
                     new BlockItem(
                         EyebrowEn: "03", EyebrowAr: "03",
                         TitleEn: "National series", TitleAr: "السلسلة الوطنية",
                         BodyEn: "Series rounds, national titles, elite standard",
-                        BodyAr: "جولات السلسلة والألقاب الوطنية ومعيار النخبة",
-                        Color: "bike"),
+                        BodyAr: "جولات السلسلة والألقاب الوطنية ومعيار النخبة"),
                     new BlockItem(
                         EyebrowEn: "04", EyebrowAr: "04",
                         TitleEn: "National team", TitleAr: "المنتخب الوطني",
                         // Card bodies are HTML, so the ampersand is written as an entity.
                         BodyEn: "Asia Triathlon &amp; World Triathlon starts",
-                        BodyAr: "مشاركات آسيوية ودولية",
-                        Color: "bike"),
+                        BodyAr: "مشاركات آسيوية ودولية"),
                 ]),
 
             Block(5, BlockType.Clubs, anchor: "clubs",
@@ -277,19 +269,18 @@ public static class SeedPages
                         TitleEn: "info@triathlon.sa", TitleAr: "info@triathlon.sa",
                         BodyEn: "General enquiries, media requests and club affiliation.",
                         BodyAr: "الاستفسارات العامة وطلبات الإعلام وانتساب الأندية.",
-                        Href: "mailto:info@triathlon.sa", Color: "swim"),
+                        Href: "mailto:info@triathlon.sa"),
                     new BlockItem(
                         EyebrowEn: "Social", EyebrowAr: "حسابات التواصل",
                         TitleEn: "@triathlonksa", TitleAr: "@triathlonksa",
-                        BodyEn: "Instagram, X and TikTok — start lists, race photos and results.",
-                        BodyAr: "إنستغرام وإكس وتيك توك — قوائم الانطلاق وصور السباقات والنتائج.",
-                        Href: "https://x.com/triathlonksa", Color: "bike"),
+                        BodyEn: "Instagram, X and TikTok: start lists, race photos and results.",
+                        BodyAr: "إنستغرام وإكس وتيك توك: قوائم الانطلاق وصور السباقات والنتائج.",
+                        Href: "https://x.com/triathlonksa"),
                     new BlockItem(
                         EyebrowEn: "Address", EyebrowAr: "العنوان",
                         TitleEn: "Headquarters", TitleAr: "المقر الرئيسي",
                         BodyEn: "Prince Faisal Bin Fahad Olympic Complex, Riyadh, Kingdom of Saudi Arabia.",
-                        BodyAr: "مجمع الأمير فيصل بن فهد الأولمبي، الرياض، المملكة العربية السعودية.",
-                        Color: "run"),
+                        BodyAr: "مجمع الأمير فيصل بن فهد الأولمبي، الرياض، المملكة العربية السعودية."),
                 ]),
 
             Block(3, BlockType.Cta,
@@ -339,14 +330,14 @@ public static class SeedPages
                         EyebrowEn: "Bike", EyebrowAr: "الدراجة",
                         BodyEn: """
                             <ul class="list-check">
-                            <li>Helmet fastened before touching the bike — always</li>
+                            <li>Helmet fastened before touching the bike, always</li>
                             <li>Drafting legal for Elite; 10m draft zone for Age Group</li>
                             <li>Blue card: drafting penalty served in the penalty box</li>
                             </ul>
                             """,
                         BodyAr: """
                             <ul class="list-check">
-                            <li>اربط الخوذة قبل لمس الدراجة — دائماً</li>
+                            <li>اربط الخوذة قبل لمس الدراجة، دائماً</li>
                             <li>التلاحق مسموح للنخبة؛ ومنطقة 10 أمتار للفئات العمرية</li>
                             <li>البطاقة الزرقاء: عقوبة تلاحق تُقضى في منطقة الجزاء</li>
                             </ul>
@@ -371,9 +362,9 @@ public static class SeedPages
                         Color: "run"),
                 ]),
 
-            Block(2, BlockType.RichText,
-                body: ("""<p class="muted">This summary is informational — the downloadable Competition Rules are the authoritative text.</p>""",
-                       """<p class="muted">هذا الملخص للاطلاع فقط — قوانين المنافسات القابلة للتحميل هي النص المعتمد.</p>""")),
+            Block(2, BlockType.RichText, variant: "note",
+                body: ("""<p class="muted">This summary is informational. The downloadable Competition Rules are the authoritative text.</p>""",
+                       """<p class="muted">هذا الملخص للاطلاع فقط. وقوانين المنافسات القابلة للتحميل هي النص المعتمد.</p>""")),
         ]);
 
         return page;
@@ -398,20 +389,20 @@ public static class SeedPages
                     new BlockItem(
                         EyebrowEn: "Swim · 750m", EyebrowAr: "سباحة · 750م",
                         TitleEn: "Comfort before speed", TitleAr: "الارتياح قبل السرعة",
-                        BodyEn: "Two pool sessions a week. Master breathing and sighting first — open-water calm wins more time than a faster stroke. Join a club session before your first sea swim.",
-                        BodyAr: "حصتان في المسبح أسبوعياً. أتقن التنفس والنظر للأمام أولاً — فالهدوء في المياه المفتوحة يكسبك وقتاً أكثر من سرعة الضربات. انضم لحصة نادٍ قبل أول سباحة بحرية.",
+                        BodyEn: "Two pool sessions a week. Master breathing and sighting first; open-water calm wins more time than a faster stroke. Join a club session before your first sea swim.",
+                        BodyAr: "حصتان في المسبح أسبوعياً. أتقن التنفس والنظر للأمام أولاً، فالهدوء في المياه المفتوحة يكسبك وقتاً أكثر من سرعة الضربات. انضم لحصة نادٍ قبل أول سباحة بحرية.",
                         Color: "swim"),
                     new BlockItem(
                         EyebrowEn: "Bike · 20km", EyebrowAr: "دراجة · 20كم",
                         TitleEn: "Any bike will do", TitleAr: "أي دراجة تكفي",
-                        BodyEn: "Your first race needs a safe bike, not an expensive one. One longer weekend ride plus one short mid-week spin. Practice drinking while riding — race mornings are warm.",
-                        BodyAr: "سباقك الأول يحتاج دراجة آمنة لا مكلفة. جولة أطول في نهاية الأسبوع وأخرى قصيرة منتصفه. تدرّب على الشرب أثناء القيادة — فصباحات السباق دافئة.",
+                        BodyEn: "Your first race needs a safe bike, not an expensive one. One longer weekend ride plus one short mid-week spin. Practice drinking while riding; race mornings are warm.",
+                        BodyAr: "سباقك الأول يحتاج دراجة آمنة لا مكلفة. جولة أطول في نهاية الأسبوع وأخرى قصيرة منتصفه. تدرّب على الشرب أثناء القيادة، فصباحات السباق دافئة.",
                         Color: "bike"),
                     new BlockItem(
                         EyebrowEn: "Run · 5km", EyebrowAr: "جري · 5كم",
                         TitleEn: "Learn the brick", TitleAr: "تعلّم التمرين المركب",
-                        BodyEn: "Running off the bike feels strange — train it. Once a week, add a short 10-minute run straight after a ride. Race-day legs will thank you at T2.",
-                        BodyAr: "الجري بعد الدراجة شعور غريب — تدرّب عليه. مرة أسبوعياً أضف جرياً قصيراً لعشر دقائق مباشرة بعد الدراجة. ستشكرك ساقاك عند المنطقة الانتقالية الثانية.",
+                        BodyEn: "Running off the bike feels strange, so train it. Once a week, add a short 10-minute run straight after a ride. Race-day legs will thank you at T2.",
+                        BodyAr: "الجري بعد الدراجة شعور غريب، فتدرّب عليه. مرة أسبوعياً أضف جرياً قصيراً لعشر دقائق مباشرة بعد الدراجة. ستشكرك ساقاك عند المنطقة الانتقالية الثانية.",
                         Color: "run"),
                 ]),
 
@@ -448,17 +439,17 @@ public static class SeedPages
                 // The headline keeps the prototype's line break and gradient span; Html.Raw in
                 // _HomeHero.cshtml is what lets this markup through, for this variant only.
                 title: ("Swim. Ride. Run.<br><span class=\"grad\">Forward.</span>",
-                        "اسبح. اركب. اجرِ.<br><span class=\"grad\">نحو الأمام.</span>"),
-                body: ("The Saudi Triathlon Federation is the national home of multisport — from your first community aquathlon to the national team. Find your race, join a club, and follow the series across the Kingdom.",
-                       "الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة — من أول أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ، وتابع السلسلة في جميع مناطق المملكة."),
+                        "اسبح. اركب. اركض.<br><span class=\"grad\">نحو الأمام.</span>"),
+                body: ("The Saudi Triathlon Federation is the national home of multisport, from your first community aquathlon to the national team. Find your race, join a club, and follow the series across the Kingdom.",
+                       "الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة، من أول أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ، وتابع السلسلة في جميع مناطق المملكة."),
                 cta: (("Find your race", "اعثر على سباقك"), "events"),
-                secondary: (("Become an athlete", "كن رياضياً"), "join")),
+                secondary: (("Become an athlete", "سجّل كرياضي"), "join")),
 
             Block(2, BlockType.Cta, variant: "teaser",
                 eyebrow: ("2026–27 season", "موسم 2026–27"),
                 title: ("One season, eight cities", "موسم واحد، ثماني مدن"),
-                body: ("Follow the national series on an interactive timeline and map — from the Red Sea to the Gulf, competition and community side by side.",
-                       "تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية — من البحر الأحمر إلى الخليج، بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب."),
+                body: ("Follow the national series on an interactive timeline and map, from the Red Sea to the Gulf, with competition and community side by side.",
+                       "تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية، من البحر الأحمر إلى الخليج، بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب."),
                 cta: (("Explore the season", "استكشف الموسم"), "events/timeline")),
 
             Block(3, BlockType.Cards, variant: "grid-4",
@@ -469,8 +460,8 @@ public static class SeedPages
                     new BlockItem(
                         EyebrowEn: "Athletes", EyebrowAr: "الرياضيون",
                         TitleEn: "Join the federation", TitleAr: "الانضمام إلى الاتحاد",
-                        BodyEn: "Registration steps, categories, clubs — and the pathway to the national team.",
-                        BodyAr: "خطوات التسجيل والفئات والأندية — والمسار نحو المنتخب الوطني.",
+                        BodyEn: "Registration steps, categories, clubs, and the pathway to the national team.",
+                        BodyAr: "خطوات التسجيل والفئات والأندية، والمسار نحو المنتخب الوطني.",
                         Href: "join"),
                     new BlockItem(
                         EyebrowEn: "Beginners", EyebrowAr: "المبتدئون",
@@ -481,8 +472,8 @@ public static class SeedPages
                     new BlockItem(
                         EyebrowEn: "Officials & organizers", EyebrowAr: "الحكام والمنظمون",
                         TitleEn: "Rules & regulations", TitleAr: "اللوائح والأنظمة",
-                        BodyEn: "Competition rules, organizer manuals and officiating handbooks — all downloadable.",
-                        BodyAr: "قوانين المنافسات وأدلة المنظمين والحكام — جميعها قابلة للتحميل.",
+                        BodyEn: "Competition rules, organizer manuals and officiating handbooks, all downloadable.",
+                        BodyAr: "قوانين المنافسات وأدلة المنظمين والحكام، جميعها قابلة للتحميل.",
                         Href: "rules"),
                     new BlockItem(
                         EyebrowEn: "Media & partners", EyebrowAr: "الإعلام والشركاء",
@@ -494,8 +485,8 @@ public static class SeedPages
 
             Block(4, BlockType.Cta,
                 title: ("Ready for your first start line?", "جاهز لأول خط انطلاق؟"),
-                body: ("No racing background needed. Community events welcome every level — and every distance has a first-timer wave.",
-                       "لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات — ولكل مسافة دفعة مخصصة للمبتدئين."),
+                body: ("No racing background needed. Community events welcome every level, and every distance has a first-timer wave.",
+                       "لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات، ولكل مسافة دفعة مخصصة للمبتدئين."),
                 cta: (("Register online", "سجّل إلكترونياً"), "register"),
                 secondary: (("Training guide", "دليل التدريب"), "training")),
         ]);

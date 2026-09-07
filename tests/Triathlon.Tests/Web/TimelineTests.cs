@@ -27,6 +27,12 @@ public sealed class TimelineTests(WebAppFixture app)
         Assert.Contains("class=\"marker m-competition\"", html, StringComparison.Ordinal);
         Assert.Contains(marker, html, StringComparison.Ordinal);
         Assert.Contains("js/timeline.js", html, StringComparison.Ordinal);
+        // The map answers the scroll position, and says so: timeline.js writes the city into a
+        // live region whose sentence the server supplies in the page's own culture.
+        Assert.Contains("id=\"timelineLive\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-live=\"polite\"", html, StringComparison.Ordinal);
+        // 26 user units of transparent circle: the pointer target SC 2.5.8 asks for.
+        Assert.Contains("class=\"hit\"", html, StringComparison.Ordinal);
         Assert.False(Markup.HasInlineScript(html));
     }
 
