@@ -732,7 +732,7 @@ select.input{appearance:none}
 .faq > div > :last-child{margin-bottom:0}
 
 /* Rich-text block: editor prose, styled so no class names are needed in the editor. */
-.rich-text{max-width:76ch}
+.rich-text{max-width:76ch;overflow-x:auto}
 .rich-text > :first-child{margin-top:0}
 .rich-text > :last-child{margin-bottom:0}
 .rich-text h2{font-size:clamp(1.4rem,2.4vw,1.9rem);margin:1.6em 0 .5em}

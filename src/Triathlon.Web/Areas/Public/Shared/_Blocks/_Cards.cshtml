@@ -11,17 +11,32 @@
 *@
 @{
     var items = Model.Items;
-    var variant = Model.Variant ?? "grid-3";
+    // Variant is a free string edited through the dashboard; only these four map to a known
+    // grid, everything else falls back to the default rather than reaching the class attribute.
+    var variant = Model.Variant switch
+    {
+        "grid-4" => "grid-4",
+        "pathway" => "pathway",
+        "muted" => "muted",
+        _ => "grid-3",
+    };
     var isPathway = variant == "pathway";
     var isMuted = variant == "muted";
     var gridClass = isPathway ? "pathway reveal" : $"grid {(isMuted ? "grid-3" : variant)}";
 
     // The card's contents are the same whether it is a link or not, and only the element differs.
-    void CardBody(string? eyebrow, string? title, string? body)
+    void CardBody(string? eyebrow, string? title, string? body, string? accentVar)
     {
         if (eyebrow is not null)
         {
-            <span class="eyebrow">@eyebrow</span>
+            if (accentVar is not null)
+            {
+                <span class="eyebrow" style="color:@accentVar">@eyebrow</span>
+            }
+            else
+            {
+                <span class="eyebrow">@eyebrow</span>
+            }
         }
         if (title is not null)
         {
@@ -29,7 +44,14 @@
         }
         if (body is not null)
         {
-            @Html.Raw(body)
+            if (PublicText.IsBlockHtml(body))
+            {
+                @Html.Raw(body)
+            }
+            else
+            {
+                <p class="muted" style="font-size:.92rem">@Html.Raw(body)</p>
+            }
         }
         if (isMuted)
         {
@@ -49,10 +71,12 @@
                     ? Bi(item.BodyEn ?? string.Empty, item.BodyAr ?? string.Empty)
                     : null;
 
+                var itemAccent = PublicText.AccentVar(item.Color);
+
                 if (isPathway)
                 {
                     <div class="path-node">
-                        <span class="path-dot" style="--pn-c:var(--@(item.Color ?? "swim"))">@Digits(eyebrow ?? string.Empty)</span>
+                        <span class="path-dot" style="--pn-c:@(itemAccent ?? "var(--swim)")">@Digits(eyebrow ?? string.Empty)</span>
                         <h4>@title</h4>
                         @if (body is not null)
                         {
@@ -62,16 +86,16 @@
                 }
                 else
                 {
-                    var accent = item.Color is { } color ? $"border-top:3px solid var(--{color})" : null;
+                    var accent = itemAccent is not null ? $"border-top:3px solid {itemAccent}" : null;
                     var style = isMuted ? "opacity:.75;" + accent : accent;
 
                     if (item.Href is { } href)
                     {
-                        <a class="card hover reveal" style="@style" href="@PublicText.Href(href)">@{ CardBody(eyebrow, title, body); }</a>
+                        <a class="card hover reveal" style="@style" href="@PublicText.Href(href)">@{ CardBody(eyebrow, title, body, itemAccent); }</a>
                     }
                     else
                     {
-                        <div class="card reveal" style="@style">@{ CardBody(eyebrow, title, body); }</div>
+                        <div class="card reveal" style="@style">@{ CardBody(eyebrow, title, body, itemAccent); }</div>
                     }
                 }
             }

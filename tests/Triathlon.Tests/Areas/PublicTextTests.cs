@@ -55,4 +55,27 @@ public sealed class PublicTextTests
         Assert.Equal("mailto:info@triathlon.sa", Under("ar", () => PublicText.Href("mailto:info@triathlon.sa")));
         Assert.Equal("#clubs", Under("en", () => PublicText.Href("#clubs")));
     }
+
+    [Fact]
+    public void IsBlockHtml_recognises_block_level_tags_and_nothing_else()
+    {
+        Assert.True(PublicText.IsBlockHtml("<p>Some copy.</p>"));
+        Assert.True(PublicText.IsBlockHtml("<ul class=\"list-check\"><li>One</li></ul>"));
+        Assert.True(PublicText.IsBlockHtml("  \n  <div>Indented</div>"));
+        Assert.False(PublicText.IsBlockHtml("Just a plain sentence."));
+        Assert.False(PublicText.IsBlockHtml(null));
+        Assert.False(PublicText.IsBlockHtml(""));
+        Assert.False(PublicText.IsBlockHtml("   "));
+    }
+
+    [Fact]
+    public void AccentVar_whitelists_the_three_discipline_colours()
+    {
+        Assert.Equal("var(--swim)", PublicText.AccentVar("swim"));
+        Assert.Equal("var(--bike)", PublicText.AccentVar("bike"));
+        Assert.Equal("var(--run)", PublicText.AccentVar("Run"));
+        Assert.Null(PublicText.AccentVar("x);background:url(a)"));
+        Assert.Null(PublicText.AccentVar(null));
+        Assert.Null(PublicText.AccentVar(""));
+    }
 }

@@ -51,6 +51,19 @@ public sealed class ContentServiceTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task Each_navigation_location_is_numbered_from_one()
+    {
+        // Each of the three locations restarts its SortOrder at 1 rather than sharing one counter
+        // across Header, FooterCompete and FooterInvolved.
+        await using var scope = app.Services.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+
+        var footerCompete = await content.NavigationAsync(NavLocation.FooterCompete, CancellationToken.None);
+
+        Assert.Equal([1, 2, 3, 4], footerCompete.Select(n => n.SortOrder));
+    }
+
+    [Fact]
     public async Task News_lists_published_posts_newest_first_and_hides_future_ones()
     {
         await using var scope = app.Services.CreateAsyncScope();

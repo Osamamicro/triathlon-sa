@@ -31,12 +31,20 @@ public static class SeedPages
     {
         if (await db.NavItems.AnyAsync(ct)) return;
 
-        var order = 0;
-        NavItem N(NavLocation location, string href, (string En, string Ar) label) => new()
+        // Each location gets its own counter, so FooterCompete and FooterInvolved both start at 1
+        // rather than continuing the Header count.
+        var order = new Dictionary<NavLocation, int>();
+        NavItem N(NavLocation location, string href, (string En, string Ar) label)
         {
-            Location = location, Href = href, LabelEn = label.En, LabelAr = label.Ar,
-            SortOrder = ++order, IsPublished = true,
-        };
+            order.TryGetValue(location, out var next);
+            order[location] = ++next;
+
+            return new()
+            {
+                Location = location, Href = href, LabelEn = label.En, LabelAr = label.Ar,
+                SortOrder = next, IsPublished = true,
+            };
+        }
 
         db.NavItems.AddRange(
             // Header. Sections shipping in later weeks are already listed; they 404 until they land.

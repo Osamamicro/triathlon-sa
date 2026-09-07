@@ -107,4 +107,43 @@ public static class PublicText
         !string.IsNullOrWhiteSpace(url)
         && Uri.TryCreate(url, UriKind.Absolute, out var parsed)
         && (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps);
+
+    private static readonly string[] BlockTags = ["<p", "<ul", "<ol", "<table", "<div", "<h"];
+
+    /// <summary>
+    /// Whether an editor-written body already opens with block-level HTML (a paragraph, list,
+    /// table, div or heading) rather than being bare text that needs a wrapper to pick up any
+    /// styling at all. Leading whitespace is tolerated. Null or blank is "no body", not block HTML.
+    /// </summary>
+    public static bool IsBlockHtml(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return false;
+        }
+
+        var trimmed = body.AsSpan().TrimStart();
+        foreach (var tag in BlockTags)
+        {
+            if (trimmed.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Maps a <c>BlockItem.Color</c> value ("swim" | "bike" | "run", case-insensitive) to the CSS
+    /// custom property that names it, or <c>null</c> for anything else — an editor-written value
+    /// never reaches a <c>style</c> attribute unescaped.
+    /// </summary>
+    public static string? AccentVar(string? color) => color?.Trim().ToLowerInvariant() switch
+    {
+        "swim" => "var(--swim)",
+        "bike" => "var(--bike)",
+        "run" => "var(--run)",
+        _ => null,
+    };
 }
