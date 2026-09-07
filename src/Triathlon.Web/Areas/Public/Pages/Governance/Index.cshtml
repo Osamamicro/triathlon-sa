@@ -1,0 +1,67 @@
+@page
+@model IndexModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Accountability", "المساءلة")</span>
+      <h1>@Bi("Governance & Transparency", "الحوكمة والشفافية")</h1>
+      <p class="hero-lead">@Bi("How the federation is governed, and every document we publish — annual reports, audited financials and board minutes — organized by category and year, free to download.", "كيف يُدار الاتحاد، وكل ما ننشره من مستندات — التقارير السنوية والقوائم المالية المدققة ومحاضر مجلس الإدارة — مصنفةً حسب الفئة والسنة ومتاحة للتحميل مجاناً.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">@Bi("Structure", "الهيكل")</span>
+          <h2>@Bi("How we are governed", "كيف نُدار")</h2>
+        </div>
+      </div>
+      @if (Model.Committees.Count > 0)
+      {
+        <div class="grid grid-4">
+          @foreach (var committee in Model.Committees)
+          {
+            <div class="card reveal">
+              <span class="eyebrow">@Bi(committee.KindEn, committee.KindAr)</span>
+              <h3>@Bi(committee.NameEn, committee.NameAr)</h3>
+              <p class="muted" style="font-size:.92rem">@Bi(committee.DescriptionEn, committee.DescriptionAr)</p>
+            </div>
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("The governance structure is being published.", "يجري نشر الهيكل الإداري.")</div>
+      }
+    </div>
+  </section>
+
+  <section class="section" id="library">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">@Bi("Documents library", "مكتبة المستندات")</span>
+          <h2>@Bi("Recently published", "أحدث المنشورات")</h2>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "governance/documents")">@Bi("Browse all documents", "تصفح جميع المستندات")</a>
+      </div>
+      @if (Model.Recent.Count > 0)
+      {
+        <div class="doc-list">
+          @foreach (var document in Model.Recent)
+          {
+            <partial name="_DocRow" model="DocRowModel.For(document)" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No documents have been published yet.", "لم تُنشر أي مستندات بعد.")</div>
+      }
+    </div>
+  </section>

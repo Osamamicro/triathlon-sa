@@ -75,6 +75,21 @@ public static class PublicText
     public static string Time(TimeOnly time) => Digits(time.ToString("HH:mm", CultureInfo.InvariantCulture));
 
     /// <summary>
+    /// A downloadable file's size the way the library lists it — one decimal in megabytes
+    /// ("4.8 MB", "0.6 MB"), which is what the prototype showed. A file too small to round to a
+    /// tenth of a megabyte would read "0.0 MB", so those are given in whole kilobytes instead.
+    /// Arabic gets Arabic-Indic digits; the unit stays Latin, as it does on every kit list.
+    /// </summary>
+    public static string FileSize(long bytes)
+    {
+        var megabytes = bytes / 1_000_000d;
+
+        return megabytes >= 0.05
+            ? Digits(megabytes.ToString("0.0", English)) + " MB"
+            : Digits((bytes / 1_000d).ToString("0", English)) + " KB";
+    }
+
+    /// <summary>
     /// Resolves an editor-written link for rendering. An absolute URL, a <c>mailto:</c> address and
     /// an in-page fragment are left exactly as they were typed; everything else is a path inside the
     /// site and gets the current culture segment, so <c>join#clubs</c> becomes <c>/en/join#clubs</c>

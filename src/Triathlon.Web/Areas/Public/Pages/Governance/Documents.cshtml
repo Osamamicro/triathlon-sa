@@ -1,0 +1,76 @@
+@page
+@using Triathlon.Web.Domain.Documents
+@model DocumentsModel
+@functions {
+    /// <summary>The filter chips' labels; longer than the meta cells' codes, as the prototype had them.</summary>
+    private static (string En, string Ar) FilterLabel(DocumentCategory category) => category switch
+    {
+        DocumentCategory.Governance => ("Governance", "الحوكمة"),
+        DocumentCategory.Finance => ("Financial", "المالية"),
+        DocumentCategory.Minutes => ("Board minutes", "محاضر المجلس"),
+        _ => (category.ToString(), category.ToString()),
+    };
+}
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var categories = new[] { DocumentCategory.Governance, DocumentCategory.Finance, DocumentCategory.Minutes };
+    var total = Model.Facets.Categories.Values.Sum();
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Documents library", "مكتبة المستندات")</span>
+      <h1>@Bi("Published documents", "المستندات المنشورة")</h1>
+      <p class="hero-lead">@Bi("Every document the federation publishes — annual reports, audited financial statements and board minutes — filed by category and year, and free to download.", "كل مستند ينشره الاتحاد — التقارير السنوية والقوائم المالية المدققة ومحاضر مجلس الإدارة — مصنفاً حسب الفئة والسنة ومتاحاً للتحميل مجاناً.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:14px">
+    <div class="container">
+
+      @* Filters are links and a GET form, not script: each combination is its own URL, which is
+         what makes the library shareable and cacheable. *@
+      <div class="filter-bar" role="group" aria-label="@Bi("Document filters", "عوامل تصفية المستندات")">
+        <div class="seg">
+          <a href="@DocumentsModel.FilterUrl(null, Model.Year)" aria-current="@(Model.Category is null ? "page" : null)">@Bi("All", "الكل") <span class="count">@Number(total)</span></a>
+          @foreach (var category in categories)
+          {
+            var (labelEn, labelAr) = FilterLabel(category);
+            var count = Model.Facets.Categories.TryGetValue(category, out var found) ? found : 0;
+            <a href="@DocumentsModel.FilterUrl(category, Model.Year)" aria-current="@(Model.Category == category ? "page" : null)">@Bi(labelEn, labelAr) <span class="count">@Number(count)</span></a>
+          }
+        </div>
+        <form method="get" action="@PublicCulture.Url(culture, "governance/documents")">
+          @if (Model.CategoryKey is { } categoryKey)
+          {
+            <input type="hidden" name="category" value="@categoryKey">
+          }
+          <select name="year" class="select" data-autosubmit aria-label="@Bi("Year", "السنة")">
+            <option value="">@Bi("All years", "كل السنوات")</option>
+            @foreach (var year in Model.Years)
+            {
+              <option value="@year" selected="@(year == Model.Year)">@Digits(year.ToString(CultureInfo.InvariantCulture))</option>
+            }
+          </select>
+          @* Without script the select cannot submit itself, so a no-JS visitor gets a button. *@
+          <noscript><button class="btn btn-ghost btn-sm" type="submit">@Bi("Apply", "تطبيق")</button></noscript>
+        </form>
+      </div>
+
+      @if (Model.Documents.Count > 0)
+      {
+        <div class="doc-list">
+          @foreach (var document in Model.Documents)
+          {
+            <partial name="_DocRow" model="DocRowModel.For(document)" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No documents match this filter.", "لا توجد مستندات مطابقة.")</div>
+      }
+
+    </div>
+  </section>

@@ -1,0 +1,6 @@
+@page "/{slug}"
+@model ContentModel
+@*
+    A CMS page is nothing but its blocks, in the order an editor arranged them.
+*@
+<partial name="_Blocks/_Blocks" model="Model.CmsPage.Blocks" />

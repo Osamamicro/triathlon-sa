@@ -1,0 +1,15 @@
+@using Triathlon.Web.Domain.Content
+@model NewsPost
+@*
+    One news post as a card. The newsroom listing and the home page's news band render the same
+    card, so a change to it lands on both.
+*@
+<a class="card hover reveal" href="@PublicCulture.Url(Culture, "news/" + Model.Slug)">
+  <span class="eyebrow">@LongDate(Model.PublishedOn)</span>
+  <h3>@Bi(Model.TitleEn, Model.TitleAr)</h3>
+  <p class="muted" style="font-size:.92rem">@Bi(Model.SummaryEn, Model.SummaryAr)</p>
+  <div class="card-cta">
+    <span>@Bi("Read the story", "اقرأ الخبر")</span>
+    <span aria-hidden="true" class="cta-arrow">→</span>
+  </div>
+</a>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Triathlon.Web.Domain.Content;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Stats;
 using Triathlon.Web.Infrastructure;
@@ -14,22 +15,30 @@ namespace Triathlon.Web.Areas.Public.Pages;
 /// gone, which is what lets the page keep a <c>script-src 'self'</c> policy with no inline script.
 /// The stat band is the four KPIs flagged <c>ShowOnHome</c>, in their <c>HomeOrder</c>.
 /// <para>
-/// Cached under the <c>Home</c>, <c>Events</c> and <c>Stats</c> tags, so publishing the page's own
-/// content, an event or a KPI drops it immediately rather than leaving the site a minute behind
-/// the editor.
+/// Cached under the <c>Home</c>, <c>Events</c>, <c>Stats</c> and <c>News</c> tags, so publishing
+/// the page's own content, an event, a KPI or an article drops it immediately rather than leaving
+/// the site a minute behind the editor.
 /// </para>
 /// </summary>
-[OutputCache(PolicyName = OutputCacheSetup.PublicPolicy, Tags = [CacheTags.Home, CacheTags.Events, CacheTags.Stats])]
-public sealed class IndexModel(IStringLocalizer<Shared> localizer, EventsService events, StatsService stats) : PageModel
+[OutputCache(
+    PolicyName = OutputCacheSetup.PublicPolicy,
+    Tags = [CacheTags.Home, CacheTags.Events, CacheTags.Stats, CacheTags.News])]
+public sealed class IndexModel(IStringLocalizer<Shared> localizer, EventsService events, StatsService stats, NewsService news) : PageModel
 {
+    /// <summary>How many articles the home page's news band shows.</summary>
+    private const int LatestNews = 3;
+
     public IReadOnlyList<Event> Upcoming { get; private set; } = [];
 
     public IReadOnlyList<Kpi> HomeKpis { get; private set; } = [];
+
+    public IReadOnlyList<NewsPost> Latest { get; private set; } = [];
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         Upcoming = await events.UpcomingAsync(null, null, 3, ct);
         HomeKpis = await stats.HomeKpisAsync(ct);
+        Latest = await news.LatestAsync(LatestNews, ct);
 
         ViewData["Title"] = localizer["HomeTitle"].Value;
         ViewData["today"] = events.Today;

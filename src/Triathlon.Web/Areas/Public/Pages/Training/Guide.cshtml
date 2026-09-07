@@ -1,0 +1,53 @@
+@page "/training/{slug}"
+@model GuideModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var guide = Model.Guide;
+}
+
+<article>
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi(guide.LevelEn, guide.LevelAr)</span>
+      <h1>@Bi(guide.TitleEn, guide.TitleAr)</h1>
+      <p class="hero-lead">@Bi(guide.SummaryEn, guide.SummaryAr)</p>
+    </div>
+  </section>
+
+  @foreach (var chapter in guide.Chapters)
+  {
+    <section class="section" style="padding-top:14px">
+      <div class="container rich-text">
+        <h2>@Bi(chapter.TitleEn, chapter.TitleAr)</h2>
+        @* Chapter bodies are editor-written HTML; the Week 4 dashboard sanitises them on save. *@
+        @Html.Raw(Bi(chapter.BodyEn, chapter.BodyAr))
+      </div>
+    </section>
+  }
+
+  @if (guide.FilePath is not null)
+  {
+    <section class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="eyebrow">@Bi("Download", "تحميل")</span>
+            <h2>@Bi("Take the plan with you", "خذ الخطة معك")</h2>
+          </div>
+        </div>
+        <div class="doc-list">
+          <partial name="_DocRow" model="DocRowModel.For(guide)" />
+        </div>
+      </div>
+    </section>
+  }
+</article>
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "training")">@Bi("All training guides", "جميع أدلة التدريب")</a>
+    </div>
+  </section>
+
+  <partial name="_Blocks/_Blocks" model="Model.Trailing" />

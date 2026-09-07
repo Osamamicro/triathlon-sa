@@ -1,0 +1,87 @@
+@page
+@model IndexModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var lead = Model.Published.Count > 0 ? Model.Published[0] : null;
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      @if (lead is not null)
+      {
+        <span class="eyebrow">@Bi(lead.LevelEn, lead.LevelAr)</span>
+      }
+      <h1>@Bi("Training Guide", "دليل التدريب")</h1>
+      <p class="hero-lead">@Bi("From zero to your first sprint triathlon in 12 weeks. Built by federation coaches as a living reference — more guides will be added over time.", "من الصفر إلى أول ترايثلون قصير خلال 12 أسبوعاً. أعدّه مدربو الاتحاد كمرجع متجدد — وستُضاف أدلة أخرى تباعاً.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <span class="eyebrow">@Bi("Available now", "متاح الآن")</span>
+          <h2>@Bi("Guides you can read today", "أدلة يمكنك قراءتها اليوم")</h2>
+        </div>
+      </div>
+
+      @if (Model.Published.Count > 0)
+      {
+        <div class="grid grid-3">
+          @foreach (var guide in Model.Published)
+          {
+            <a class="card hover reveal" href="@PublicCulture.Url(culture, "training/" + guide.Slug)" style="border-top:3px solid var(--bike)">
+              <span class="eyebrow" style="color:var(--bike)">@Bi(guide.LevelEn, guide.LevelAr)</span>
+              <h3>@Bi(guide.TitleEn, guide.TitleAr)</h3>
+              <p class="muted" style="font-size:.92rem">@Bi(guide.SummaryEn, guide.SummaryAr)</p>
+              <div class="card-cta">
+                <span>@Bi("Read the guide", "اقرأ الدليل")</span>
+                <span aria-hidden="true" class="cta-arrow">→</span>
+              </div>
+            </a>
+          }
+        </div>
+
+        @if (Model.Published.Any(g => g.FilePath is not null))
+        {
+          <div class="doc-list" style="margin-top:20px">
+            @foreach (var guide in Model.Published.Where(g => g.FilePath is not null))
+            {
+              <partial name="_DocRow" model="DocRowModel.For(guide)" />
+            }
+          </div>
+        }
+      }
+      else
+      {
+        <div class="empty-note">@Bi("The first training guide is being written.", "يجري إعداد أول دليل تدريبي.")</div>
+      }
+    </div>
+  </section>
+
+  @if (Model.InPreparation.Count > 0)
+  {
+    <section class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <div>
+            <span class="eyebrow">@Bi("Roadmap", "خارطة الطريق")</span>
+            <h2>@Bi("More guides on the way", "أدلة إضافية قادمة")</h2>
+          </div>
+        </div>
+        <div class="grid grid-3">
+          @foreach (var guide in Model.InPreparation)
+          {
+            <div class="card reveal" style="opacity:.75">
+              <span class="chip">@Bi("In preparation", "قيد الإعداد")</span>
+              <h3 style="margin-top:12px">@Bi(guide.TitleEn, guide.TitleAr)</h3>
+              <p class="muted" style="font-size:.9rem;margin:0">@Bi(guide.SummaryEn, guide.SummaryAr)</p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <partial name="_Blocks/_Blocks" model="Model.Trailing" />
