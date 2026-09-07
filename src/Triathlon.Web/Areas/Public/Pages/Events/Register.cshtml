@@ -62,7 +62,8 @@
                 <select class="input" id="category" name="category" required>
                   @foreach (var category in ev.CategoryList)
                   {
-                    <option value="@category" selected="@(Model.Value("category") == category)">@category</option>
+                    var label = EventCategories.Label(category);
+                    <option value="@category" selected="@(Model.Value("category") == category)">@Bi(label.En, label.Ar)</option>
                   }
                 </select>
               }

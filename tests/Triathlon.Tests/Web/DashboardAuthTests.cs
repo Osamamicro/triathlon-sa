@@ -23,6 +23,19 @@ public sealed class DashboardAuthTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task Login_email_field_carries_an_explicit_type_so_the_stylesheet_matches_it()
+    {
+        // dashboard.css styles the email field with the attribute selector
+        // `input[type="email"]` — InputText emits no `type` attribute at all unless one is passed
+        // explicitly, so without it the field renders as an unstyled, browser-default text box.
+        using var client = app.CreateClient();
+
+        var html = await client.GetStringAsync("/dashboard/login");
+
+        Assert.Contains("type=\"email\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Dashboard_redirects_anonymous_to_login()
     {
         using var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });

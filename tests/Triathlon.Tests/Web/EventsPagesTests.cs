@@ -168,6 +168,20 @@ public sealed class EventsPagesTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task Arabic_guest_entry_localises_the_event_categories()
+    {
+        // riyadh-sprint-2026 is seeded with "Elite,Age Group,Junior" (SeedEvents.cs) — raw English
+        // keys the endpoint validates against. The visible option text must be translated even
+        // though the posted value stays the English key; the athlete registration form
+        // (/ar/register) already gets this right via AthleteCategories.Arabic.
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync("/ar/events/riyadh-sprint-2026/register");
+
+        Assert.Contains(">النخبة<", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Elite<", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Category_not_offered_by_the_event_is_rejected()
     {
         // A crafted POST (or a stale option from a form the event changed under) must not be able

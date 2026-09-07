@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Triathlon.Tests.Web;
@@ -9,6 +11,24 @@ public static partial class Markup
 {
     [GeneratedRegex(@"<script\b([^>]*)>", RegexOptions.IgnoreCase)]
     private static partial Regex ScriptTag();
+
+    [GeneratedRegex(@"<h([1-6])\b", RegexOptions.IgnoreCase)]
+    private static partial Regex HeadingTag();
+
+    /// <summary>
+    /// Every <c>&lt;h1&gt;</c>-<c>&lt;h6&gt;</c> level in the document, in source order — the whole
+    /// page (header, main content and footer), which is what a heading-order audit walks. A skip is
+    /// a level more than one deeper than the heading immediately before it; a decrease is never a
+    /// violation.
+    /// </summary>
+    public static IReadOnlyList<int> HeadingLevels(string html)
+    {
+        ArgumentNullException.ThrowIfNull(html);
+
+        return HeadingTag().Matches(html)
+            .Select(m => int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture))
+            .ToArray();
+    }
 
     [GeneratedRegex(@"\bsrc\s*=", RegexOptions.IgnoreCase)]
     private static partial Regex HasSrcAttribute();

@@ -51,14 +51,41 @@ public sealed class PublicShellTests(WebAppFixture app)
     }
 
     [Fact]
-    public async Task Footer_columns_are_h3()
+    public async Task Footer_columns_are_h2()
     {
         using var client = app.CreateClient();
         var html = await client.GetStringAsync("/en");
         var footer = html[html.IndexOf("<footer", StringComparison.Ordinal)..];
 
+        // h2, not h3: a page whose only other heading is its <h1> (an event detail page has no
+        // <h2> section before the footer) would otherwise skip a level going into the footer,
+        // which is exactly the Lighthouse "heading-order" accessibility failure this guards.
         Assert.DoesNotContain("<h4", footer, StringComparison.Ordinal);
-        Assert.Contains("<h3>Compete</h3>", footer, StringComparison.Ordinal);
+        Assert.DoesNotContain("<h3", footer, StringComparison.Ordinal);
+        Assert.Contains("<h2>Compete</h2>", footer, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/en/governance/documents")]
+    [InlineData("/en/events/timeline")]
+    [InlineData("/en/register")]
+    [InlineData("/en")]
+    [InlineData("/en/events/riyadh-sprint-2026")]
+    [InlineData("/ar/governance")]
+    public async Task Heading_levels_never_skip(string path)
+    {
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync(path);
+
+        var levels = Markup.HeadingLevels(html);
+        Assert.NotEmpty(levels);
+        Assert.Equal(1, levels[0]);
+
+        for (var i = 1; i < levels.Count; i++)
+        {
+            Assert.True(levels[i] <= levels[i - 1] + 1,
+                $"{path}: heading level {levels[i]} follows {levels[i - 1]} — skips a level. Full sequence: {string.Join(", ", levels)}");
+        }
     }
 
     [Fact]

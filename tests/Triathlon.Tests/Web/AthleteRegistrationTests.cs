@@ -129,7 +129,7 @@ public sealed class AthleteRegistrationTests(WebAppFixture app)
     {
         using var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         client.DefaultRequestHeaders.Add(TestClientIp.Header, TestClientIp.Unique());
-        var born = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-3);
+        var born = DateOnly.FromDateTime(WebAppFixture.FixedNow.UtcDateTime).AddYears(-3);
 
         using var response = await Forms.PostFormAsync(client, "/en/register", "/api/register", new()
         {

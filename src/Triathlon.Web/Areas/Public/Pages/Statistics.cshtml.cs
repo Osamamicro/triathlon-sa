@@ -22,7 +22,7 @@ public sealed class StatisticsModel(StatsService stats) : PageModel
 
         ViewData["Title"] = PublicText.Bi("Federation Statistics", "إحصائيات الاتحاد");
         ViewData["MetaDescription"] = PublicText.Bi(
-            "Registered athletes, growth over time and participation by region — the Saudi Triathlon Federation's key numbers, updated as the season progresses.",
-            "الرياضيون المسجلون، والنمو عبر الزمن، والمشاركة حسب المنطقة — أهم أرقام الاتحاد السعودي للترايثلون، محدّثة مع تقدم الموسم.");
+            "Registered athletes, growth over time and participation by region. The Saudi Triathlon Federation's key numbers, updated as the season progresses.",
+            "إحصاءات الاتحاد السعودي للترايثلون تشمل الرياضيين المسجلين، والنمو عبر الزمن، والمشاركة حسب المنطقة. تُحدَّث هذه الأرقام باستمرار مع تقدم الموسم.");
     }
 }

@@ -1,8 +1,7 @@
-# Handover — start Week 1 of the platform build
+# Handover — platform build (session chain)
 
-Written 2026-09-06 at the end of the planning session. Read this first, then `CLAUDE.md`, then
-the plan. Everything below is true as of the last commit on branch `docs/platform-plan-and-agents`
-(PR #1 to `main`).
+Written 2026-09-06 at the end of the planning session; §1 and §9 are refreshed at the end of every
+stage (last: 2026-09-08, end of Weeks 2–3). Read this first, then `CLAUDE.md`, then the plan.
 
 ## 1. Where things stand
 
@@ -10,13 +9,13 @@ the plan. Everything below is true as of the last commit on branch `docs/platfor
 |---|---|
 | Static prototype (repo root) | Approved look & feel, live on GitHub Pages. Do not restyle it; it becomes the source for the Razor port. |
 | Design spec | `docs/superpowers/specs/2026-09-06-triathlon-platform-design.md` (v2) — decisions final unless the client changes hosting/DB |
-| Implementation plan | `docs/superpowers/plans/2026-09-06-triathlon-platform-ultra-plan.md` — Week 1 done; Weeks 2–3 are at task level, expand to step level before coding |
-| Production code (Week 1) | `src/Triathlon.Web` + `tests/Triathlon.Tests` on branch `feat/week-1-foundation` (PR to `main`). 60 tests green (Testcontainers Postgres). Public shell at `/en` `/ar`, dashboard at `/dashboard` (seeded SuperAdmin from `Seed:*`), `/health`, Hangfire at `/dashboard/jobs`, media store with WebP variants, staging Basic-auth, CI in `.github/workflows/ci.yml`, deploy recipe in `deploy/`. Both migration sets (`Data/Migrations/{Postgres,SqlServer}`) in sync with the model. |
+| Implementation plan | `docs/superpowers/plans/2026-09-06-triathlon-platform-ultra-plan.md` — Weeks 1–3 done. Step-level plans for the finished stage: `docs/superpowers/plans/2026-09-07-task-2.{1,2,3}-*.md`. Week 4 is at task level; expand with `superpowers:writing-plans` before coding. |
+| Production code (Weeks 1–3) | `src/Triathlon.Web` + `tests/Triathlon.Tests` (solution `Triathlon.slnx`). 215 tests green on PostgreSQL and SQL Server (CI runs both). Every public page renders from the database in `en` + `ar` via `Bi(en, ar)` (single-culture markup): home (CMS `home` page + KPIs + events + news), events list/detail/guest entry, season timeline + Kingdom map, join, athlete registration (Pending athlete + email, Turnstile when configured), training + guides, rules, governance + documents library (facets, counting downloads), statistics, news, contact, branded 404/500. Minimal APIs: `/api/timeline`, `/api/calendar.ics`, `POST /api/events/{slug}/register`, `POST /api/register`, `/documents|rules|training/{id}/download`, `/sitemap.xml`, `/robots.txt`. Security headers + CSP `script-src 'self'`, per-scope DB provider resolution, migration bundles in CI, bilingual dashboard sign-in (cookie culture). Redesign around the Federation brand (`docs/design/2026-09-07-redesign.md`). Lighthouse mobile perf 96–99 / a11y 100 on the gate pages (`docs/qa/lighthouse/2026-09-07-summary.md`). |
 | Proposals (EN) | v3 sent to the client via the agency; awaiting confirmation. Files live in `docs/proposal/` (gitignored — public repo) |
 | Proposals (AR) | **Not built yet.** Build only after the client confirms the English pair. Generator `docs/proposal/build-proposal-ar.js` exists but still carries the v1 content and navy theme; it must be reworked to the v3 brief and green theme. |
-| QA | Baseline `docs/qa/2026-09-06-home-timeline-smoke.md` (F1/F2/F3) — **all three fixed in the port**, confirmed by `docs/qa/2026-09-07-week1-public-shell.md` (0 P0/P1; 3 P2 carry-overs: mobile nav bleed-through from the prototype, footer heading skips h3, `favicon.ico` 404; unbranded 404 page). |
-| Agents | `.claude/agents/stf-*` + `/stf-polish`. Loaded automatically in a new session. |
-| Branch | `feat/week-1-foundation` (from `docs/platform-plan-and-agents`, which is `main` + this handover). Next: `feat/week-2-public-site` from `main` once the Week 1 PR merges. |
+| QA | Weeks 2–3: `docs/qa/2026-09-07-week2-3-public-site.md` (full matrix en/ar × dark/light × 390/1024/1440; 0 P0/P1 open; P2-17/18/21 deferred — see §9), design jury `docs/qa/2026-09-07-design-critique-redesign.md` (12/14 P0+P1 fixed in the polish round, the rest in the QA fix round), Lighthouse `docs/qa/lighthouse/2026-09-07-summary.md`. Week 1: `docs/qa/2026-09-07-week1-public-shell.md` (all carry-overs closed). |
+| Agents | `.claude/agents/stf-*` + `/stf-polish`. Loaded automatically in a new session. Model policy: Fable for planning/rulings/adversarial review, sonnet implementers, never haiku. |
+| Branch | `feat/week-2-public-site`: commits through `e93cee1` merged to `main` in PR #4; the perf/QA tail is in a follow-up PR (see §9). Next: `feat/week-4-dashboard` from `main` once that PR merges. |
 
 ## 2. Decisions already made (do not reopen without a reason)
 
@@ -25,7 +24,7 @@ the plan. Everything below is true as of the last commit on branch `docs/platfor
 - Bilingual = paired `*En` / `*Ar` properties; URL culture segment `/en/` `/ar/`; Gregorian dates in both.
 - Output caching by tag, evicted on publish. Hangfire for jobs. Local disk file store behind `IFileStore` (blob later).
 - Roles: `SuperAdmin`, `Editor`, `CrmOfficer`.
-- Brand: Federation green `#008250` + swirl mark (`docs/proposal/assets/stf-mark.png`, local only — ask the client for the official vector). The prototype's navy/teal palette is an exploration; Week 1 design direction re-skins to green while keeping the layout, motion and discipline colour code as secondary accents.
+- Brand: Federation green `#008C3D` (sampled from the official lock-up on triathlon.sa; the `#008250` in earlier notes was an estimate) + the official swirl mark, fetched from the live site into `src/Triathlon.Web/wwwroot/img/brand/` (raster; still ask the client for the vector). The site is a redesign of the brand's presence, not a copy of the Wix site: green is the ground and the only general accent in both themes, Tajawal is the display face in both scripts, and the swim/bike/run colours are a strict code used only where a discipline is named. Rationale and token table: `docs/design/2026-09-07-redesign.md`.
 - Scope guardrails: fixed page block types (no page builder), no payments, no live timing, email only (no SMS), staging + production as two sites on one server.
 
 ## 3. Open decisions to get from the client at kick-off
@@ -113,11 +112,30 @@ next stage in the same session only if context is still small; otherwise chain.
 > perf ≥ 85 / a11y ≥ 95 on home, events, event, governance. Then run the session chain protocol (§7).
 
 **Week 4 — Content dashboard** (Tasks 3.1–3.2):
-> Read `docs/HANDOVER.md`, `CLAUDE.md`, Week 4 of the plan. Branch `feat/week-4-dashboard`. Expand
-> 3.1–3.2 to step level, execute. Use `stf-dashboard-ux` for the Blazor/MudBlazor screens and
-> `stf-visual-qa` (logged in, LTR + RTL, 1024 + 1440). Gate: editor publishes an event with gallery
-> and results PDF, a document, a KPI change, a news post, reorders navigation; each visible on the
-> public site within 5 s; activity log shows before/after; Editor role cannot open Users. Chain (§7).
+> Read `docs/HANDOVER.md` (§1, §2, §6, §7, §9 — the Week 4 carry-overs), `CLAUDE.md`, Week 4 of
+> the plan, and skim the three Weeks 2–3 step plans for the domain/services you will edit. Branch
+> `feat/week-4-dashboard` from `main` once the Weeks 2–3 tail PR has merged (else from
+> `feat/week-2-public-site`). Expand 3.1–3.2 to step level with `superpowers:writing-plans`, execute
+> with `superpowers:subagent-driven-development` (Fable for planning/rulings/reviews, sonnet
+> implementers, never haiku). Use `stf-dashboard-ux` for the Blazor/MudBlazor screens and
+> `stf-visual-qa` (logged in, LTR + RTL, 1024 + 1440). First commits, before any screen: (1) the
+> eviction contract — every dashboard save evicts its tags (`site` for navigation/settings,
+> `page:{slug}`, `events` + `event:{slug}`, `stats`, `news`, `documents`, `rules`, `guides`,
+> `clubs`) with `page:{slug}`/`site` eviction tests; (2) `OutputCacheSetup` base policy
+> `SetVaryByQuery([])` so only pages that declare `VaryByQueryKeys` vary; (3) HTML sanitiser on
+> save for every `Html.Raw` field (block bodies, the home hero title and lead, news bodies, guide
+> chapters); (4) file-path validation on save (site-relative `/docs/` or `/media/` only) and a
+> local-redirect guard on the download endpoints; (5) `DeleteAsync` with the ADR 0001 cascade and
+> restore for Page, TrainingGuide, NewsPost, Document, RuleOrGuide, Club, Athlete, with a test
+> each; (6) a `PublicSite.ReservedSlugs` list shared by routing, sitemap and slug validation. Also
+> in scope: dashboard i18n beyond the sign-in pages; nav `aria-current` longest match; the
+> confirmation name via TempData instead of the query string; athlete dedupe by email; the
+> `PublicApi`/test-helper/category-map consolidation; footer year from `TimeProvider`; ICS
+> `DTEND`/`DTSTAMP`; the `Kpi.Source = Computed` nightly job; email via a Hangfire job; a
+> structural seed (navigation, pages, committees, KPI keys) separate from the demo seed so
+> production boots with a header. Gate: editor publishes an event with gallery and results PDF,
+> a document, a KPI change, a news post, reorders navigation; each visible on the public site
+> within 5 s; activity log shows before/after; Editor role cannot open Users. Chain (§7).
 
 **Week 5 — CRM + admin** (Tasks 4.1–4.2):
 > Read `docs/HANDOVER.md`, `CLAUDE.md`, Week 5 of the plan. Branch `feat/week-5-crm`. Expand
@@ -142,6 +160,8 @@ next stage in the same session only if context is still small; otherwise chain.
 
 - 2026-09-06 — Planning done. Commits `bd0843e`, `b85d3ab` on `docs/platform-plan-and-agents` (PR #1). No code yet.
 - 2026-09-07 — **Stage 1 (Week 1 — Foundation) done.** Branch `feat/week-1-foundation`, code head `0e6fa84` (Tasks 1.1–1.5 + two review fix waves), PR to `main` open. 80 tests green against Testcontainers Postgres; live gate verified (`/health` 200, `/en` ltr + `/ar` rtl, seeded SuperAdmin login → `/dashboard`, Hangfire `/dashboard/jobs` admin-only, WebP variants, CI file, both migration sets in sync). QA: `docs/qa/2026-09-07-week1-public-shell.md` (F1/F2/F3 fixed). Not done: staging deployment (no server yet). Carried into Weeks 2–3: public 404 page, single-culture server markup (`@Bi(en, ar)`), bilingual login page before client review 1, SQL Server Testcontainers CI job, `site.js` innerHTML hardening, soft-delete cascade decision, migration bundles in CI, security headers + `AllowedHosts`, QA N2/N3, dashboard i18n in Week 4.
+
+- 2026-09-08 — **Stage 2 (Weeks 2–3 — Public website) done.** Branch `feat/week-2-public-site`; commits through `e93cee1` merged in PR #4; the perf/QA tail (`4bd2812..f13e3fe`, message-rewritten, no trailers) goes to `main` in PR #5 (https://github.com/Osamamicro/triathlon-sa/pull/5). 215 tests green on PostgreSQL and SQL Server; both migration sets in sync (`Events`, `Documents`, `Content`, `Statistics`); Lighthouse mobile perf 96–99 / a11y 100 on home, events, event, governance in both cultures; QA matrix 0 P0/P1 open. Gate met per the whole-branch final review. Decisions recorded in the three step plans (2.1 §Decisions 1–13, 2.2 §Decisions 1–9) plus: full brand redesign instead of a token re-skin (user request); forms live on uncached pages and POST to minimal APIs; invalid posts round-trip via TempData (`FormRoundTrip`); DB provider resolved per scope; JSON-LD emitted through one `Html.Raw` with `<` escaped and `Markup.HasInlineScript` as the CSP test contract; `Kpi.HomeOrder`; `EventCategories` display labels; ADR 0001 soft-delete cascade; integration tests run on a pinned clock (`WebAppFixture.FixedNow` = 2026-09-07 09:00 Riyadh). Carried into Week 4 (in the §8 prompt): eviction contract + tests, base cache policy `SetVaryByQuery([])`, HTML sanitiser on save, file-path validation + local-redirect guard, `DeleteAsync` cascades for the new aggregates, reserved slugs, dashboard i18n, `aria-current` longest match, TempData for the confirmation name, athlete dedupe, `PublicApi` consolidation, footer year via `TimeProvider`, ICS `DTEND`, computed KPIs job, email via Hangfire, licence uniqueness (Week 5), structural vs demo seed split, featured-event layout (QA P2-18). Ask the client for review 1: board member names/terms (P2-17), contact channels — phone, hours, form (P2-21), Cloudflare Turnstile keys (go-live prerequisite: without them registration mail is rate-limited only), brand vector + photography, staging host/`AllowedHosts`/proxy answer, SMTP credentials, real club list and content (production runs with `SeedContent=false`; staging for review 1 must run with `Database__SeedContent=true`). Not done: staging deployment (no host yet).
 
 ## 10. After Week 1
 

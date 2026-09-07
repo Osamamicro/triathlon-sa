@@ -33,13 +33,16 @@
                      by it, so it is raised for legibility rather than to 3:1 (measured on
                      --surface: 1.54 -> 1.99 dark, 1.37 -> 1.63 light) and the light theme gets a
                      tinted shadow so a card is bounded by more than a 1.11:1 tone step.
-       --line-strong dividers that structure a block: the timing board's cells, the leg strip's
-                     gaps, a table head (2.44 dark, 2.06 light).
+       --line-strong the boundary of anything that identifies a block of content or a form field —
+                     cards, doc rows, inputs/selects, stat tiles, timeline cards, table borders —
+                     plus dividers that structure a block: the timing board's cells, the leg
+                     strip's gaps, a table head. Raised to 3.13:1 dark / 3.12:1 light on --surface,
+                     which is what 1.4.11 asks (previously 2.44 dark / 2.06 light — under 3:1).
        --edge        every user-interface component: inputs, selects, segmented controls, the
                      ghost button, the header pills, the download affordance. Measured 3.13:1
                      dark and 3.12:1 light on --surface, which is what 1.4.11 asks. */
   --line:rgba(160,214,184,.28);
-  --line-strong:rgba(160,214,184,.36);
+  --line-strong:rgba(160,214,184,.46);
   --edge:rgba(160,214,184,.46);
 
   /* ---- ink ---- */
@@ -107,7 +110,7 @@
   --surface:#FFFFFF;
   --surface-2:#F5F9F6;
   --line:rgba(10,45,26,.24);
-  --line-strong:rgba(10,45,26,.34);
+  --line-strong:rgba(10,45,26,.50);
   --edge:rgba(10,45,26,.50);
 
   --ink:#0A1D13;
@@ -428,7 +431,7 @@ html[dir="rtl"] .hero-course .course-marks text{
 /* ---------- cards ---------- */
 .card{
   background:var(--surface);
-  border:1px solid var(--line);
+  border:1px solid var(--line-strong);
   border-radius:var(--radius);
   padding:24px;
   transition:transform .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease);
@@ -473,7 +476,7 @@ html[lang="ar"] .chip{letter-spacing:0;font-size:.78rem;text-transform:none;font
    The 1px grid gap paints through as the divider at any column count. */
 .stat-band{
   display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--line-strong);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:var(--line-strong);border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden;
 }
 @media (max-width:980px){.stat-band{grid-template-columns:repeat(2,1fr)}}
 /* the statistics page's ten-tile band */
@@ -662,7 +665,7 @@ html[lang="ar"] .map-legend,html[lang="ar"] .map-caption{font-family:var(--body)
 .doc-list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
 .doc-row{
   display:flex;align-items:center;gap:18px;padding:16px 12px;
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid var(--line-strong);
   transition:background .18s var(--ease);
 }
 .doc-row:hover,.doc-row:focus-visible{background:var(--surface-2)}
@@ -740,7 +743,7 @@ html[lang="ar"] .club-city{font-family:var(--body);letter-spacing:0;font-size:.8
 }
 
 /* ---------- tables ---------- */
-.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.table-wrap{overflow-x:auto;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface)}
 table{width:100%;border-collapse:collapse;font-size:.94rem;min-width:560px}
 th{
   text-align:start;font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
@@ -806,11 +809,11 @@ html[dir="rtl"] .footer-tri{transform:scaleX(-1)}
 .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:34px;padding-block:54px 28px}
 @media (max-width:860px){.footer-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.footer-grid{grid-template-columns:1fr}}
-.footer-grid h3{
+.footer-grid h2{
   font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--faint);margin:0 0 16px;font-weight:400;letter-spacing:.18em;
 }
-html[lang="ar"] .footer-grid h3{letter-spacing:0;font-size:.8rem;text-transform:none;font-family:var(--body)}
+html[lang="ar"] .footer-grid h2{letter-spacing:0;font-size:.8rem;text-transform:none;font-family:var(--body)}
 .footer-grid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 /* 24px minimum line box (SC 2.5.8): thirteen footer links were 19px tall at 390. */
 .footer-grid a{

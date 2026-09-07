@@ -20,6 +20,13 @@ namespace Triathlon.Web.Areas.Public;
 /// file's size is not known, in which case <c>_DocRow</c> omits the size cell rather than showing
 /// a false "0 KB".
 /// </param>
+/// <param name="HeadingLevel">
+/// The row title's heading level. <c>_DocRow</c> is shared by pages whose document list sits at a
+/// different depth in the outline — straight under the page's &lt;h1&gt;, under one &lt;h2&gt;
+/// section, or nested inside an &lt;h3&gt; card — so the caller states the level that keeps the
+/// page's headings sequential instead of every list defaulting to the same tag. Defaults to the
+/// depth <c>Training/Index.cshtml</c> needs (a guide card's &lt;h3&gt; followed by its row).
+/// </param>
 public sealed record DocRowModel(
     string Href,
     string TitleEn,
@@ -29,7 +36,8 @@ public sealed record DocRowModel(
     string? MetaMid,
     string? Size,
     string? DescEn = null,
-    string? DescAr = null)
+    string? DescAr = null,
+    int HeadingLevel = 4)
 {
     /// <summary>A library document: category on the left, year in the middle.</summary>
     public static DocRowModel For(Document document)
