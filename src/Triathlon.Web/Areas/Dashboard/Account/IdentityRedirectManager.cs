@@ -65,20 +65,33 @@ internal sealed class IdentityRedirectManager(NavigationManager navigationManage
 
         url = url.Trim();
 
-        // Rejects absolute URIs, including scheme-based redirects like "javascript:alert(1)".
-        if (Uri.TryCreate(url, UriKind.Absolute, out _))
+        // Same rules as ASP.NET Core's UrlHelper.IsLocalUrl, written out so the answer does not
+        // depend on System.Uri's platform quirks: on Linux/macOS Uri.TryCreate("/dashboard",
+        // UriKind.Absolute) succeeds because a leading slash is an implicit file path, which made
+        // every genuine local path look absolute in CI.
+        //
+        // Local means: starts with exactly one "/" (a second "/" or "\" would be a network-path
+        // reference the browser resolves to another host), and contains no control characters or
+        // whitespace that could smuggle a scheme past the check.
+        if (url[0] != '/')
         {
             return false;
         }
 
-        // Rejects network-path references: a browser/NavigateTo treats a leading "//" or "/\" as
-        // "same scheme, different host" even though Uri.IsWellFormedUriString calls it relative.
-        if (url.StartsWith("//", StringComparison.Ordinal) || url.StartsWith("/\\", StringComparison.Ordinal))
+        if (url.Length > 1 && (url[1] == '/' || url[1] == '\\'))
         {
             return false;
         }
 
-        return Uri.IsWellFormedUriString(url, UriKind.Relative);
+        foreach (var c in url)
+        {
+            if (char.IsControl(c) || char.IsWhiteSpace(c))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void RedirectToWithStatus(string uri, string message, HttpContext context)
