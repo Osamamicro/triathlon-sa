@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 
@@ -78,5 +79,29 @@ public sealed class SecurityHeadersTests(WebAppFixture app)
 
         Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
         Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+    }
+
+    /// <summary>
+    /// <c>UseExceptionHandler</c> — only registered outside Development — calls
+    /// <c>Response.Clear()</c> before re-executing to the error page, which used to wipe every
+    /// header this middleware had already written. The fixture's own host runs in Development
+    /// (where the exception handler is not wired at all, so this bug could not show up there), so
+    /// this spins up a second host in Production, the way the real deployment runs.
+    /// </summary>
+    [Fact]
+    public async Task Security_headers_survive_the_response_clear_on_an_unhandled_exception()
+    {
+        using var production = app.WithWebHostBuilder(b => b.UseEnvironment("Production"));
+        using var client = production.CreateClient();
+
+        using var response = await client.GetAsync(WebAppFixture.ThrowingPath);
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.True(response.Headers.Contains("Content-Security-Policy"));
+        // The thrown path is public (not under /dashboard), so the exception handler re-executes to
+        // the branded /en/error page.
+        Assert.Contains("class=\"site-header\"", html, StringComparison.Ordinal);
     }
 }

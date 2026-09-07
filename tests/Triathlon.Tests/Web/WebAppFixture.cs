@@ -32,6 +32,13 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     /// </summary>
     public const string CacheTaggedPath = "/__test/cache-tagged";
 
+    /// <summary>
+    /// Always throws. Used to prove security headers survive <c>UseExceptionHandler</c>'s
+    /// <c>Response.Clear()</c> — only reachable on a host that registers the exception handler,
+    /// i.e. one built outside the Development environment.
+    /// </summary>
+    public const string ThrowingPath = "/__test/throw";
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -60,7 +67,12 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
                 PolicyName = OutputCacheSetup.PublicPolicy,
                 Tags = [CacheTags.Home],
             });
+
+        endpoints.MapGet(ThrowingPath, ThrowingHandler);
     }
+
+    private static Task ThrowingHandler(HttpContext context) =>
+        throw new InvalidOperationException("Test endpoint always throws.");
 
     async Task IAsyncLifetime.DisposeAsync()
     {
