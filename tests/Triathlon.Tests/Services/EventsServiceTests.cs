@@ -65,30 +65,42 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Third_registration_over_a_capacity_of_two_is_waitlisted()
     {
         var slug = "cap-" + Guid.NewGuid().ToString("N")[..8];
-        await using (var scope = app.Services.CreateAsyncScope())
+        Guid eventId;
+        try
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var city = await db.Cities.FirstAsync(c => c.Key == "riyadh");
-            db.Events.Add(new Event
+            await using (var scope = app.Services.CreateAsyncScope())
             {
-                Slug = slug, Type = EventType.Community, IsPublished = true, Season = "2026-27",
-                DateStart = new DateOnly(2026, 12, 31), CityId = city.Id,
-                TitleEn = "Cap", TitleAr = "سعة", VenueEn = "V", VenueAr = "م", DescriptionEn = "d", DescriptionAr = "و",
-                RegistrationMode = RegistrationMode.Internal, RegistrationOpen = true, Capacity = 2,
-            });
-            await db.SaveChangesAsync();
-        }
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var city = await db.Cities.FirstAsync(c => c.Key == "riyadh");
+                var ev = new Event
+                {
+                    Slug = slug, Type = EventType.Community, IsPublished = true, Season = "2026-27",
+                    DateStart = new DateOnly(2026, 12, 31), CityId = city.Id,
+                    TitleEn = "Cap", TitleAr = "سعة", VenueEn = "V", VenueAr = "م", DescriptionEn = "d", DescriptionAr = "و",
+                    RegistrationMode = RegistrationMode.Internal, RegistrationOpen = true, Capacity = 2,
+                };
+                db.Events.Add(ev);
+                await db.SaveChangesAsync();
+                eventId = ev.Id;
+            }
 
-        var outcomes = new List<RegistrationOutcome>();
-        for (var i = 0; i < 3; i++)
+            var outcomes = new List<RegistrationOutcome>();
+            for (var i = 0; i < 3; i++)
+            {
+                await using var scope = app.Services.CreateAsyncScope();
+                var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
+                outcomes.Add(await service.RegisterAsync(slug,
+                    new GuestRegistration($"Guest {i}", $"g{i}@x.test", null, "Open", null), CancellationToken.None));
+            }
+
+            Assert.Equal([RegistrationOutcome.Confirmed, RegistrationOutcome.Confirmed, RegistrationOutcome.Waitlist], outcomes);
+        }
+        finally
         {
             await using var scope = app.Services.CreateAsyncScope();
-            var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
-            outcomes.Add(await service.RegisterAsync(slug,
-                new GuestRegistration($"Guest {i}", $"g{i}@x.test", null, "Open", null), CancellationToken.None));
+            var service = scope.ServiceProvider.GetRequiredService<EventsService>();
+            await service.DeleteAsync(eventId, CancellationToken.None);
         }
-
-        Assert.Equal([RegistrationOutcome.Confirmed, RegistrationOutcome.Confirmed, RegistrationOutcome.Waitlist], outcomes);
     }
 
     [Fact]
