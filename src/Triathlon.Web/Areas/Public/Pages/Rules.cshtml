@@ -1,0 +1,66 @@
+@page
+@using Triathlon.Web.Domain.Documents
+@model RulesModel
+@functions {
+    /// <summary>The audience chips, in the order the prototype's filter bar listed its readers.</summary>
+    private static (string En, string Ar) AudienceLabel(RuleAudience audience) => audience switch
+    {
+        RuleAudience.Athletes => ("Athletes", "الرياضيون"),
+        RuleAudience.Organizers => ("Organizers", "المنظمون"),
+        RuleAudience.Officials => ("Officials", "الحكام"),
+        RuleAudience.Coaches => ("Coaches", "المدربون"),
+        _ => (audience.ToString(), audience.ToString()),
+    };
+}
+@{
+    var audiences = new[] { RuleAudience.Athletes, RuleAudience.Organizers, RuleAudience.Officials, RuleAudience.Coaches };
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Fair racing", "سباق عادل")</span>
+      <h1>@Bi("Rules & Regulations", "اللوائح والأنظمة")</h1>
+      <p class="hero-lead">@Bi("The approved regulations for athletes, organizers and officials, aligned with the World Triathlon Competition Rules and downloadable as PDF.", "الأنظمة المعتمدة للرياضيين والمنظمين والحكام، بما يتوافق مع قوانين الاتحاد الدولي للترايثلون، وقابلة للتحميل بصيغة PDF.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:14px">
+    <div class="container">
+
+      <div class="filter-bar" role="group" aria-label="@Bi("Audience filter", "تصفية حسب الفئة")">
+        <div class="seg">
+          <a href="@RulesModel.FilterUrl(null)" aria-current="@(Model.Audience is null ? "page" : null)">@Bi("All", "الكل")</a>
+          @foreach (var audience in audiences)
+          {
+            var (labelEn, labelAr) = AudienceLabel(audience);
+            <a href="@RulesModel.FilterUrl(audience)" aria-current="@(Model.Audience == audience ? "page" : null)">@Bi(labelEn, labelAr)</a>
+          }
+        </div>
+      </div>
+
+      <div class="section-head reveal" style="margin-bottom:24px">
+        <div>
+          <span class="eyebrow">@Bi("Official documents", "المستندات الرسمية")</span>
+          <h2>@Bi("Regulations library", "مكتبة الأنظمة")</h2>
+        </div>
+      </div>
+
+      @if (Model.Rules.Count > 0)
+      {
+        <div class="doc-list">
+          @foreach (var rule in Model.Rules)
+          {
+            <partial name="_DocRow" model="DocRowModel.For(rule)" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No regulations are published for this audience yet.", "لا توجد أنظمة منشورة لهذه الفئة بعد.")</div>
+      }
+
+    </div>
+  </section>
+
+  <partial name="_Blocks/_Blocks" model="Model.Trailing" />

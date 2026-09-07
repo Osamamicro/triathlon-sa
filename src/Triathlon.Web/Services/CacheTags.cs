@@ -12,6 +12,12 @@ namespace Triathlon.Web.Services;
 /// </summary>
 public static class CacheTags
 {
+    /// <summary>
+    /// Carried by every public page; evicting it drops the whole public cache — used when the
+    /// navigation or a site setting changes, which is content no single page tag covers.
+    /// </summary>
+    public const string Site = "site";
+
     public const string Home = "home";
     public const string Events = "events";
     public const string Stats = "stats";
@@ -20,6 +26,13 @@ public static class CacheTags
     public const string Governance = "governance";
     public const string Rules = "rules";
     public const string Guides = "guides";
+
+    /// <summary>
+    /// The affiliated club list. It is its own tag because the clubs block appears on pages that
+    /// otherwise have nothing to do with each other — the join page and the training page today.
+    /// Committees have no tag of their own: they only ever render under <see cref="Governance"/>.
+    /// </summary>
+    public const string Clubs = "clubs";
 
     /// <summary>Tag for one CMS page, so editing it does not evict every other page.</summary>
     public static string Page(string slug) => $"page:{slug}";

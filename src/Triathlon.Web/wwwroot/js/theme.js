@@ -1,0 +1,1 @@
+try{var q=new URLSearchParams(location.search).get("theme");var t=(q==="light"||q==="dark")?q:localStorage.getItem("stf-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}

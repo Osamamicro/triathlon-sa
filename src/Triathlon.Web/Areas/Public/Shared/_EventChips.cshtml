@@ -1,0 +1,21 @@
+@using Triathlon.Web.Domain.Events
+@model Event
+@*
+    The calendar chip and the entry-status chip an event carries wherever it is listed — the events
+    grid and the season timeline both. "today" travels in ViewData, as it does for _EventCard: the
+    status is a function of the Riyadh date the page was rendered on, shared by every card on it.
+    The caller supplies the wrapping <div class="chips">, because the timeline spaces its own.
+*@
+@{
+    var status = Model.StatusOn(ViewData["today"] as DateOnly?
+        ?? throw new InvalidOperationException("_EventChips needs ViewData[\"today\"]"));
+    var typeLabel = Model.Type == EventType.Competition ? Bi("Competition", "بطولات") : Bi("Community", "مجتمعي");
+    var (statusClass, statusLabel) = status switch
+    {
+        EventStatus.Open => ("chip-open", Bi("Registration open", "التسجيل مفتوح")),
+        EventStatus.Completed => ("chip-done", Bi("Completed", "انتهت")),
+        _ => ("", Bi("Opens soon", "يفتح قريباً")),
+    };
+}
+<span class="chip chip-@Model.Type.ToString().ToLowerInvariant()">@typeLabel</span>
+<span class="chip @statusClass">@statusLabel</span>

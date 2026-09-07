@@ -25,18 +25,13 @@ public static class MediaFilesSetup
         // middleware needs the root itself to exist at startup.
         Directory.CreateDirectory(root);
 
+        // nosniff is not set here: SecurityHeadersMiddleware runs ahead of this in the pipeline and
+        // puts it on every response, and appending a second copy would send the header twice.
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(root),
             RequestPath = media.NormalizedPublicPrefix,
             ServeUnknownFileTypes = false,
-            OnPrepareResponse = context =>
-            {
-                // An upload is stored by sniffed signature, not by the name a caller supplied, so
-                // there is no untrusted extension for a browser to guess at — but nosniff is free
-                // insurance against any client that ignores the returned Content-Type anyway.
-                context.Context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-            },
         });
 
         return app;

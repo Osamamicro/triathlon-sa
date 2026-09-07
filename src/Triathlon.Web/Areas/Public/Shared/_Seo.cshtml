@@ -1,0 +1,76 @@
+@inject IStringLocalizer<Shared> L
+@inject IConfiguration Configuration
+@{
+    // Everything a public page's <head> needs beyond the two icons and the stylesheets, which stay
+    // in _Layout because they never vary by page. A page model sets ViewData["Title"],
+    // ["MetaDescription"], ["OgImage"] and/or ["JsonLd"] before Page() runs; every one of them is
+    // optional and falls back to something sane, so a page that sets nothing still gets a complete,
+    // correct <head>.
+    var culture = PublicCulture.Of(ViewContext);
+    var isRtl = culture == "ar";
+    var otherCulture = PublicCulture.Other(culture);
+
+    var siteName = L["SiteName"].Value;
+    var title = ViewData["Title"] as string;
+    var pageTitle = string.IsNullOrWhiteSpace(title) ? siteName : $"{title} · {siteName}";
+
+    var description = ViewData["MetaDescription"] as string;
+    if (string.IsNullOrWhiteSpace(description))
+    {
+        description = L["MetaDescription"].Value;
+    }
+
+    // HttpRequest.Path never carries the query string (that is HttpRequest.QueryString, a separate
+    // property), so building the canonical from it drops "?utm=x" et al. for free.
+    var origin = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    var canonicalUrl = origin + PublicCulture.PathForCulture(Context, culture);
+    var alternateUrl = origin + PublicCulture.PathForCulture(Context, otherCulture);
+    var enUrl = culture == "en" ? canonicalUrl : alternateUrl;
+
+    var ogImagePath = ViewData["OgImage"] as string;
+    var ogImage = string.IsNullOrWhiteSpace(ogImagePath)
+        ? origin + "/img/og.png"
+        : ogImagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || ogImagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? ogImagePath
+            : origin + ogImagePath;
+
+    var staging = Configuration.GetValue("Site:Staging", false);
+
+    // Already-serialised JSON (System.Text.Json, no indentation) — see DetailModel.OnGetAsync for
+    // the event page's SportsEvent object. Written as data, not executed: a browser never runs
+    // <script type="application/ld+json"> through the script engine, so CSP's script-src 'self'
+    // does not apply to it (see Markup.HasInlineScript, which every "no inline script" test uses).
+    var jsonLd = ViewData["JsonLd"] as string;
+}
+<title>@pageTitle</title>
+<meta name="description" content="@description">
+<link rel="canonical" href="@canonicalUrl">
+<link rel="alternate" hreflang="en" href="@(culture == "en" ? canonicalUrl : alternateUrl)">
+<link rel="alternate" hreflang="ar" href="@(culture == "ar" ? canonicalUrl : alternateUrl)">
+<link rel="alternate" hreflang="x-default" href="@enUrl">
+@if (staging)
+{
+    <meta name="robots" content="noindex">
+}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="@siteName">
+<meta property="og:locale" content="@(isRtl ? "ar_SA" : "en_US")">
+<meta property="og:locale:alternate" content="@(isRtl ? "en_US" : "ar_SA")">
+<meta property="og:title" content="@pageTitle">
+<meta property="og:description" content="@description">
+<meta property="og:url" content="@canonicalUrl">
+<meta property="og:image" content="@ogImage">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+@if (!string.IsNullOrWhiteSpace(jsonLd))
+{
+    @* One Html.Raw call for the whole element: writing the opening tag as ordinary markup would
+       route its "application/ld+json" attribute value through the page's HtmlEncoder, which turns
+       "+" into "&#x2B;" — technically harmless in an attribute, but it stops
+       Markup.HasInlineScript's plain-text match on type="application/ld+json" from a browser's or a
+       test's point of view. Raw sidesteps that: jsonLd already had every "&lt;" escaped to its
+       backslash-u JSON form in DetailModel, so nothing here can reopen the tag early. *@
+    @Html.Raw($"<script type=\"application/ld+json\">{jsonLd}</script>")
+}

@@ -52,6 +52,7 @@ variables — never in `appsettings.json`, which is in source control.
 | `Email__User` / `Email__Password` | | Omit both for an unauthenticated relay. |
 | `Email__FromName` / `Email__FromAddress` | `Saudi Triathlon Federation` / `no-reply@triathlon.sa` | |
 | `Media__Root` | `/var/lib/triathlon/media` | **Point this outside the deployment folder**, or a redeploy deletes every upload. |
+| `AllowedHosts` | `triathlon.sa;www.triathlon.sa` | Host-header filtering. Staging uses its own name. Requests for any other host get 400. |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | Staging uses `Production` too — `Site__Staging` is what makes it staging, not the framework's environment name. |
 
 ### The `Site__BehindProxy` trust assumption

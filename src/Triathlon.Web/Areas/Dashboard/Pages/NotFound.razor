@@ -2,9 +2,13 @@
 @layout AuthLayout
 @attribute [AllowAnonymous]
 
-<PageTitle>Not found</PageTitle>
+@using Microsoft.Extensions.Localization
 
-<h1>Not found</h1>
-<p>There is nothing at this address.</p>
+@inject IStringLocalizer<DashboardStrings> L
 
-<p><a href="dashboard">Back to the dashboard</a></p>
+<PageTitle>@L["NotFoundTitle"]</PageTitle>
+
+<h1>@L["NotFoundTitle"]</h1>
+<p>@L["NotFoundBody"]</p>
+
+<p><a href="dashboard">@L["BackToDashboard"]</a></p>

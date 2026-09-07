@@ -1,0 +1,29 @@
+@page
+@model IndexModel
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Newsroom", "غرفة الأخبار")</span>
+      <h1>@Bi("News", "الأخبار")</h1>
+      <p class="hero-lead">@Bi("Race recaps, calendar announcements and federation notices: the season as it happens.", "ملخصات السباقات وإعلانات التقويم وأخبار الاتحاد: الموسم أولاً بأول.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:14px">
+    <div class="container">
+      @if (Model.Posts.Count > 0)
+      {
+        <div class="grid grid-3">
+          @foreach (var post in Model.Posts)
+          {
+            <partial name="_NewsCard" model="post" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No news has been published yet.", "لم تُنشر أي أخبار بعد.")</div>
+      }
+    </div>
+  </section>

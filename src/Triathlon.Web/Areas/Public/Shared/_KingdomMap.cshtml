@@ -1,0 +1,69 @@
+@using Triathlon.Web.Domain.Events
+@using Triathlon.Web.Services
+@model TimelineData
+@*
+    The Kingdom map for one season, rendered by the server: the stylised land outline from the
+    prototype and one marker per host city. Every marker is focusable and operable from the
+    keyboard, so the map is a way to reach the events rather than decoration only. timeline.js just
+    adds and removes classes on what is here.
+*@
+@{
+    // Which calendars a city hosts this season. The marker's colour follows the competition when a
+    // city has both; data-type carries every type it has, so the filter can hide a marker only once
+    // all of its events are hidden.
+    var typesByCity = Model.Events
+        .GroupBy(e => e.City.Key, StringComparer.Ordinal)
+        .ToDictionary(
+            g => g.Key,
+            g => g.Select(e => e.Type).Distinct().OrderBy(t => t).Select(t => t.ToString().ToLowerInvariant()).ToList(),
+            StringComparer.Ordinal);
+}
+<div class="map-wrap">
+  @* role="group", not the prototype's role="img": an image's descendants are presentational, which
+     would hide the markers from assistive technology just as they became operable from the keyboard. *@
+  <svg class="ksa-map" id="ksaMap" viewBox="0 0 1000 800" role="group"
+       aria-label="@Bi("Map of Saudi Arabia with event locations", "خريطة المملكة العربية السعودية مع مواقع الفعاليات")">
+    <path class="land" d="M41 135 L136 30 L214 15 L486 145 L568 150 L618 175 L673 190
+      L714 250 L736 285 L750 325 L764 355 L800 390 L964 465 L950 605 L818 700
+      L595 730 L455 745 L395 765 L355 720 L318 650 L291 585 L232 530 L205 450
+      L177 400 L132 325 L95 265 L77 230 L36 180 Z"></path>
+    <g id="markers">
+      @foreach (var city in Model.Cities)
+      {
+        if (!typesByCity.TryGetValue(city.Key, out var types))
+        {
+          continue;
+        }
+
+        var markerType = types.Contains("competition", StringComparer.Ordinal) ? "competition" : "community";
+        var dataType = string.Join(' ', types);
+        var name = Bi(city.NameEn, city.NameAr);
+        <g class="marker m-@markerType" data-city="@city.Key" data-type="@dataType"
+           tabindex="0" role="button" aria-label="@name">
+          @* The visible dot is 9 user units; this transparent circle is the pointer target.
+             r=26 on a 1000-unit viewBox is a 27px target at 1440 (WCAG 2.2 SC 2.5.8) and is the
+             largest radius that keeps Jeddah and Taif, 56 units apart, from overlapping. *@
+          <circle class="hit" cx="@city.SvgX" cy="@city.SvgY" r="26"></circle>
+          <circle class="halo" cx="@city.SvgX" cy="@city.SvgY" r="14"></circle>
+          <circle class="core" cx="@city.SvgX" cy="@city.SvgY" r="9"></circle>
+          <text x="@(city.LabelAtEnd ? city.SvgX - 20 : city.SvgX + 20)" y="@(city.SvgY + 7 + city.LabelDy)"
+                text-anchor="@(city.LabelAtEnd ? "end" : "start")">@(IsArabic ? name : name.ToUpperInvariant())</text>
+        </g>
+      }
+    </g>
+  </svg>
+  @* The legend reads the same marks the map does. Both calendars are the Federation green:
+     the community calendar used to be the run amber, which meant amber said "run" on a distance
+     pill and "community" on the marker beside it. The calendars are told apart by fill instead —
+     solid for the national series, hollow for community — and the selected city by its halo. *@
+  <div class="map-legend">
+    <span><i class="i-solid"></i>@Bi("Competition", "بطولات")</span>
+    <span><i class="i-hollow"></i>@Bi("Community", "مجتمعي")</span>
+    <span><i class="i-sel"></i>@Bi("Selected", "المحدد")</span>
+  </div>
+  <p class="map-caption">@Bi("Stylized map: for event navigation, not geographic accuracy", "خريطة تعبيرية للتنقل بين الفعاليات، وليست مرجعاً جغرافياً")</p>
+  @* timeline.js writes the city the reader has scrolled to here, so the map's highlight is
+     announced rather than being a purely visual change. The template travels with the culture. *@
+  <p class="visually-hidden" id="timelineLive" role="status" aria-live="polite"
+     data-template="@Bi("{city}, events: {n}", "{city}، الفعاليات: {n}")"></p>
+</div>

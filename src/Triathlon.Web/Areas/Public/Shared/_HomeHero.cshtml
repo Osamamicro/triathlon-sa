@@ -1,0 +1,35 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    The home page's hero copy — eyebrow, headline and lead paragraph, plus its two calls to action —
+    from the `home` CMS page's first block (BlockType.Hero, Variant "home"). This is a dedicated
+    partial rather than a "home" branch inside _Blocks/_Hero.cshtml: the home hero sits inside
+    Index.cshtml's own <section class="hero"> alongside the course diagram and the tri-strip, which
+    are static design elements, not editable copy, so they stay in Index.cshtml rather than here.
+
+    The headline is seeded with a <span class="grad"> and a <br> (see SeedPages.Home), so it goes
+    through Html.Raw for this one partial — trusted because only a seed or the Week 4 dashboard
+    (which will sanitise on save) ever writes it, never a visitor.
+*@
+@if (Model.EyebrowEn is { } eyebrowEn && Model.EyebrowAr is { } eyebrowAr)
+{
+    <span class="hero-kicker mono">@Bi(eyebrowEn, eyebrowAr)</span>
+}
+<h1>@Html.Raw(Bi(Model.TitleEn ?? string.Empty, Model.TitleAr ?? string.Empty))</h1>
+@if (Model.BodyEn is not null || Model.BodyAr is not null)
+{
+    <p class="hero-lead">@Html.Raw(Bi(Model.BodyEn ?? string.Empty, Model.BodyAr ?? string.Empty))</p>
+}
+@if (Model.CtaHref is not null || Model.SecondaryHref is not null)
+{
+    <div class="hero-actions">
+        @if (Model.CtaHref is { } ctaHref)
+        {
+            <a class="btn btn-primary" href="@PublicText.Href(ctaHref)">@Bi(Model.CtaLabelEn ?? string.Empty, Model.CtaLabelAr ?? string.Empty)</a>
+        }
+        @if (Model.SecondaryHref is { } secondaryHref)
+        {
+            <a class="btn btn-ghost" href="@PublicText.Href(secondaryHref)">@Bi(Model.SecondaryLabelEn ?? string.Empty, Model.SecondaryLabelAr ?? string.Empty)</a>
+        }
+    </div>
+}

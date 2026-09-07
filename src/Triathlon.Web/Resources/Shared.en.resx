@@ -106,4 +106,12 @@
     <value>Swim, bike, run</value>
     <comment>Browser-title prefix for the home page; the site name is appended by the layout.</comment>
   </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>Page not found</value>
+    <comment>Browser-title prefix of the public 404 page.</comment>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Something went wrong</value>
+    <comment>Browser-title prefix of the public 500 page.</comment>
+  </data>
 </root>

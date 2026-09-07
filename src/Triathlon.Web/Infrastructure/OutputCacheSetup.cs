@@ -1,3 +1,5 @@
+using Triathlon.Web.Services;
+
 namespace Triathlon.Web.Infrastructure;
 
 /// <summary>
@@ -8,6 +10,11 @@ namespace Triathlon.Web.Infrastructure;
 /// construction rather than by exclusion rules. The base policy the named one builds on already
 /// refuses to cache anything but an anonymous GET or HEAD that returned 200 without setting a
 /// cookie, which is what keeps a signed-in staff member's response out of a shared cache.
+/// </para>
+/// <para>
+/// Every stored response also carries <see cref="CacheTags.Site"/>, on top of whatever content
+/// tags the page itself declares, so a change to something the whole site renders — the
+/// navigation, a site setting — is one eviction rather than one per page.
 /// </para>
 /// </summary>
 public static class OutputCacheSetup
@@ -24,7 +31,7 @@ public static class OutputCacheSetup
     public static IServiceCollection AddAppOutputCache(this IServiceCollection services)
     {
         services.AddOutputCache(options =>
-            options.AddPolicy(PublicPolicy, policy => policy.Expire(PublicLifetime)));
+            options.AddPolicy(PublicPolicy, policy => policy.Expire(PublicLifetime).Tag(CacheTags.Site)));
 
         return services;
     }

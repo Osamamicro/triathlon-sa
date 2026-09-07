@@ -1,0 +1,147 @@
+@page "/events/{slug}"
+@using Triathlon.Web.Domain.Events
+@model DetailModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var ev = Model.Event;
+    var past = Model.Status == EventStatus.Completed;
+    var typeLabel = ev.Type == EventType.Competition ? Bi("Competition", "بطولات") : Bi("Community", "مجتمعي");
+    var (statusClass, statusLabel) = Model.Status switch
+    {
+        EventStatus.Open => ("chip-open", Bi("Registration open", "التسجيل مفتوح")),
+        EventStatus.Completed => ("chip-done", Bi("Completed", "انتهت")),
+        _ => ("", Bi("Opens soon", "يفتح قريباً")),
+    };
+}
+
+  <section class="page-hero detail-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <a class="back-link" href="@PublicCulture.Url(culture, "events")"><span aria-hidden="true">←</span> @Bi("All events", "جميع الفعاليات")</a>
+      <div class="chips">
+        <span class="chip chip-@ev.Type.ToString().ToLowerInvariant()">@typeLabel</span>
+        <span class="chip @statusClass">@statusLabel</span>
+      </div>
+      <h1>@Bi(ev.TitleEn, ev.TitleAr)</h1>
+      <p class="hero-lead">@LongDate(ev.DateStart) · @Bi(ev.City.NameEn, ev.City.NameAr)</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:8px">
+    <div class="container">
+      <div class="detail-grid">
+        <div>
+          <div class="card">
+            <span class="eyebrow">@Bi("About the race", "عن السباق")</span>
+            <p style="margin-bottom:0">@Bi(ev.DescriptionEn, ev.DescriptionAr)</p>
+          </div>
+
+          <div class="tri-strip" style="margin-top:20px">
+            @if (ev.SwimDistance is { } swim)
+            {
+              <div class="tri-leg leg-swim"><span class="leg-name">@Bi("Swim", "سباحة")</span><span class="leg-data mono">@Distance(swim)</span></div>
+            }
+            @if (ev.BikeDistance is { } bike)
+            {
+              <div class="tri-leg leg-bike"><span class="leg-name">@Bi("Bike", "دراجة")</span><span class="leg-data mono">@Distance(bike)</span></div>
+            }
+            @if (ev.RunDistance is { } run)
+            {
+              <div class="tri-leg leg-run"><span class="leg-name">@Bi("Run", "جري")</span><span class="leg-data mono">@Distance(run)</span></div>
+            }
+          </div>
+
+          @* An empty gallery is no gallery. Three dashed frames labelled SWIM, BIKE and RUN
+             read as unfinished rather than as a considered placeholder, so the block only
+             exists once the event has photographs. *@
+          @if (ev.Gallery.Count > 0)
+          {
+            <div style="margin-top:20px">
+              <span class="eyebrow">@Bi("Gallery", "معرض الصور")</span>
+              <div class="gallery">
+                @foreach (var image in ev.Gallery)
+                {
+                  <img src="@image.Path" loading="lazy" alt="@Bi(image.AltEn ?? string.Empty, image.AltAr ?? string.Empty)">
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <aside class="card">
+          <span class="eyebrow">@Bi("Key information", "معلومات أساسية")</span>
+          <ul class="info-list">
+            <li><span class="k">@Bi("Date", "التاريخ")</span><span class="v">@LongDate(ev.DateStart)</span></li>
+            @if (ev.StartTime is { } start)
+            {
+              <li><span class="k">@Bi("First start", "أول انطلاقة")</span><span class="v mono">@Time(start)</span></li>
+            }
+            <li><span class="k">@Bi("City", "المدينة")</span><span class="v">@Bi(ev.City.NameEn, ev.City.NameAr)</span></li>
+            <li><span class="k">@Bi("Venue", "الموقع")</span><span class="v">@Bi(ev.VenueEn, ev.VenueAr)</span></li>
+            @if (ev.CategoryList.Count > 0)
+            {
+              <li><span class="k">@Bi("Categories", "الفئات")</span><span class="v mono">@string.Join(" · ", ev.CategoryList)</span></li>
+            }
+          </ul>
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+            @if (past)
+            {
+              <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "events")">@Bi("Browse upcoming events", "تصفح الفعاليات القادمة")</a>
+            }
+            else if (Model.Status == EventStatus.Open && ev.RegistrationMode == RegistrationMode.Internal)
+            {
+              <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/" + ev.Slug + "/register")">@Bi("Register now", "سجّل الآن")</a>
+            }
+            else if (Model.Status == EventStatus.Open && ev.RegistrationMode == RegistrationMode.External && IsSafeExternalUrl(ev.ExternalRegistrationUrl))
+            {
+              <a class="btn btn-primary" href="@ev.ExternalRegistrationUrl" target="_blank" rel="noopener">@Bi("Register now", "سجّل الآن")</a>
+            }
+            else
+            {
+              <span class="btn btn-ghost" aria-disabled="true" style="opacity:.6;cursor:default">@Bi("Registration opens soon", "التسجيل يفتح قريباً")</span>
+            }
+            <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "events/timeline")">@Bi("See it on the season map", "شاهدها على خريطة الموسم")</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+@if (ev.Results.Count > 0)
+{
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <span class="eyebrow">@Bi("Official results", "النتائج الرسمية")</span>
+      <h2>@Bi("Podium & top finishers", "منصة التتويج وأوائل المتسابقين")</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>@Bi("Athlete", "الرياضي")</th>
+              <th>@Bi("Club", "النادي")</th>
+              <th>@Bi("Time", "الزمن")</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var result in ev.Results)
+            {
+              <tr>
+                <td class="mono pos-@result.Position">@result.Position</td>
+                <td>@Bi(result.AthleteEn, result.AthleteAr)</td>
+                <td>@Bi(result.ClubEn ?? string.Empty, result.ClubAr ?? string.Empty)</td>
+                <td class="mono">@result.Time</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (ev.ResultsFilePath is { } resultsFile)
+      {
+        <div style="margin-top:20px">
+          <a class="btn btn-ghost btn-sm" href="@resultsFile" download>@Bi("Download full results (PDF)", "تحميل النتائج الكاملة (PDF)")</a>
+        </div>
+      }
+    </div>
+  </section>
+}

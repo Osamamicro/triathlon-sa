@@ -1,0 +1,18 @@
+@model Triathlon.Web.Domain.Events.Event
+@* The three discipline pills. A leg is absent, not empty, when the event does not include it:
+   an aquathlon has no bike distance at all. Distances go through PublicText.Distance so Arabic
+   reads one numeral system with the dates and times beside it. *@
+<div class="distances">
+  @if (Model.SwimDistance is { } swim)
+  {
+    <span class="d-swim">@Bi("Swim", "سباحة") @Distance(swim)</span>
+  }
+  @if (Model.BikeDistance is { } bike)
+  {
+    <span class="d-bike">@Bi("Bike", "دراجة") @Distance(bike)</span>
+  }
+  @if (Model.RunDistance is { } run)
+  {
+    <span class="d-run">@Bi("Run", "جري") @Distance(run)</span>
+  }
+</div>

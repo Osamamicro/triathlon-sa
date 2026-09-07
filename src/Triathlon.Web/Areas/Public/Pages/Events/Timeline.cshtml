@@ -1,0 +1,99 @@
+@page "/events/timeline"
+@using Triathlon.Web.Domain.Events
+@model TimelineModel
+@functions {
+    // Seasons are stored as "2026-27"; the site writes them with an en dash, and in Arabic digits.
+    private static string SeasonLabel(string season) => Digits(season.Replace('-', '–'));
+}
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var seasonLabel = SeasonLabel(Model.Data.Season);
+    var heroLead = Bi(
+        $"The {seasonLabel} tournament sequence as one journey across the Kingdom. Select an event to light up its city, or tap a city to find its races.",
+        $"تسلسل بطولات موسم {seasonLabel} كرحلة واحدة عبر المملكة. اختر فعالية لتُضيء مدينتها، أو المس مدينة لتجد سباقاتها.");
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Creative calendar", "التقويم الإبداعي")</span>
+      <h1>@Bi("The Season, Mapped", "الموسم على الخريطة")</h1>
+      <p class="hero-lead">@heroLead</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:10px">
+    <div class="container">
+
+      <div class="filter-bar">
+        @* Everything both filters could show is already in the page, so the type buttons are a
+           client-side view rather than a new request — unlike the events list, where each filter
+           is its own cacheable URL. The season is a real navigation: it is a different season's
+           data. *@
+        <div class="seg" id="typeSeg" role="group" aria-label="@Bi("Calendar filter", "تصفية التقويم")">
+          <button type="button" data-type="all" aria-pressed="true">@Bi("All", "الكل")</button>
+          <button type="button" data-type="competition" aria-pressed="false">@Bi("Competition", "البطولات")</button>
+          <button type="button" data-type="community" aria-pressed="false">@Bi("Community", "المجتمعي")</button>
+        </div>
+        @if (Model.Data.Seasons.Count > 1)
+        {
+          <form method="get" action="@PublicCulture.Url(culture, "events/timeline")">
+            <select name="season" class="select" data-autosubmit aria-label="@Bi("Season", "الموسم")">
+              @foreach (var season in Model.Data.Seasons)
+              {
+                <option value="@season" selected="@(season == Model.Data.Season)">@SeasonLabel(season)</option>
+              }
+            </select>
+            @* Without script the select cannot submit itself, so a no-JS visitor gets a button. *@
+            <noscript><button class="btn btn-ghost btn-sm" type="submit">@Bi("Apply", "تطبيق")</button></noscript>
+          </form>
+        }
+      </div>
+
+      @if (Model.Data.Events.Count == 0)
+      {
+        <div class="empty-note">@Bi("No events are on this season's calendar yet.", "لا توجد فعاليات في تقويم هذا الموسم بعد.")</div>
+      }
+      else
+      {
+        <div class="season-grid">
+          <div id="timelineHost">
+            <div class="season-timeline">
+              @{ string? lastMonth = null; }
+              @foreach (var e in Model.Data.Events)
+              {
+                var month = e.DateStart.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture);
+                if (month != lastMonth)
+                {
+                  <div class="tl-month mono" data-month="@month">@(IsArabic ? MonthYear(e.DateStart) : MonthYear(e.DateStart).ToUpperInvariant())</div>
+                  lastMonth = month;
+                }
+                var type = e.Type.ToString().ToLowerInvariant();
+                var past = e.StatusOn(Model.Today) == EventStatus.Completed;
+                <div class="tl-item t-@type" data-city="@e.City.Key" data-type="@type">
+                  <a class="card tl-card event-card@(past ? " past" : "")" href="@PublicCulture.Url(culture, "events/" + e.Slug)" data-city="@e.City.Key">
+                    <div class="chips tl-chips">
+                      <partial name="_EventChips" model="e" view-data="ViewData" />
+                    </div>
+                    <h3>@Bi(e.TitleEn, e.TitleAr)</h3>
+                    <div class="event-meta">
+                      <span class="mono">@LongDate(e.DateStart)</span>
+                      <span>◈ @Bi(e.City.NameEn, e.City.NameAr)</span>
+                    </div>
+                    <partial name="_Distances" model="e" />
+                  </a>
+                </div>
+              }
+            </div>
+          </div>
+
+          <partial name="_KingdomMap" model="Model.Data" view-data="ViewData" />
+        </div>
+      }
+
+    </div>
+  </section>
+
+@section Scripts {
+  <script src="~/js/timeline.js" asp-append-version="true" defer></script>
+}

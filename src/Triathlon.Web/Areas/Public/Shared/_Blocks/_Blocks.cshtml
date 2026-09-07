@@ -1,0 +1,9 @@
+@model IReadOnlyList<Triathlon.Web.Domain.Content.PageBlock>
+@*
+    Renders a page's blocks in order, dispatching each to the partial named after its type. Adding a
+    block type is adding a value to BlockType and a view beside this one — nothing here changes.
+*@
+@foreach (var block in Model)
+{
+    <partial name="_Blocks/_@(block.Type)" model="block" />
+}

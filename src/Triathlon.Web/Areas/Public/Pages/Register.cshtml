@@ -1,0 +1,172 @@
+@page "/register"
+@using Triathlon.Web.Services
+@model RegisterModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Online registration", "التسجيل الإلكتروني")</span>
+      <h1>@Bi("Athlete Registration", "تسجيل الرياضيين")</h1>
+      <p class="hero-lead">@Bi("Register once with the federation; your licence is renewed each season. An officer reviews every application.",
+                              "سجّل مرة واحدة لدى الاتحاد وتُجدد رخصتك كل موسم. يراجع موظف مختص كل طلب.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:16px">
+    <div class="container">
+      <div class="detail-grid">
+
+        @* The action is the minimal API, not this page: rate limiting is per endpoint, and a Razor
+           Page is one endpoint for its GET and its POST alike. asp-antiforgery is explicit because
+           the tag helper leaves the token out of a form that sets its own action. *@
+        <form class="card" method="post" action="/api/register" asp-antiforgery="true">
+          <input type="hidden" name="culture" value="@culture">
+
+          @if (Model.Invalid)
+          {
+            <p class="form-error" role="alert">@Bi("Please check the highlighted fields and try again.", "فضلاً تحقق من الحقول وحاول مرة أخرى.")</p>
+          }
+          @if (Model.ChallengeFailed)
+          {
+            <p class="form-error" role="alert">@Bi("The security check did not pass. Please try again.", "لم يجتز التحقق الأمني. فضلاً حاول مرة أخرى.")</p>
+          }
+
+          <span class="eyebrow">@Bi("Step 1: Personal details", "الخطوة ١: البيانات الشخصية")</span>
+          <p class="form-note">@Bi("Fields marked * are required.", "الحقول المعلمة بـ * مطلوبة.")</p>
+          <div class="form-grid">
+            <div class="@Model.FieldClass("fullName")">
+              <label for="fullName">@Bi("Full name", "الاسم الكامل")<span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="fullName" name="fullName" autocomplete="name" required maxlength="128" value="@Model.Value("fullName")">
+              @if (Model.InvalidFields.Contains("fullName"))
+              {
+                <span class="err">@Bi("Please enter your name.", "فضلاً أدخل اسمك.")</span>
+              }
+            </div>
+            <div class="@Model.FieldClass("email")">
+              <label for="email">@Bi("Email", "البريد الإلكتروني")<span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="256" value="@Model.Value("email")">
+              @if (Model.InvalidFields.Contains("email"))
+              {
+                <span class="err">@Bi("Please enter a valid email.", "فضلاً أدخل بريداً صحيحاً.")</span>
+              }
+            </div>
+            <div class="@Model.FieldClass("dateOfBirth")">
+              <label for="dateOfBirth">@Bi("Date of birth", "تاريخ الميلاد")<span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="dateOfBirth" name="dateOfBirth" type="date" required
+                     min="@Model.EarliestDateOfBirth" max="@Model.LatestDateOfBirth" value="@Model.Value("dateOfBirth")">
+              @* The date control keeps the browser's own format, which is the only left-to-right
+                 field in an otherwise mirrored form; the hint says what the three boxes are. *@
+              <span class="hint">@Bi("Day, month and year.", "يوم / شهر / سنة.")</span>
+              @if (Model.InvalidFields.Contains("dateOfBirth"))
+              {
+                <span class="err">@Bi("Please enter your date of birth. Athletes register from the age of six.",
+                                      "فضلاً أدخل تاريخ ميلادك. يبدأ التسجيل من سن السادسة.")</span>
+              }
+            </div>
+            <div class="@Model.FieldClass("city")">
+              <label for="city">@Bi("City", "المدينة")</label>
+              <select class="input" id="city" name="city">
+                @foreach (var city in Model.Cities)
+                {
+                  <option value="@city.Key" selected="@(Model.Value("city") == city.Key)">@Bi(city.NameEn, city.NameAr)</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <hr class="tri" style="margin-block:20px">
+
+          <span class="eyebrow">@Bi("Step 2: Your sport", "الخطوة ٢: رياضتك")</span>
+          <div class="form-grid">
+            <div class="@Model.FieldClass("category")">
+              <label for="category">@Bi("Category", "الفئة")<span class="req" aria-hidden="true">*</span></label>
+              <select class="input" id="category" name="category" required>
+                @foreach (var category in RegisterModel.Categories)
+                {
+                  <option value="@category" selected="@(Model.Value("category", AthleteCategories.AgeGroup) == category)">@Bi(category, AthleteCategories.Arabic(category))</option>
+                }
+              </select>
+              @if (Model.InvalidFields.Contains("category"))
+              {
+                <span class="err">@Bi("Please choose a category.", "فضلاً اختر الفئة.")</span>
+              }
+            </div>
+            <div class="@Model.FieldClass("club")">
+              <label for="club">@Bi("Club (optional)", "النادي (اختياري)")</label>
+              <select class="input" id="club" name="club">
+                <option value="">@Bi("No club yet", "لا يوجد نادٍ بعد")</option>
+                @foreach (var club in Model.Clubs)
+                {
+                  <option value="@club.Id" selected="@(Model.Value("club") == club.Id.ToString())">@Bi(club.NameEn, club.NameAr)</option>
+                }
+              </select>
+              @if (Model.InvalidFields.Contains("club"))
+              {
+                <span class="err">@Bi("Please choose a club from the list.", "فضلاً اختر نادياً من القائمة.")</span>
+              }
+            </div>
+            <div class="@Model.FieldClass("event")" style="grid-column:1/-1">
+              <label for="event">@Bi("First event of interest (optional)", "أول فعالية تهمك (اختياري)")</label>
+              <select class="input" id="event" name="event">
+                <option value="">@Bi("Not decided yet", "لم أقرر بعد")</option>
+                @foreach (var upcoming in Model.UpcomingEvents)
+                {
+                  <option value="@upcoming.Id" selected="@(Model.Value("event", Model.PrefilledEventId) == upcoming.Id.ToString())">@Bi(upcoming.TitleEn, upcoming.TitleAr) · @LongDate(upcoming.DateStart)</option>
+                }
+              </select>
+              <span class="hint">@Bi("Pre-filled when you arrive from an event page.", "تُعبأ تلقائياً عند القدوم من صفحة فعالية.")</span>
+              @if (Model.InvalidFields.Contains("event"))
+              {
+                <span class="err">@Bi("Please choose an event from the list.", "فضلاً اختر فعالية من القائمة.")</span>
+              }
+            </div>
+          </div>
+
+          <hr class="tri" style="margin-block:20px">
+
+          <span class="eyebrow">@Bi("Step 3: Declarations", "الخطوة ٣: الإقرارات")</span>
+          <div class="@Model.FieldClass("declaration")">
+            <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.9rem;color:var(--muted)">
+              <input type="checkbox" id="declaration" name="declaration" value="on" required style="margin-top:3px">
+              <span>@Bi("I declare that I am medically fit to train and race, and I accept the STF Competition Rules and Anti-Doping Policy.", "أقر بأنني لائق طبياً للتدريب والمنافسة، وأوافق على قوانين المنافسات وسياسة مكافحة المنشطات.")</span>
+            </label>
+            @if (Model.InvalidFields.Contains("declaration"))
+            {
+              <span class="err">@Bi("The declaration is required to register.", "الإقرار مطلوب لإتمام التسجيل.")</span>
+            }
+          </div>
+
+          @if (Model.TurnstileSiteKey is not null)
+          {
+            @* Cloudflare serves this widget from a versionless URL and updates it in place, so there
+               is no build to pin an integrity hash to — subresource integrity is deliberately absent
+               rather than forgotten. The CSP names the host instead. *@
+            <div class="cf-turnstile" data-sitekey="@Model.TurnstileSiteKey" style="margin-block:16px"></div>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+          }
+
+          <button class="btn btn-primary" type="submit" style="margin-top:10px">@Bi("Submit registration", "إرسال التسجيل")</button>
+        </form>
+
+        <aside>
+          <div class="card">
+            <span class="eyebrow">@Bi("What happens next", "ماذا بعد؟")</span>
+            <ul class="list-check" style="margin:0">
+              <li>@Bi("An officer reviews your application within five working days.", "يراجع موظف مختص طلبك خلال خمسة أيام عمل.")</li>
+              <li>@Bi("Your licence number arrives by email once the application is approved.", "يصلك رقم رخصتك بالبريد الإلكتروني بعد اعتماد الطلب.")</li>
+              <li>@Bi("A licensed athlete can enter any sanctioned race in the Kingdom.", "الرياضي المرخص يسجل في أي سباق معتمد في المملكة.")</li>
+            </ul>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <span class="eyebrow">@Bi("Privacy", "الخصوصية")</span>
+            <p class="muted" style="font-size:.88rem;margin:0">@Bi("Your data is processed under the Saudi Personal Data Protection Law and used only to manage your registration. Write to info@triathlon.sa to have it deleted.",
+                                                                   "تُعالج بياناتك وفق نظام حماية البيانات الشخصية السعودي وتُستخدم لإدارة تسجيلك فقط. راسلنا على info@triathlon.sa لحذفها.")</p>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>

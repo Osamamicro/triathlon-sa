@@ -1,0 +1,88 @@
+@page
+@model IndexModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Season 2026–27", "موسم 2026–27")</span>
+      <h1>@Bi("Events & Calendar", "الفعاليات والتقويم")</h1>
+      <p class="hero-lead">@Bi("Two calendars, one season: official competition rounds of the national series, and community events open to everyone. Completed races move automatically to the results archive.", "تقويمان في موسم واحد: جولات البطولات الرسمية للسلسلة الوطنية، وفعاليات مجتمعية مفتوحة للجميع. تنتقل السباقات المنتهية تلقائياً إلى أرشيف النتائج.")</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:14px">
+    <div class="container">
+
+      @* The filters are links and a GET form, not script: each combination is its own URL, which
+         is what makes the page shareable and cacheable. *@
+      <div class="filter-bar" role="group" aria-label="@Bi("Event filters", "عوامل تصفية الفعاليات")">
+        <div class="seg">
+          <a href="@IndexModel.FilterUrl(null, Model.CityKey)" aria-current="@(Model.TypeKey is null ? "page" : null)">@Bi("All", "الكل")</a>
+          <a href="@IndexModel.FilterUrl("competition", Model.CityKey)" aria-current="@(Model.TypeKey == "competition" ? "page" : null)">@Bi("Competition", "البطولات")</a>
+          <a href="@IndexModel.FilterUrl("community", Model.CityKey)" aria-current="@(Model.TypeKey == "community" ? "page" : null)">@Bi("Community", "المجتمعي")</a>
+        </div>
+        <form method="get" action="@PublicCulture.Url(culture, "events")">
+          @if (Model.TypeKey is { } typeKey)
+          {
+            <input type="hidden" name="type" value="@typeKey">
+          }
+          <select name="city" class="select" data-autosubmit aria-label="@Bi("City", "المدينة")">
+            <option value="">@Bi("All cities", "كل المدن")</option>
+            @foreach (var city in Model.Cities)
+            {
+              <option value="@city.Key" selected="@(city.Key == Model.CityKey)">@Bi(city.NameEn, city.NameAr)</option>
+            }
+          </select>
+          @* Without script the select cannot submit itself, so a no-JS visitor gets a button. *@
+          <noscript><button class="btn btn-ghost btn-sm" type="submit">@Bi("Apply", "تطبيق")</button></noscript>
+        </form>
+      </div>
+
+      <div class="section-head" style="margin-bottom:24px">
+        <div>
+          <span class="eyebrow">@Bi("Open for entry", "متاح للتسجيل")</span>
+          <h2>@Bi("Upcoming", "القادمة")</h2>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "events/timeline")">@Bi("View as season timeline", "اعرضها كجدول زمني")</a>
+      </div>
+      @if (Model.Upcoming.Count > 0)
+      {
+        <div class="grid grid-3">
+          @foreach (var upcoming in Model.Upcoming)
+          {
+            <partial name="_EventCard" model="upcoming" view-data="ViewData" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No events match this filter. Try another city or calendar.", "لا توجد فعاليات مطابقة. جرّب مدينة أو تقويماً آخر.")</div>
+      }
+
+      <hr class="tri">
+
+      <div class="section-head" style="margin-bottom:24px">
+        <div>
+          <span class="eyebrow">@Bi("Archive", "الأرشيف")</span>
+          <h2>@Bi("Past events & results", "الفعاليات السابقة والنتائج")</h2>
+        </div>
+      </div>
+      @if (Model.Past.Count > 0)
+      {
+        <div class="grid grid-3">
+          @foreach (var past in Model.Past)
+          {
+            <partial name="_EventCard" model="past" view-data="ViewData" />
+          }
+        </div>
+      }
+      else
+      {
+        <div class="empty-note">@Bi("No past events match this filter.", "لا توجد فعاليات سابقة مطابقة.")</div>
+      }
+
+    </div>
+  </section>

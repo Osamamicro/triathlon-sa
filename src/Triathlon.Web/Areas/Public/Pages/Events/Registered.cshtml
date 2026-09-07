@@ -1,0 +1,38 @@
+@page "/events/{slug}/registered"
+@model RegisteredModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var ev = Model.Event;
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Entry received", "تم استلام التسجيل")</span>
+      <h1>@(Model.Waitlisted ? Bi("You're on the waiting list", "أنت على قائمة الانتظار") : Bi("You're on the start list", "أنت على قائمة الانطلاق"))</h1>
+      <p class="hero-lead">@(Model.Waitlisted
+          ? Bi("This event is full. We will email you if a place opens up.", "اكتمل العدد في هذه الفعالية. سنراسلك عبر البريد إذا توفر مكان.")
+          : Bi("We have your entry. Bring photo ID to registration on race day.", "استلمنا تسجيلك. أحضر إثبات هوية بصورة عند التسجيل يوم السباق."))</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:8px">
+    <div class="container">
+      <div class="license-card">
+        <span class="eyebrow">@Bi("Entry summary", "ملخص التسجيل")</span>
+        <ul class="info-list" style="margin-top:14px">
+          @if (!string.IsNullOrWhiteSpace(Model.Name))
+          {
+            <li><span class="k">@Bi("Athlete", "الرياضي")</span><span class="v">@Model.Name</span></li>
+          }
+          <li><span class="k">@Bi("Event", "الفعالية")</span><span class="v">@Bi(ev.TitleEn, ev.TitleAr)</span></li>
+          <li><span class="k">@Bi("Date", "التاريخ")</span><span class="v">@LongDate(ev.DateStart)</span></li>
+          <li><span class="k">@Bi("City", "المدينة")</span><span class="v">@Bi(ev.City.NameEn, ev.City.NameAr)</span></li>
+        </ul>
+      </div>
+      <div class="hero-actions" style="margin-top:22px">
+        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/" + ev.Slug)">@Bi("Event page", "صفحة الفعالية")</a>
+        <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "events")">@Bi("All events", "جميع الفعاليات")</a>
+      </div>
+    </div>
+  </section>

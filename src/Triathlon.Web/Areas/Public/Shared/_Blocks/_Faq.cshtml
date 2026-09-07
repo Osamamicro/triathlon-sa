@@ -1,0 +1,21 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    Questions and answers as native <details> elements — no script, keyboard-accessible, and each
+    answer is findable by the browser's own in-page search once opened. Answers are editor-written
+    HTML; the Week 4 dashboard sanitises on save.
+*@
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        <div class="faq-list reveal">
+            @foreach (var item in Model.Items)
+            {
+                <details class="faq">
+                    <summary>@Bi(item.TitleEn ?? string.Empty, item.TitleAr ?? string.Empty)</summary>
+                    <div>@Html.Raw(Bi(item.BodyEn ?? string.Empty, item.BodyAr ?? string.Empty))</div>
+                </details>
+            }
+        </div>
+    </div>
+</section>

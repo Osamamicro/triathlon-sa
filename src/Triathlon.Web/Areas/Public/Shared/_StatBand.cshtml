@@ -1,0 +1,41 @@
+@using Triathlon.Web.Domain.Stats
+@model IReadOnlyList<Kpi>
+@*
+    One row of KPI tiles: the home page's four-tile band (no ViewData) and the statistics page's
+    ten-tile band ("wide" in ViewData).
+
+    Two rulings live here.
+
+    1. The number is real in the served HTML. The tile prints PublicText.Number(k.Value) as its
+       first text node and keeps data-count for the counter; site.js resets that node to zero and
+       tweens it only when motion is allowed, so a crawler, a printout, a no-JS visitor and a
+       reduced-motion visitor all read the Federation's actual figures rather than "0".
+
+    2. The band carries no discipline colour. Swim cyan on "Elite athletes" and run amber on
+       "Race participations" made the colour code mean nothing; a KPI is not a discipline. The
+       band is a timing board — one frame, hairline-divided cells, no per-cell stripe — so the
+       numbers are the only thing on it that varies.
+*@
+@{
+    var wide = ViewData["wide"] as bool? ?? false;
+}
+<div class="stat-band@(wide ? " wide" : "")">
+@foreach (var k in Model)
+{
+    <div class="stat reveal">
+      @if (k.Suffix is null)
+      {
+        <div class="stat-value mono" data-count="@k.Value">@Number(k.Value)@if (k.ShowPlus) {<span class="plus">+</span>}</div>
+      }
+      else
+      {
+        <div class="stat-value mono" data-count="@k.Value" data-suffix="@k.Suffix">@Number(k.Value)@k.Suffix@if (k.ShowPlus) {<span class="plus">+</span>}</div>
+      }
+      <div class="stat-label">@Bi(k.LabelEn, k.LabelAr)</div>
+      @if (k.NoteEn is not null)
+      {
+        <div class="stat-note mono">@Bi(k.NoteEn, k.NoteAr ?? k.NoteEn)</div>
+      }
+    </div>
+}
+</div>

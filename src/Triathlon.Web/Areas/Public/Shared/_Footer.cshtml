@@ -1,24 +1,14 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
 @inject IStringLocalizer<Shared> L
+@inject ContentService Content
 @{
-    var culture = PublicCulture.Of(ViewContext);
     var year = DateTime.UtcNow.Year;
 
-    (string Href, string En, string Ar)[] compete =
-    [
-        (PublicCulture.Url(culture, "events"), "Events & calendar", "الفعاليات والتقويم"),
-        (PublicCulture.Url(culture, "events/timeline"), "Season timeline", "الجدول الزمني للموسم"),
-        (PublicCulture.Url(culture, "rules"), "Rules & regulations", "اللوائح والأنظمة"),
-        (PublicCulture.Url(culture, "statistics"), "Federation statistics", "إحصائيات الاتحاد"),
-    ];
-
-    (string Href, string En, string Ar)[] involved =
-    [
-        (PublicCulture.Url(culture, "register"), "Athlete registration", "تسجيل الرياضيين"),
-        (PublicCulture.Url(culture, "join"), "Become an athlete", "كن رياضياً"),
-        (PublicCulture.Url(culture, "training"), "Training guide", "دليل التدريب"),
-        (PublicCulture.Url(culture, "join") + "#clubs", "Affiliated clubs", "الأندية المنتسبة"),
-        (PublicCulture.Url(culture, "governance"), "Governance & transparency", "الحوكمة والشفافية"),
-    ];
+    // The two link columns are rows in the same table the header reads; the contact column stays
+    // here because it is the federation's own details rather than site navigation.
+    var compete = await Content.NavigationAsync(NavLocation.FooterCompete, Context.RequestAborted);
+    var involved = await Content.NavigationAsync(NavLocation.FooterInvolved, Context.RequestAborted);
 }
 <footer class="site-footer">
     <div class="footer-tri"></div>
@@ -26,41 +16,33 @@
         <div class="footer-grid">
             <div>
                 <div class="brand" style="margin-bottom:14px">
-                    <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
-                        <path d="M22 5 L39 37 H33 L22 16 L11 37 H5 Z" fill="none" stroke="url(#triGradFooter)" stroke-width="3.4" stroke-linejoin="round" />
-                        <defs>
-                            <linearGradient id="triGradFooter" x1="0" y1="0" x2="44" y2="44">
-                                <stop offset="0" stop-color="#26C6E8" /><stop offset=".5" stop-color="#2EE68A" /><stop offset="1" stop-color="#FFA245" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <span class="brand-name"><span class="en">Saudi Triathlon</span><span class="ar">الاتحاد السعودي للترايثلون</span></span>
+                    <img class="brand-mark" src="~/img/brand/stf-mark-96.webp" width="34" height="34" alt="" decoding="async" loading="lazy">
+                    <span class="brand-name">@Bi("Saudi Triathlon Federation", "الاتحاد السعودي للترايثلون")</span>
                 </div>
                 <p class="muted" style="font-size:.9rem;max-width:34ch">
-                    <span class="en">The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.</span>
-                    <span class="ar">الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.</span>
+                    @Bi("The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.", "الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.")
                 </p>
             </div>
             <div>
-                <h4><span class="en">Compete</span><span class="ar">المنافسات</span></h4>
+                <h3>@Bi("Compete", "المنافسات")</h3>
                 <ul>
                     @foreach (var link in compete)
                     {
-                        <li><a href="@link.Href"><span class="en">@link.En</span><span class="ar">@link.Ar</span></a></li>
+                        <li><a href="@PublicText.Href(link.Href)">@Bi(link.LabelEn, link.LabelAr)</a></li>
                     }
                 </ul>
             </div>
             <div>
-                <h4><span class="en">Get involved</span><span class="ar">شارك معنا</span></h4>
+                <h3>@Bi("Get involved", "شارك معنا")</h3>
                 <ul>
                     @foreach (var link in involved)
                     {
-                        <li><a href="@link.Href"><span class="en">@link.En</span><span class="ar">@link.Ar</span></a></li>
+                        <li><a href="@PublicText.Href(link.Href)">@Bi(link.LabelEn, link.LabelAr)</a></li>
                     }
                 </ul>
             </div>
             <div>
-                <h4><span class="en">Contact</span><span class="ar">تواصل معنا</span></h4>
+                <h3>@Bi("Contact", "تواصل معنا")</h3>
                 <ul>
                     <li><a href="https://triathlon.sa" rel="noopener">triathlon.sa</a></li>
                     <li><a href="mailto:info@@triathlon.sa">info@@triathlon.sa</a></li>
@@ -70,8 +52,8 @@
         </div>
         <div class="footer-bottom">
             <span>@L["FooterLegal", year]</span>
-            <a href="/dashboard"><span class="en">CONTENT DASHBOARD</span><span class="ar">لوحة إدارة المحتوى</span></a>
-            <span class="en">SWIM · BIKE · RUN</span><span class="ar">سباحة · دراجة · جري</span>
+            <a href="/dashboard">@Bi("CONTENT DASHBOARD", "لوحة إدارة المحتوى")</a>
+            <span>@Bi("SWIM · BIKE · RUN", "سباحة · دراجة · جري")</span>
         </div>
     </div>
 </footer>

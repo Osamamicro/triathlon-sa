@@ -1,0 +1,18 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    A stretch of editor-written prose — headings, paragraphs, lists and tables — styled by
+    .rich-text so an editor never has to reach for a class name. Rendered raw; the Week 4 dashboard
+    sanitises on save, and everything reaching it today came from a seed.
+*@
+@{
+    // Variant "note" is a footnote to the block above it, not a section of its own: one sentence
+    // of prose does not earn a section rule, 300px of band and an indent that lines up with
+    // nothing. It keeps the container so the measure still matches the page.
+    var isNote = Model.Variant == "note";
+}
+<section class="@(isNote ? "section-note" : "section")" id="@Model.Anchor">
+    <div class="container rich-text">
+        @Html.Raw(Bi(Model.BodyEn ?? string.Empty, Model.BodyAr ?? string.Empty))
+    </div>
+</section>

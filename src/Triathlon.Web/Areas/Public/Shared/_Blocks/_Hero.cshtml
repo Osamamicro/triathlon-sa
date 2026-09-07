@@ -1,0 +1,34 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    A page's opening section: eyebrow, headline, lead paragraph and up to two calls to action.
+    The lead is editor-written HTML, so it goes through Html.Raw; the Week 4 dashboard sanitises
+    it on save, and everything reaching it today came from a seed.
+*@
+<section class="page-hero" id="@Model.Anchor">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+        @if (Model.EyebrowEn is { } eyebrowEn && Model.EyebrowAr is { } eyebrowAr)
+        {
+            <span class="eyebrow">@Bi(eyebrowEn, eyebrowAr)</span>
+        }
+        <h1>@Bi(Model.TitleEn ?? string.Empty, Model.TitleAr ?? string.Empty)</h1>
+        @if (Model.BodyEn is not null || Model.BodyAr is not null)
+        {
+            <p class="hero-lead">@Html.Raw(Bi(Model.BodyEn ?? string.Empty, Model.BodyAr ?? string.Empty))</p>
+        }
+        @if (Model.CtaHref is not null || Model.SecondaryHref is not null)
+        {
+            <div class="hero-actions" style="margin-top:26px">
+                @if (Model.CtaHref is { } ctaHref)
+                {
+                    <a class="btn btn-primary" href="@PublicText.Href(ctaHref)">@Bi(Model.CtaLabelEn ?? string.Empty, Model.CtaLabelAr ?? string.Empty)</a>
+                }
+                @if (Model.SecondaryHref is { } secondaryHref)
+                {
+                    <a class="btn btn-ghost" href="@PublicText.Href(secondaryHref)">@Bi(Model.SecondaryLabelEn ?? string.Empty, Model.SecondaryLabelAr ?? string.Empty)</a>
+                }
+            </div>
+        }
+    </div>
+</section>

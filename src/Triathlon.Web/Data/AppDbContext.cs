@@ -2,7 +2,12 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Domain.Content;
+using Triathlon.Web.Domain.Crm;
+using Triathlon.Web.Domain.Documents;
+using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
+using Triathlon.Web.Domain.Stats;
 
 namespace Triathlon.Web.Data;
 
@@ -19,6 +24,30 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     /// <summary>Append-only audit trail; never soft-deleted, so it is exempt from the filter below.</summary>
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventGalleryImage> EventGalleryImages => Set<EventGalleryImage>();
+    public DbSet<EventResult> EventResults => Set<EventResult>();
+    public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
+
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<RuleOrGuide> Rules => Set<RuleOrGuide>();
+    public DbSet<TrainingGuide> TrainingGuides => Set<TrainingGuide>();
+    public DbSet<TrainingGuideChapter> TrainingGuideChapters => Set<TrainingGuideChapter>();
+
+    public DbSet<Page> Pages => Set<Page>();
+    public DbSet<PageBlock> PageBlocks => Set<PageBlock>();
+    public DbSet<NavItem> NavItems => Set<NavItem>();
+    public DbSet<Committee> Committees => Set<Committee>();
+    public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
+
+    public DbSet<Club> Clubs => Set<Club>();
+    public DbSet<Athlete> Athletes => Set<Athlete>();
+
+    public DbSet<Kpi> Kpis => Set<Kpi>();
+    public DbSet<RegionStat> RegionStats => Set<RegionStat>();
+    public DbSet<GrowthPoint> GrowthPoints => Set<GrowthPoint>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

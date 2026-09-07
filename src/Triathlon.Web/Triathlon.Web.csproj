@@ -31,6 +31,9 @@
          ResourcesPath instead ("Triathlon.Web.Resources.Shared"), so the names are pinned here. -->
     <EmbeddedResource Update="Resources\Shared.en.resx" LogicalName="Triathlon.Web.Resources.Shared.en.resources" />
     <EmbeddedResource Update="Resources\Shared.ar.resx" LogicalName="Triathlon.Web.Resources.Shared.ar.resources" />
+    <!-- Same reasoning as Shared.cs above, for DashboardStrings.cs. -->
+    <EmbeddedResource Update="Resources\DashboardStrings.en.resx" LogicalName="Triathlon.Web.Resources.DashboardStrings.en.resources" />
+    <EmbeddedResource Update="Resources\DashboardStrings.ar.resx" LogicalName="Triathlon.Web.Resources.DashboardStrings.ar.resources" />
   </ItemGroup>
 
   <ItemGroup>

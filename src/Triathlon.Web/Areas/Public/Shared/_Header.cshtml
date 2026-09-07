@@ -1,4 +1,7 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
 @inject IStringLocalizer<Shared> L
+@inject ContentService Content
 @{
     var culture = PublicCulture.Of(ViewContext);
 
@@ -10,18 +13,10 @@
         here = string.Empty;
     }
 
-    // Sections shipping in later weeks are already in the navigation; they 404 until they land.
-    (string Path, string En, string Ar)[] nav =
-    [
-        ("", "Home", "الرئيسية"),
-        ("events", "Events", "الفعاليات"),
-        ("events/timeline", "Season", "الموسم"),
-        ("join", "Join", "الانضمام"),
-        ("training", "Training", "التدريب"),
-        ("rules", "Rules", "اللوائح"),
-        ("governance", "Governance", "الحوكمة"),
-        ("statistics", "Statistics", "الإحصائيات"),
-    ];
+    // Rows, not markup: renaming a section is an edit in the dashboard. Sections shipping in later
+    // weeks are already listed; they 404 until they land. Every public page is cached under
+    // CacheTags.Site, so a navigation publish evicts the whole site in one call.
+    var nav = await Content.NavigationAsync(NavLocation.Header, Context.RequestAborted);
 
     bool Current(string path) => path.Length == 0
         ? here.Length == 0
@@ -29,21 +24,16 @@
           || here.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
 }
 <header class="site-header"><div class="container">
+    @* The Federation's own mark, fetched from triathlon.sa. The anchor's accessible name comes
+       from the wordmark beside it, so the image itself is decorative. *@
     <a class="brand" href="@PublicCulture.Url(culture)">
-        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
-            <path d="M22 5 L39 37 H33 L22 16 L11 37 H5 Z" fill="none" stroke="url(#triGrad)" stroke-width="3.4" stroke-linejoin="round" />
-            <defs>
-                <linearGradient id="triGrad" x1="0" y1="0" x2="44" y2="44">
-                    <stop offset="0" stop-color="#26C6E8" /><stop offset=".5" stop-color="#2EE68A" /><stop offset="1" stop-color="#FFA245" />
-                </linearGradient>
-            </defs>
-        </svg>
-        <span class="brand-name"><span class="en">Saudi Triathlon</span><span class="ar">الاتحاد السعودي للترايثلون</span><small><span class="en">FEDERATION · SWIM BIKE RUN</span><span class="ar">سباحة · دراجة · جري</span></small></span>
+        <img class="brand-mark" src="~/img/brand/stf-mark-96.webp" width="34" height="34" alt="" decoding="async">
+        <span class="brand-name">@Bi("Saudi Triathlon", "ترايثلون السعودية")<small>@Bi("Federation", "الاتحاد السعودي")</small></span>
     </a>
     <nav class="main-nav" id="mainNav" aria-label="@L["MainNav"]">
         @foreach (var item in nav)
         {
-            <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)"><span class="en">@item.En</span><span class="ar">@item.Ar</span></a>
+            <a href="@PublicText.Href(item.Href)" aria-current="@(Current(item.Href) ? "page" : null)">@Bi(item.LabelEn, item.LabelAr)</a>
         }
     </nav>
     <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]" data-label-light="@L["SwitchToLight"]" data-label-dark="@L["SwitchToDark"]">

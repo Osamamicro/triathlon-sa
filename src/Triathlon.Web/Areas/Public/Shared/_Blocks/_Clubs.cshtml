@@ -1,0 +1,33 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
+@model PageBlock
+@inject ContentService Content
+@*
+    The affiliated club list. The block carries only its heading — the clubs themselves are CRM
+    records, so the block reads them rather than storing a copy that would go stale. The generic
+    content page tags its cache entry CacheTags.Clubs when this block is present, so approving a
+    club evicts it; other pages that happen to carry this block fall back to the default 60-second
+    output-cache lifetime.
+*@
+@{
+    var clubs = await Content.ClubsAsync(Context.RequestAborted);
+}
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        @* A register, not six cards. Every club carried the same stand-in sentence about coached
+           sessions, which made real content look like filler; without it a card is two lines in
+           a 120px box. The clubs are a list the federation keeps, so they are filed the way the
+           documents library files its PDFs: one hairline row each, name and city. A real
+           sentence per club can come back as a third column when the Federation writes them. *@
+        <ul class="club-list reveal">
+            @foreach (var club in clubs)
+            {
+                <li class="club-row">
+                    <span class="club-name">@Bi(club.NameEn, club.NameAr)</span>
+                    <span class="club-city mono">@(IsArabic ? Bi(club.CityEn, club.CityAr) : club.CityEn.ToUpperInvariant())</span>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

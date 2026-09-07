@@ -1,0 +1,29 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    A numbered sequence — the registration steps on the join page. The number comes from the item's
+    position, so reordering the items in the dashboard renumbers the list.
+*@
+@{
+    var items = Model.Items;
+}
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        <div class="steps grid grid-2">
+            @for (var i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                // The number is the colour: a step is a position in a sequence, not a category,
+                // so the rail runs in one green rather than cycling the discipline hues.
+                <div class="step reveal">
+                    <span class="step-num">@Digits((i + 1).ToString(CultureInfo.InvariantCulture))</span>
+                    <div>
+                        <h3>@Bi(item.TitleEn ?? string.Empty, item.TitleAr ?? string.Empty)</h3>
+                        <p>@Bi(item.BodyEn ?? string.Empty, item.BodyAr ?? string.Empty)</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

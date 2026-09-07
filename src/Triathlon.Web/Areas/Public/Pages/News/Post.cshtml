@@ -1,0 +1,39 @@
+@page "/news/{slug}"
+@model PostModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var post = Model.Post;
+}
+
+<article>
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@LongDate(post.PublishedOn)</span>
+      <h1>@Bi(post.TitleEn, post.TitleAr)</h1>
+      <p class="hero-lead">@Bi(post.SummaryEn, post.SummaryAr)</p>
+    </div>
+  </section>
+
+  @if (post.HeroImagePath is { } hero)
+  {
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <img src="@hero" alt="@Bi(post.TitleEn, post.TitleAr)" loading="lazy" style="width:100%;border-radius:var(--radius)">
+      </div>
+    </section>
+  }
+
+  <section class="section" style="padding-top:14px">
+    <div class="container rich-text">
+      @* Post bodies are editor-written HTML; the Week 4 dashboard sanitises them on save. *@
+      @Html.Raw(Bi(post.BodyEn, post.BodyAr))
+    </div>
+  </section>
+</article>
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "news")">@Bi("All news", "جميع الأخبار")</a>
+    </div>
+  </section>

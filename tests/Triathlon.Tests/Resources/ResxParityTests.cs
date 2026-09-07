@@ -5,15 +5,17 @@ namespace Triathlon.Tests.Resources;
 /// <summary>
 /// Arabic is a first-class language on this site, not a translation afterthought, and a key that
 /// exists in one file only fails silently — the missing side falls back to the key name in the
-/// middle of a page. So the two resource files are compared key for key.
+/// middle of a page. So every resx pair in the assembly is compared key for key.
 /// </summary>
 public sealed class ResxParityTests
 {
-    [Fact]
-    public void English_and_Arabic_carry_the_same_keys()
+    [Theory]
+    [InlineData("Shared")]
+    [InlineData("DashboardStrings")]
+    public void English_and_Arabic_carry_the_same_keys(string pair)
     {
-        var english = Keys("Shared.en.resx");
-        var arabic = Keys("Shared.ar.resx");
+        var english = Keys($"{pair}.en.resx");
+        var arabic = Keys($"{pair}.ar.resx");
 
         Assert.Equal(english.Keys.OrderBy(key => key, StringComparer.Ordinal), arabic.Keys.OrderBy(key => key, StringComparer.Ordinal));
     }
@@ -21,6 +23,8 @@ public sealed class ResxParityTests
     [Theory]
     [InlineData("Shared.en.resx")]
     [InlineData("Shared.ar.resx")]
+    [InlineData("DashboardStrings.en.resx")]
+    [InlineData("DashboardStrings.ar.resx")]
     public void No_string_is_left_empty(string file)
     {
         var empty = Keys(file).Where(entry => string.IsNullOrWhiteSpace(entry.Value)).Select(entry => entry.Key);
@@ -28,11 +32,13 @@ public sealed class ResxParityTests
         Assert.Empty(empty);
     }
 
-    [Fact]
-    public void There_is_something_to_compare()
+    [Theory]
+    [InlineData("Shared")]
+    [InlineData("DashboardStrings")]
+    public void There_is_something_to_compare(string pair)
     {
         // Guards the test itself: a path that stopped resolving would otherwise pass silently.
-        Assert.NotEmpty(Keys("Shared.en.resx"));
+        Assert.NotEmpty(Keys($"{pair}.en.resx"));
     }
 
     private static Dictionary<string, string> Keys(string file)
@@ -56,13 +62,13 @@ public sealed class ResxParityTests
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "Triathlon.sln")))
+            if (File.Exists(Path.Combine(directory.FullName, "Triathlon.slnx")))
             {
                 return directory.FullName;
             }
         }
 
         throw new InvalidOperationException(
-            $"Could not find Triathlon.sln above '{AppContext.BaseDirectory}'.");
+            $"Could not find Triathlon.slnx above '{AppContext.BaseDirectory}'.");
     }
 }

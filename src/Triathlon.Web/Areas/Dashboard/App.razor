@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components.Endpoints
+@using System.Globalization
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@Lang" dir="@Dir">
 
 <head>
     <meta charset="utf-8" />
@@ -9,7 +10,10 @@
     <ResourcePreloader />
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
     <link rel="stylesheet" href="@Assets["dashboard.css"]" />
-    <ImportMap />
+    @* No <ImportMap />: it renders an inline <script type="importmap">, which the dashboard's
+       Content-Security-Policy (script-src 'self') blocks, and nothing here needs it — every
+       script on this page is referenced through @Assets[...] already. If a component ever
+       imports a fingerprinted JS module, the map has to come back with a CSP nonce. *@
     <link rel="icon" type="image/png" href="@Assets["favicon.png"]" />
     <HeadOutlet />
 </head>
@@ -30,4 +34,11 @@
     // those are marked [ExcludeFromInteractiveRouting] and render as plain server HTML.
     private IComponentRenderMode? PageRenderMode =>
         HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+
+    // The dashboard has no "culture" URL segment (see PublicSite.AddPublicSite); its language comes
+    // from the culture cookie set by /dashboard/culture/{culture}, which request localization has
+    // already resolved into CurrentUICulture by the time this component renders.
+    private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    private static string Dir => Lang == "ar" ? "rtl" : "ltr";
 }

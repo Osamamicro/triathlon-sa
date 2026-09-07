@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Triathlon.Web.Areas.Public;
@@ -44,5 +45,25 @@ public static class PublicCulture
         }
 
         return string.Join('/', segments) + request.QueryString;
+    }
+
+    /// <summary>
+    /// The current request's path (query string dropped — <see cref="Microsoft.AspNetCore.Http.HttpRequest.Path"/>
+    /// never carries one) with its culture segment swapped to <paramref name="targetCulture"/>. This is
+    /// what a canonical or hreflang link needs; <see cref="SwitchUrl"/> keeps the query string instead,
+    /// which is right for the visible language toggle but wrong for a link search engines compare
+    /// byte-for-byte across cultures.
+    /// </summary>
+    public static string PathForCulture(HttpContext context, string targetCulture)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var segments = (context.Request.Path.Value ?? "/").Split('/');
+        if (segments.Length > 1)
+        {
+            segments[1] = targetCulture;
+        }
+
+        return string.Join('/', segments);
     }
 }

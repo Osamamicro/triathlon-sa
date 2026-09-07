@@ -75,6 +75,7 @@ the failing test, and the acceptance check. Expand any task that feels under-spe
 - The bootstrap the `dotnet new blazor` template vendors (60k lines) was added in Task 1.1 and deleted in 1.3; per-task review diffs that include `wwwroot/lib` are unreadable — exclude that path from review packages.
 - Every dashboard mutation later must call `IActivityLogger.LogAsync`; it saves the shared scoped `AppDbContext`, so call it as the single save of the unit of work (or refactor to Add-only first).
 - Deferred review findings from Week 1 (media/decode test fixture, rate-limit "unknown" bucket, EvictAsync partial failure, backup.ps1 layout, Shared.cs resx marker naming, public 404 page, favicon) are listed in the Week 1 PR description — pick them up in Weeks 2–3 where the touched area comes up.
+- Run the suite against SQL Server with `STF_TEST_DB=SqlServer dotnet test` (CI does this on every push); Postgres remains the default.
 
 ## 7. Session chain protocol (every session must do this)
 

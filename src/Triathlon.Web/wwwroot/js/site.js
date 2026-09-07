@@ -1,10 +1,15 @@
 /* ============================================================
    Saudi Triathlon Federation — shared public-site behaviour.
-   Ported from the prototype's assets/js/app.js. The header and
-   footer are rendered by the server now, and the language comes
-   from the URL, so neither is built or persisted here: what is
-   left is the theme toggle, the burger menu, scroll reveal, the
-   stat counters and the shared card/date helpers.
+   Everything this file used to build as HTML — event cards, chips,
+   distance rows, bilingual spans, formatted dates — is rendered by
+   the server now, in one culture, from the database. What is left
+   is behaviour that has no server-side equivalent: the theme
+   toggle, the burger menu, scroll reveal, the stat counters and
+   the filter select that submits its own form.
+
+   Deliberately free of innerHTML: with a script-src 'self' policy
+   and no markup built here, there is nothing on the page that can
+   turn content into script.
    ============================================================ */
 
 (function () {
@@ -29,109 +34,23 @@
     });
   }
 
-  /* ---------------- language ----------------
-     The culture is a route segment, so the served document already carries the
-     right lang/dir. Nothing here writes it, and nothing reads it from storage. */
-  function currentLang() { return document.documentElement.lang === "ar" ? "ar" : "en"; }
-
-  /* ---------------- bilingual text helper ---------------- */
-  function bi(obj) {
-    if (!obj) return "";
-    return '<span class="en">' + obj.en + '</span><span class="ar">' + obj.ar + "</span>";
-  }
-
-  /* ---------------- date formatting ---------------- */
-  const AR_LOCALE = "ar-SA-u-ca-gregory";
-  function fmtDate(iso) {
-    const d = new Date(iso + "T12:00:00");
-    return {
-      en: {
-        day: d.toLocaleDateString("en-GB", { day: "2-digit" }),
-        mon: d.toLocaleDateString("en-GB", { month: "short" }),
-        full: d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" })
-      },
-      ar: {
-        day: d.toLocaleDateString(AR_LOCALE, { day: "2-digit" }),
-        mon: d.toLocaleDateString(AR_LOCALE, { month: "short" }),
-        full: d.toLocaleDateString(AR_LOCALE, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-      }
-    };
-  }
-  function fmtMonth(iso) {
-    const d = new Date(iso + "T12:00:00");
-    return {
-      en: d.toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
-      ar: d.toLocaleDateString(AR_LOCALE, { month: "long", year: "numeric" })
-    };
-  }
-
-  /* ---------------- shared chip labels ---------------- */
-  const LABELS = {
-    competition: { en: "Competition", ar: "بطولات" },
-    community:   { en: "Community",  ar: "مجتمعي" },
-    open:  { en: "Registration open", ar: "التسجيل مفتوح" },
-    soon:  { en: "Opens soon",        ar: "يفتح قريباً" },
-    done:  { en: "Completed",         ar: "انتهت" },
-    swim: { en: "Swim", ar: "سباحة" },
-    bike: { en: "Bike", ar: "دراجة" },
-    run:  { en: "Run",  ar: "جري" }
-  };
-
-  function typeChip(e) {
-    return '<span class="chip chip-' + e.type + '">' + bi(LABELS[e.type]) + "</span>";
-  }
-  function statusChip(e) {
-    const cls = e.status === "open" ? "chip-open" : e.status === "done" ? "chip-done" : "";
-    return '<span class="chip ' + cls + '">' + bi(LABELS[e.status]) + "</span>";
-  }
-  function distanceRow(e) {
-    let out = '<div class="distances">';
-    if (e.distances.swim) out += '<span class="d-swim">' + bi(LABELS.swim) + " " + e.distances.swim + "</span>";
-    if (e.distances.bike) out += '<span class="d-bike">' + bi(LABELS.bike) + " " + e.distances.bike + "</span>";
-    if (e.distances.run)  out += '<span class="d-run">'  + bi(LABELS.run)  + " " + e.distances.run  + "</span>";
-    return out + "</div>";
-  }
-
-  /* ---------------- event card ---------------- */
-  function eventCard(e, opts) {
-    opts = opts || {};
-    const d = fmtDate(e.date);
-    const city = STF.cities[e.city];
-    const past = e.status === "done";
-    /* every public URL is culture-first, so a card links inside the culture it was rendered in */
-    const href = "/" + currentLang() + "/events/" + e.id;
-    return (
-      '<a class="card event-card reveal' + (past ? " past" : "") + '" href="' + href + '">' +
-        '<div class="date-block">' +
-          '<span class="date-tile">' +
-            '<span class="d-m mono"><span class="en">' + d.en.mon + '</span><span class="ar">' + d.ar.mon + "</span></span>" +
-            '<span class="d-d"><span class="en">' + d.en.day + '</span><span class="ar">' + d.ar.day + "</span></span>" +
-          "</span>" +
-          '<div class="chips">' + typeChip(e) + statusChip(e) + "</div>" +
-        "</div>" +
-        "<h3>" + bi(e.title) + "</h3>" +
-        '<div class="event-meta">' +
-          "<span>◈ " + bi(city.name) + "</span>" +
-          '<span class="mono">' + e.time + "</span>" +
-        "</div>" +
-        distanceRow(e) +
-        '<div class="card-cta"><span>' +
-          bi(past ? { en: "Results & recap", ar: "النتائج والملخص" } : { en: "Event page", ar: "صفحة الفعالية" }) +
-        "</span><span aria-hidden=\"true\" class=\"cta-arrow\">→</span></div>" +
-      "</a>"
-    );
-  }
-
-  /* ---------------- counters ---------------- */
+  /* ---------------- counters ----------------
+     The tile already carries the real figure, rendered by the server: a crawler, a printout and
+     a no-JS visitor all read it. The count-up is decoration on top, so it resets the number to
+     zero itself and only when motion is allowed. Under prefers-reduced-motion this function
+     touches nothing and the served value stands. */
   function animateCounter(el) {
+    if (reduced) return;
     const target = parseFloat(el.dataset.count || "0");
     const suffix = el.dataset.suffix || "";
-    const plus = el.dataset.plus !== undefined;
-    const render = v => {
-      el.innerHTML = Math.round(v).toLocaleString(currentLang() === "ar" ? AR_LOCALE : "en-US") +
-        suffix + (plus ? '<span class="plus">+</span>' : "");
-    };
-    if (reduced) { render(target); return; }
+    const locale = document.documentElement.lang === "ar" ? "ar-SA-u-ca-gregory" : "en-US";
+    /* the number is the element's first text node; a trailing <span class="plus">,
+       rendered once by the server, stays untouched */
+    const node = el.firstChild && el.firstChild.nodeType === 3
+      ? el.firstChild
+      : el.insertBefore(document.createTextNode(""), el.firstChild);
+    const render = v => { node.nodeValue = Math.round(v).toLocaleString(locale) + suffix; };
+    render(0);
     const dur = 1400, t0 = performance.now();
     (function tick(t) {
       const p = Math.min((t - t0) / dur, 1);
@@ -142,8 +61,8 @@
 
   /* ---------------- boot ---------------- */
   function boot() {
-    /* the inline bootstrap in <head> already painted the theme; this only
-       syncs the toggle's aria-label and re-persists the active choice */
+    /* theme.js in <head> already painted the theme; this only syncs the
+       toggle's aria-label and re-persists the active choice */
     applyTheme(currentTheme());
 
     document.addEventListener("click", ev => {
@@ -183,10 +102,39 @@
     } else {
       counters.forEach(animateCounter);
     }
-  }
 
-  /* public API for pages */
-  window.STFApp = { bi, fmtDate, fmtMonth, eventCard, typeChip, statusChip, distanceRow, LABELS, currentLang };
+    /* ---------------- statistics bars ----------------
+       The server writes each bar's real width into the style attribute as well as into data-w,
+       so the charts are drawn in the served HTML. Where motion is allowed the bars are collapsed
+       to zero without a transition, then grown back as each one scrolls into view. Reduced
+       motion, or no IntersectionObserver, leaves the served widths exactly as they are. */
+    function setBarWidth(el) { el.style.width = el.dataset.w + "%"; }
+    const fills = document.querySelectorAll(".bar-fill");
+    if (!reduced && "IntersectionObserver" in window && fills.length) {
+      const io3 = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { en.target.style.width = ""; setBarWidth(en.target); io3.unobserve(en.target); }
+          else if (!en.target.dataset.reset) {
+            /* collapse on the observer's first word about this bar, not before it: if the
+               observer never reports, the width the server wrote is what stays on screen */
+            en.target.dataset.reset = "1";
+            en.target.style.transition = "none";
+            en.target.style.width = "0%";
+            void en.target.offsetWidth;
+            en.target.style.transition = "";
+          }
+        });
+      }, { threshold: 0.4 });
+      fills.forEach(el => io3.observe(el));
+    }
+
+    /* <select data-autosubmit> inside a GET form submits on change; no-JS visitors use
+       the noscript button beside it */
+    document.addEventListener("change", ev => {
+      const s = ev.target.closest("select[data-autosubmit]");
+      if (s && s.form) s.form.requestSubmit();
+    });
+  }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

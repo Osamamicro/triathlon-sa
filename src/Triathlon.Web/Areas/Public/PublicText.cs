@@ -1,0 +1,190 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+using Triathlon.Web.Domain.Common;
+
+namespace Triathlon.Web.Areas.Public;
+
+/// <summary>
+/// Single-culture text for the public views. Request localization sets the culture from the URL
+/// segment, so a view that calls <c>Bi(en, ar)</c> emits one language and nothing for the other —
+/// the paired <c>.en/.ar</c> spans of the prototype are gone from server markup (Week 1 ruling).
+/// Dates are Gregorian in both languages; Arabic shows Arabic-Indic digits, as the prototype did.
+/// </summary>
+public static partial class PublicText
+{
+    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-GB");
+    // Neutral "ar", not "ar-SA": ar-SA defaults to the Umm al-Qura calendar.
+    private static readonly CultureInfo Arabic = CultureInfo.GetCultureInfo("ar");
+
+    public static bool IsArabic =>
+        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ar", StringComparison.OrdinalIgnoreCase);
+
+    public static string Culture => IsArabic ? "ar" : "en";
+
+    public static string Bi(string en, string ar) => IsArabic ? ar : en;
+
+    public static string Bi(Bilingual text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        return Bi(text.En, text.Ar);
+    }
+
+    /// <summary>Arabic-Indic digits for Arabic; every other character, and every other culture, untouched.</summary>
+    public static string Digits(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        if (!IsArabic)
+        {
+            return text;
+        }
+
+        return string.Create(text.Length, text, static (span, source) =>
+        {
+            for (var i = 0; i < source.Length; i++)
+            {
+                var c = source[i];
+                span[i] = c is >= '0' and <= '9' ? (char)('\u0660' + (c - '0')) : c;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Thousands are grouped with the Arabic thousands separator (U+066C) rather than a comma,
+    /// which is what the digits belong with; the grouping itself comes from the English format
+    /// because Arabic's own numeric formats vary by region and this site shows one shape.
+    /// </summary>
+    public static string Number(long value) =>
+        IsArabic ? Digits(value.ToString("N0", English)).Replace(',', '\u066C') : value.ToString("N0", English);
+
+    /// <summary>
+    /// A race distance the way the site prints it everywhere: "750m", "20km", "5km + 2.5km".
+    /// In English the seeded string is already right. In Arabic it is the one place the site used
+    /// to speak two numeral systems at once — an Arabic-Indic date beside a Latin-digit distance on
+    /// the same card — so the digits, the decimal separator and the unit are all converted here:
+    /// "٧٥٠م", "٢٠كم", "٢٫٥كم". One system per page (Arabic-Indic), which is what the dates, the
+    /// times and the KPI values already use.
+    /// </summary>
+    public static string Distance(string? raw)
+    {
+        if (string.IsNullOrEmpty(raw) || !IsArabic)
+        {
+            return raw ?? string.Empty;
+        }
+
+        // Unit first, while the digits are still Latin and the lookbehind can find them.
+        var text = UnitPattern().Replace(raw, m => m.Groups[1].Value.Equals("km", StringComparison.OrdinalIgnoreCase) ? "كم" : "م");
+
+        return Digits(text).Replace('.', '٫');
+    }
+
+    /// <summary>A metric distance unit that follows a number: the "m" of "750m", the "km" of "20km".</summary>
+    [GeneratedRegex(@"(?<=\d\s*)(km|m)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex UnitPattern();
+
+    public static string LongDate(DateOnly date) =>
+        IsArabic ? Digits(date.ToString("dddd d MMMM yyyy", Arabic)) : date.ToString("ddd d MMMM yyyy", English);
+
+    public static string DayNumber(DateOnly date) => Digits(date.Day.ToString(CultureInfo.InvariantCulture));
+
+    /// <summary>
+    /// Short in English ("Oct"); Arabic has no shortened month names worth the ambiguity, so it
+    /// gets the full one.
+    /// </summary>
+    public static string MonthShort(DateOnly date) =>
+        IsArabic ? date.ToString("MMMM", Arabic) : date.ToString("MMM", English);
+
+    public static string MonthYear(DateOnly date) =>
+        Digits(date.ToString("MMMM yyyy", IsArabic ? Arabic : English));
+
+    public static string Time(TimeOnly time) => Digits(time.ToString("HH:mm", CultureInfo.InvariantCulture));
+
+    /// <summary>
+    /// A downloadable file's size the way the library lists it — one decimal in megabytes
+    /// ("4.8 MB", "0.6 MB"), which is what the prototype showed. A file too small to round to a
+    /// tenth of a megabyte would read "0.0 MB", so those are given in whole kilobytes instead.
+    /// Arabic gets Arabic-Indic digits; the unit stays Latin, as it does on every kit list.
+    /// </summary>
+    public static string FileSize(long bytes)
+    {
+        var megabytes = bytes / 1_000_000d;
+
+        return megabytes >= 0.05
+            ? Digits(megabytes.ToString("0.0", English)) + " MB"
+            : Digits((bytes / 1_000d).ToString("0", English)) + " KB";
+    }
+
+    /// <summary>
+    /// Resolves an editor-written link for rendering. An absolute URL, a <c>mailto:</c> address and
+    /// an in-page fragment are left exactly as they were typed; everything else is a path inside the
+    /// site and gets the current culture segment, so <c>join#clubs</c> becomes <c>/en/join#clubs</c>
+    /// and the empty string becomes <c>/en</c>.
+    /// <para>
+    /// Views must call this as <c>@PublicText.Href(…)</c>, not as a bare <c>@Href(…)</c>: every
+    /// Razor view inherits <c>RazorPageBase.Href</c>, which resolves <c>~/</c> content paths and
+    /// wins over a static import, so an unqualified call silently emits the raw value.
+    /// </para>
+    /// </summary>
+    public static string Href(string href)
+    {
+        ArgumentNullException.ThrowIfNull(href);
+
+        return href.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith('#')
+            ? href
+            : PublicCulture.Url(Culture, href);
+    }
+
+    /// <summary>
+    /// Whether a value edited through the dashboard is safe to render into an <c>href</c>: an
+    /// absolute <c>http</c>/<c>https</c> URL. Blocks <c>javascript:</c>, <c>data:</c> and malformed
+    /// values, and a relative path (which would resolve against the current page rather than go
+    /// where the editor intended). Callers fall back to a disabled placeholder when this is false.
+    /// </summary>
+    public static bool IsSafeExternalUrl(string? url) =>
+        !string.IsNullOrWhiteSpace(url)
+        && Uri.TryCreate(url, UriKind.Absolute, out var parsed)
+        && (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps);
+
+    private static readonly string[] BlockTags = ["<p", "<ul", "<ol", "<table", "<div", "<h"];
+
+    /// <summary>
+    /// Whether an editor-written body already opens with block-level HTML (a paragraph, list,
+    /// table, div or heading) rather than being bare text that needs a wrapper to pick up any
+    /// styling at all. Leading whitespace is tolerated. Null or blank is "no body", not block HTML.
+    /// </summary>
+    public static bool IsBlockHtml(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return false;
+        }
+
+        var trimmed = body.AsSpan().TrimStart();
+        foreach (var tag in BlockTags)
+        {
+            if (trimmed.StartsWith(tag, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Maps a <c>BlockItem.Color</c> value ("swim" | "bike" | "run", case-insensitive) to the CSS
+    /// custom property that names it, or <c>null</c> for anything else — an editor-written value
+    /// never reaches a <c>style</c> attribute unescaped.
+    /// </summary>
+    public static string? AccentVar(string? color) => color?.Trim().ToLowerInvariant() switch
+    {
+        "swim" => "var(--swim)",
+        "bike" => "var(--bike)",
+        "run" => "var(--run)",
+        _ => null,
+    };
+}

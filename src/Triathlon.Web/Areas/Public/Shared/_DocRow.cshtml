@@ -1,0 +1,30 @@
+@model DocRowModel
+@*
+    One downloadable file, the prototype's .doc-row anchor. The href is the counting redirect rather
+    than the PDF, so there is no download attribute: the endpoint increments the counter and then
+    sends the browser to the file.
+*@
+@* The badge is one accent for every row. Tinting it by filing category made cyan mean
+   "board minutes" and amber mean "financial", which is the run colour spent on a PDF. *@
+<a class="doc-row reveal" href="@Model.Href">
+  <span class="doc-icon">PDF</span>
+  <span class="doc-main">
+    <h4>@Bi(Model.TitleEn, Model.TitleAr)</h4>
+    @if (Model.DescEn is { } descEn && Model.DescAr is { } descAr)
+    {
+      <p class="muted" style="margin:4px 0 6px;font-size:.86rem">@Bi(descEn, descAr)</p>
+    }
+    <span class="doc-meta">
+      <span>@Bi(Model.MetaLeftEn, Model.MetaLeftAr)</span>
+      @if (Model.MetaMid is { } mid)
+      {
+        <span>@mid</span>
+      }
+      @if (Model.Size is { } size)
+      {
+        <span>@size</span>
+      }
+    </span>
+  </span>
+  <span class="doc-dl" aria-hidden="true">↓</span>
+</a>
