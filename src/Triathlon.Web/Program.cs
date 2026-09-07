@@ -85,6 +85,8 @@ var app = builder.Build();
 //                        run before anything that reads the address or scheme.
 //   staging gate       — before anything can produce or replay a response body, so an unfinished
 //                        site cannot leak through static assets or the output cache.
+//   media files        — right after the staging gate, so an unfinished staging site's uploads are
+//                        challenged the same as everything else on it.
 //   exception handling — outside compression, so a failure inside it still renders an error page.
 //   compression        — before routing, so it wraps static assets and endpoints alike.
 //   rate limiter       — after routing, because the policy is chosen from endpoint metadata.
@@ -93,6 +95,7 @@ var app = builder.Build();
 
 app.UseAppProxy();
 app.UseStagingBasicAuth();
+app.UseMediaFiles();
 
 if (app.Environment.IsDevelopment())
 {

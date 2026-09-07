@@ -36,8 +36,8 @@ public sealed class LocalFileStore : IFileStore
     public LocalFileStore(IOptions<MediaOptions> options, IWebHostEnvironment environment, TimeProvider clock)
     {
         var settings = options.Value;
-        _root = ResolveRoot(settings.Root, environment);
-        _publicPrefix = "/" + settings.PublicPrefix.Trim('/');
+        _root = settings.ResolveRoot(environment);
+        _publicPrefix = settings.NormalizedPublicPrefix;
         _clock = clock;
     }
 
@@ -103,6 +103,15 @@ public sealed class LocalFileStore : IFileStore
             foreach (var path in written)
             {
                 TryDelete(path);
+            }
+
+            // ImageVariants.WriteAsync can throw after writing some, but not all, of its renditions
+            // (a later width failing to encode, or the request being cancelled mid-loop). Those file
+            // names never made it into `names` and so were never added to `written` above — sweep
+            // the directory for anything this upload's id could have produced and remove it too.
+            foreach (var orphan in Directory.EnumerateFiles(directory, $"{id}-*.webp"))
+            {
+                TryDelete(orphan);
             }
 
             throw;
@@ -203,18 +212,6 @@ public sealed class LocalFileStore : IFileStore
         }
 
         return null;
-    }
-
-    private static string ResolveRoot(string configured, IWebHostEnvironment environment)
-    {
-        if (string.IsNullOrWhiteSpace(configured))
-        {
-            return Path.Combine(environment.ContentRootPath, "wwwroot", "media");
-        }
-
-        return Path.IsPathRooted(configured)
-            ? configured
-            : Path.Combine(environment.ContentRootPath, configured);
     }
 
     private sealed record Signature(string ContentType, string Extension, FileKind Kind);

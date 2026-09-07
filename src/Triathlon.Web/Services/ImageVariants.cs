@@ -31,13 +31,18 @@ public static class ImageVariants
         string baseName,
         CancellationToken ct)
     {
-        using var image = await Image.LoadAsync(sourcePath, ct);
+        // Identify only reads the header — width and height are declared there — so an image that
+        // claims an enormous canvas is rejected before the decoder is asked to allocate for it.
+        // Loading first and checking after, as this used to do, defeats the whole point of the guard.
+        var info = await Image.IdentifyAsync(sourcePath, ct);
 
-        if (image.Width > MaxSourceEdge || image.Height > MaxSourceEdge)
+        if (info.Width > MaxSourceEdge || info.Height > MaxSourceEdge)
         {
             throw new InvalidDataException(
-                $"Image is {image.Width}x{image.Height}; the longest side may not exceed {MaxSourceEdge} pixels.");
+                $"Image is {info.Width}x{info.Height}; the longest side may not exceed {MaxSourceEdge} pixels.");
         }
+
+        using var image = await Image.LoadAsync(sourcePath, ct);
 
         var widths = Widths.Where(width => width < image.Width).ToArray();
         if (widths.Length == 0)

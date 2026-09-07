@@ -72,6 +72,23 @@ public sealed class LocalFileStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Image_whose_longest_edge_exceeds_the_limit_is_rejected_before_a_full_decode()
+    {
+        var store = CreateStore();
+
+        // One dimension one pixel past ImageVariants.MaxSourceEdge (6000). The guard reads this
+        // straight from the header via Image.IdentifyAsync — it must reject the upload without
+        // ever asking the decoder to materialise the full frame.
+        await using var oversized = Png(6001, 1);
+
+        await Assert.ThrowsAsync<InvalidDataException>(() =>
+            store.SaveAsync(oversized, "panorama.png", FileKind.Image));
+
+        // Neither the original nor any partial WebP rendition may be left on disk.
+        Assert.Empty(Directory.GetFiles(_root, "*", SearchOption.AllDirectories));
+    }
+
+    [Fact]
     public async Task Pdf_is_stored_without_variants()
     {
         var store = CreateStore();

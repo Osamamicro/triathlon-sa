@@ -28,14 +28,27 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Smtp
         // and a pooled connection to a relay that drops idle sessions costs more than it saves.
         using var client = new SmtpClient();
 
-        await client.ConnectAsync(
-            settings.Host,
-            settings.Port,
-            settings.UseStartTls ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto,
-            ct);
+        // SecureSocketOptions.Auto silently accepts a plaintext session if the relay does not offer
+        // STARTTLS — fine for an anonymous relay, not for one an authenticated mailbox password is
+        // about to go over. When STARTTLS is not explicitly requested, still ask for TLS: implicit
+        // TLS on 465, otherwise upgrade-if-offered on 587/25, and refuse to authenticate below if
+        // that upgrade did not actually happen.
+        var secureSocketOptions = settings.UseStartTls
+            ? SecureSocketOptions.StartTls
+            : settings.Port == 465
+                ? SecureSocketOptions.SslOnConnect
+                : SecureSocketOptions.StartTlsWhenAvailable;
+
+        await client.ConnectAsync(settings.Host, settings.Port, secureSocketOptions, ct);
 
         if (!string.IsNullOrEmpty(settings.User))
         {
+            if (!client.IsSecure)
+            {
+                throw new InvalidOperationException(
+                    "Refusing to authenticate over an unencrypted SMTP connection.");
+            }
+
             await client.AuthenticateAsync(settings.User, settings.Password, ct);
         }
 
