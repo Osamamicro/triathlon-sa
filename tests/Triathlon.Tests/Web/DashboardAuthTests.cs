@@ -86,6 +86,53 @@ public sealed class DashboardAuthTests(WebAppFixture app)
         Assert.DoesNotContain("evil.com", signIn.Headers.Location!.ToString());
     }
 
+    [Fact]
+    public async Task Logout_with_a_tampered_returnUrl_lands_on_the_login_page()
+    {
+        using var client = app.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = WebAppFixture.HttpsBaseAddress,
+        });
+
+        await SignInAsync(client);
+
+        // The sign-out form is rendered by the dashboard layout, so its antiforgery token comes from
+        // the signed-in page — the same token the browser would post.
+        var dashboard = await client.GetStringAsync("/dashboard");
+        var form = HiddenFields(dashboard);
+        Assert.Contains("__RequestVerificationToken", form.Keys);
+
+        // What a hand-edited form would post. LocalRedirect throws on it, so an unguarded endpoint
+        // answers 500 and leaves the visitor signed out on an error page.
+        form["returnUrl"] = "//evil.com";
+
+        using var logout = await client.PostAsync("/dashboard/logout", new FormUrlEncodedContent(form));
+
+        Assert.Equal(HttpStatusCode.Found, logout.StatusCode);
+        Assert.Equal("/dashboard/login", logout.Headers.Location!.ToString());
+
+        // And it really was a sign-out: the dashboard bounces us back to the login page again.
+        using var afterLogout = await client.GetAsync("/dashboard");
+
+        Assert.Equal(HttpStatusCode.Found, afterLogout.StatusCode);
+        Assert.Contains("/dashboard/login", afterLogout.Headers.Location!.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>Signs the seeded administrator in on <paramref name="client"/>, cookie and all.</summary>
+    private static async Task SignInAsync(HttpClient client)
+    {
+        var loginPage = await client.GetStringAsync("/dashboard/login");
+        var form = HiddenFields(loginPage);
+
+        form["Input.Email"] = WebAppFixture.AdminEmail;
+        form["Input.Password"] = WebAppFixture.AdminPassword;
+
+        using var signIn = await client.PostAsync("/dashboard/login", new FormUrlEncodedContent(form));
+
+        Assert.Equal(HttpStatusCode.Found, signIn.StatusCode);
+    }
+
     /// <summary>Collects every hidden input on a page — the antiforgery token and Blazor's form handler.</summary>
     private static Dictionary<string, string> HiddenFields(string html)
     {

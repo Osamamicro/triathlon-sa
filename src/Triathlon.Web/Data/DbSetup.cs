@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Triathlon.Web.Services;
 
 namespace Triathlon.Web.Data;
 
@@ -22,9 +23,14 @@ public static class DbSetup
 
         services.AddHttpContextAccessor();
         services.TryAddSingleton(TimeProvider.System);
-        services.TryAddSingleton(sp => new StampInterceptor(
+
+        // Both scoped, and for the same reason: the acting user is a property of the request or the
+        // circuit the save is running on, so the interceptor has to be built per scope with that
+        // scope's user. The options callbacks below resolve it from the scope that creates the context.
+        services.TryAddScoped<ICurrentUser, CurrentUser>();
+        services.TryAddScoped(sp => new StampInterceptor(
             sp.GetRequiredService<TimeProvider>(),
-            sp.GetService<IHttpContextAccessor>()));
+            sp.GetService<ICurrentUser>()));
 
         if (string.Equals(provider, Postgres, StringComparison.OrdinalIgnoreCase))
         {

@@ -15,26 +15,35 @@ public static class JobsSetup
     /// <summary>Where the job dashboard is mounted, inside the staff area.</summary>
     public const string DashboardPath = "/dashboard/jobs";
 
+    /// <remarks>
+    /// The storage is resolved from the built host's configuration rather than from the
+    /// <paramref name="configuration"/> captured here, exactly as <see cref="DbSetup"/> resolves the
+    /// EF connection string: registration runs before a test host or a late configuration source has
+    /// been layered in, and a connection string read now would pin the job storage to the settings
+    /// file while the rest of the application talks to somewhere else. The parameter stays so every
+    /// <c>AddApp…</c> call reads the same at the call site.
+    /// </remarks>
     public static IServiceCollection AddAppJobs(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = configuration["Database:Provider"] ?? DbSetup.Postgres;
-        var connectionString = configuration.GetConnectionString("Default")
-            ?? throw new InvalidOperationException("Connection string 'Default' not found.");
-
-        services.AddHangfire(hangfire =>
+        services.AddHangfire((serviceProvider, hangfire) =>
         {
-            hangfire
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings();
+            var settings = serviceProvider.GetRequiredService<IConfiguration>();
+            var provider = settings["Database:Provider"] ?? DbSetup.Postgres;
+            var connectionString = settings.GetConnectionString("Default")
+                ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+
+            // Chosen before anything is applied, so an unknown provider fails without leaving a
+            // half-configured Hangfire behind.
+            Action<IGlobalConfiguration> useStorage;
 
             if (string.Equals(provider, DbSetup.Postgres, StringComparison.OrdinalIgnoreCase))
             {
-                hangfire.UsePostgreSqlStorage(storage => storage.UseNpgsqlConnection(connectionString));
+                useStorage = config => config.UsePostgreSqlStorage(
+                    storage => storage.UseNpgsqlConnection(connectionString));
             }
             else if (string.Equals(provider, DbSetup.SqlServer, StringComparison.OrdinalIgnoreCase))
             {
-                hangfire.UseSqlServerStorage(connectionString);
+                useStorage = config => config.UseSqlServerStorage(connectionString);
             }
             else
             {
@@ -42,6 +51,13 @@ public static class JobsSetup
                     $"Unknown database provider '{provider}'. Set Database:Provider to "
                     + $"'{DbSetup.Postgres}' or '{DbSetup.SqlServer}'.");
             }
+
+            hangfire
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings();
+
+            useStorage(hangfire);
         });
 
         services.AddHangfireServer();

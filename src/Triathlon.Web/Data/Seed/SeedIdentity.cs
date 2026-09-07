@@ -9,12 +9,35 @@ namespace Triathlon.Web.Data.Seed;
 /// administrator from <c>Seed:AdminEmail</c> / <c>Seed:AdminPassword</c> (environment variables
 /// <c>Seed__AdminEmail</c> and <c>Seed__AdminPassword</c> in production). The "no users yet" guard is
 /// what keeps this from resurrecting or resetting an account someone deliberately removed or renamed.
+/// Outside Development the committed developer password is refused outright — see
+/// <see cref="DevelopmentPassword"/>.
 /// </summary>
 public static class SeedIdentity
 {
+    /// <summary>
+    /// The password committed in <c>appsettings.Development.json</c>, so that a deployment which
+    /// inherited that file cannot quietly stand up an administrator everyone can read the password of.
+    /// </summary>
+    public const string DevelopmentPassword = "ChangeMe-Local-2026!";
+
     public static async Task RunAsync(IServiceProvider services, CancellationToken ct = default)
     {
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(SeedIdentity).FullName!);
+
+        var configuration = services.GetRequiredService<IConfiguration>();
+        var email = configuration["Seed:AdminEmail"];
+        var password = configuration["Seed:AdminPassword"];
+
+        // Checked before anything is created: a server that starts with the committed development
+        // password would hand the dashboard to anyone who has read this repository, and refusing to
+        // boot is the only response that cannot be ignored.
+        if (password == DevelopmentPassword &&
+            !services.GetRequiredService<IHostEnvironment>().IsDevelopment())
+        {
+            throw new InvalidOperationException(
+                "Seed:AdminPassword is the development password committed in appsettings.Development.json. "
+                + "Set Seed__AdminPassword to a real secret for this deployment.");
+        }
 
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         foreach (var role in Roles.All)
@@ -30,10 +53,6 @@ public static class SeedIdentity
         {
             return;
         }
-
-        var configuration = services.GetRequiredService<IConfiguration>();
-        var email = configuration["Seed:AdminEmail"];
-        var password = configuration["Seed:AdminPassword"];
 
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Triathlon.Web.Areas.Dashboard.Account;
 using Triathlon.Web.Domain.Identity;
 
 namespace Microsoft.AspNetCore.Routing;
@@ -22,7 +23,14 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
             [FromForm] string returnUrl) =>
         {
             await signInManager.SignOutAsync();
-            return TypedResults.LocalRedirect($"~/{returnUrl}");
+
+            // The field comes off a posted form, so anyone can put anything in it, and LocalRedirect
+            // throws on a non-local URL — which would turn a tampered sign-out into a 500 instead of
+            // a sign-out. The same guard the login page uses decides, and the leading slash is
+            // trimmed because "~//dashboard" is itself a network-path reference LocalRedirect rejects.
+            return TypedResults.LocalRedirect(IdentityRedirectManager.IsLocalUrl(returnUrl)
+                ? $"~/{returnUrl.TrimStart('/')}"
+                : "~/dashboard/login");
         });
 
         return dashboard;

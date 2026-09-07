@@ -1,15 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Services;
 
 namespace Triathlon.Web.Data;
 
 /// <summary>
 /// Fills the audit stamps on every <see cref="BaseEntity"/> and turns hard deletes into soft deletes.
-/// The user name is resolved from the current request when there is one, so background jobs and tests
-/// simply stamp a null author.
+/// <para>
+/// The author comes from <see cref="ICurrentUser"/>, which answers for a Blazor circuit as well as an
+/// HTTP request — the dashboard saves on a circuit, where there is no <c>HttpContext</c> to read. That
+/// makes this interceptor scoped, and it is resolved from the scope that builds the context (see
+/// <see cref="DbSetup"/>). Background jobs, seeding and the unit tests have no user and stamp a null
+/// author.
+/// </para>
 /// </summary>
-public sealed class StampInterceptor(TimeProvider timeProvider, IHttpContextAccessor? httpContextAccessor = null)
+public sealed class StampInterceptor(TimeProvider timeProvider, ICurrentUser? currentUser = null)
     : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
@@ -35,7 +41,7 @@ public sealed class StampInterceptor(TimeProvider timeProvider, IHttpContextAcce
         }
 
         var now = timeProvider.GetUtcNow();
-        var user = httpContextAccessor?.HttpContext?.User.Identity?.Name;
+        var user = currentUser?.Name;
 
         // Materialised because turning a delete into a modification mutates the change tracker.
         foreach (var entry in context.ChangeTracker.Entries<BaseEntity>().ToList())

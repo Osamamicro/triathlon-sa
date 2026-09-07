@@ -16,6 +16,14 @@ namespace Triathlon.Web.Middleware;
 /// because the load balancer and the systemd unit have to be able to probe the site without
 /// carrying a secret.
 /// </para>
+/// <para>
+/// Once the credential has been checked the <c>Authorization</c> header is stripped from the
+/// request, so the rest of the pipeline sees exactly what it would see in production. That is not
+/// tidiness: browsers resend Basic credentials on every request, and the output cache refuses to
+/// store or replay a response to a request carrying an <c>Authorization</c> header, so leaving it in
+/// place would quietly disable caching on staging — the one environment where the caching is meant
+/// to be rehearsed. Nothing downstream reads it; Identity's own sign-in is a cookie.
+/// </para>
 /// </summary>
 public sealed class StagingBasicAuthMiddleware
 {
@@ -49,7 +57,15 @@ public sealed class StagingBasicAuthMiddleware
             return _next(context);
         }
 
-        return IsAuthorized(context.Request) ? _next(context) : ChallengeAsync(context);
+        if (!IsAuthorized(context.Request))
+        {
+            return ChallengeAsync(context);
+        }
+
+        // Checked and done with. See the class remarks: carrying it further turns off output caching.
+        context.Request.Headers.Remove(HeaderNames.Authorization);
+
+        return _next(context);
     }
 
     private bool IsAuthorized(HttpRequest request)

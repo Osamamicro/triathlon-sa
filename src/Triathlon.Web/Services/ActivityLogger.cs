@@ -26,9 +26,9 @@ public interface IActivityLogger
 public sealed class ActivityLogger(
     AppDbContext db,
     TimeProvider timeProvider,
-    IHttpContextAccessor? httpContextAccessor = null) : IActivityLogger
+    ICurrentUser? currentUser = null) : IActivityLogger
 {
-    /// <summary>The user recorded when there is no request behind the change — jobs, seeding, tests.</summary>
+    /// <summary>The user recorded when nobody is signed in behind the change — jobs, seeding, tests.</summary>
     public const string SystemUser = "system";
 
     private static readonly JsonSerializerOptions DiffOptions = new(JsonSerializerDefaults.Web)
@@ -44,9 +44,13 @@ public sealed class ActivityLogger(
         object? after = null,
         CancellationToken ct = default)
     {
+        // Through ICurrentUser rather than the HTTP context: a dashboard edit is saved from a Blazor
+        // circuit, which has no request behind it and would otherwise be logged as the system.
+        var user = currentUser is null ? null : await currentUser.GetNameAsync(ct);
+
         db.ActivityLogs.Add(new ActivityLog
         {
-            User = httpContextAccessor?.HttpContext?.User.Identity?.Name ?? SystemUser,
+            User = user ?? SystemUser,
             Entity = entity,
             EntityId = entityId,
             Action = action,

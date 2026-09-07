@@ -4,12 +4,13 @@ using Microsoft.AspNetCore.ResponseCompression;
 namespace Triathlon.Web.Infrastructure;
 
 /// <summary>
-/// Response compression for the public website.
+/// Response compression, for the public website and the dashboard alike.
 /// <para>
-/// Enabled over HTTPS. The BREACH class of attacks that made that a bad default needs a secret in
-/// the response body and attacker-controlled input reflected beside it; the public pages are
-/// anonymous and identical for every visitor, and the dashboard's antiforgery tokens sit behind
-/// endpoints that output caching and this middleware both leave alone.
+/// Enabled over HTTPS, app-wide. The BREACH class of attacks that made that a bad default needs a
+/// stable secret in the response body with attacker-controlled input reflected beside it; the public
+/// pages are anonymous and identical for every visitor, and the dashboard's antiforgery request
+/// tokens are encrypted with Data Protection using a fresh initialisation vector per response, so
+/// the same token is never a repeated byte sequence for a guess to converge on.
 /// </para>
 /// </summary>
 public static class CompressionSetup

@@ -47,6 +47,27 @@ public sealed class StagingGateTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task Output_caching_still_works_behind_the_gate()
+    {
+        using var staging = Staging();
+        using var client = staging.CreateClient();
+        client.DefaultRequestHeaders.Authorization = BasicHeader(User, Password);
+
+        using var first = await client.GetAsync("/en");
+        using var second = await client.GetAsync("/en");
+
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+
+        // A browser resends the Basic credential on every request, and the output cache refuses any
+        // request carrying an Authorization header. The gate therefore strips the header once it has
+        // checked it — without that, staging would silently run with caching switched off, which is
+        // the one thing staging exists to rehearse. Only a replay from the cache carries Age.
+        Assert.True(
+            second.Headers.Contains("Age"),
+            "The second authenticated GET /en was not served from the output cache.");
+    }
+
+    [Fact]
     public async Task Wrong_password_is_refused()
     {
         using var staging = Staging();

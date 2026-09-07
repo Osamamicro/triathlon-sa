@@ -45,10 +45,10 @@ variables — never in `appsettings.json`, which is in source control.
 | `Site__Staging` | `false` / `true` | `true` turns on the Basic-auth gate and `noindex`. |
 | `Site__BasicAuth__User` | `stf` | Required when `Site__Staging` is `true`; the app refuses to start without it. |
 | `Site__BasicAuth__Password` | *(shared with the client)* | One shared credential — a keep-out sign, not an account. |
-| `Site__BehindProxy` | `true` | `true` behind nginx or ARR; `false` when Kestrel is exposed directly. See the trust note below. |
+| `Site__BehindProxy` | `true` | `true` behind nginx or ARR; `false` otherwise — including IIS in-process without ARR, where the module already hands Kestrel the real client address and scheme. See the trust note below. |
 | `Email__Host` | `smtp.example.com` | **Empty disables sending** and logs the subject and recipient instead. |
-| `Email__Port` | `587` | |
-| `Email__UseStartTls` | `true` | |
+| `Email__Port` | `587` | `587` with STARTTLS, or `465` for implicit TLS. See the pairing note below. |
+| `Email__UseStartTls` | `true` | `true` for port 587, `false` for port 465. |
 | `Email__User` / `Email__Password` | | Omit both for an unauthenticated relay. |
 | `Email__FromName` / `Email__FromAddress` | `Saudi Triathlon Federation` / `no-reply@triathlon.sa` | |
 | `Media__Root` | `/var/lib/triathlon/media` | **Point this outside the deployment folder**, or a redeploy deletes every upload. |
@@ -64,6 +64,22 @@ That is only safe while nginx is the sole thing that can reach Kestrel. `triathl
 `ASPNETCORE_URLS` to `127.0.0.1`, which is what enforces it. If Kestrel is ever bound to a public
 interface, set `Site__BehindProxy=false` — otherwise any visitor could forge their own address and
 walk around the public rate limiter.
+
+On IIS in-process (the `web.config` here) there is no proxy in front of the application: the ASP.NET
+Core Module gives Kestrel the real client address and scheme itself, so `Site__BehindProxy` must be
+`false` there. Set it to `true` on IIS only when Application Request Routing, or another reverse
+proxy, actually sits in front of the site.
+
+### The two working `Email__Port` / `Email__UseStartTls` pairs
+
+| Port | `Email__UseStartTls` | What happens |
+|---|---|---|
+| `587` | `true` | Connects in the clear, then upgrades to TLS with STARTTLS. The usual submission port. |
+| `465` | `false` | Connects with TLS from the first byte (implicit TLS, "SMTPS"). |
+
+Those two are the only combinations that work. `Email__UseStartTls=true` with port `465` fails to
+connect: MailKit waits for a plaintext greeting to upgrade with STARTTLS while the server is already
+negotiating TLS, and nothing on either side gives way.
 
 ## Deploying
 

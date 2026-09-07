@@ -18,7 +18,6 @@ obj/
 *.user
 .vs/
 TestResults/
-src/Triathlon.Web/Data/app.db
 
 # Uploaded media is content, not source.
 src/Triathlon.Web/wwwroot/media/
