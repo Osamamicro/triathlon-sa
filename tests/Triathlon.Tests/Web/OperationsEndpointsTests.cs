@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Triathlon.Tests.Web;
@@ -44,38 +43,11 @@ public sealed class OperationsEndpointsTests(WebAppFixture app)
             BaseAddress = WebAppFixture.HttpsBaseAddress,
         });
 
-        await SignInAsync(client);
+        await DashboardClient.SignInAsync(client);
 
         using var response = await client.GetAsync("/dashboard/jobs");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Hangfire", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
-    }
-
-    /// <summary>Signs the seeded administrator in through the real antiforgery-protected form.</summary>
-    private static async Task SignInAsync(HttpClient client)
-    {
-        var loginPage = await client.GetStringAsync("/dashboard/login");
-
-        var form = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var input in Regex.Matches(loginPage, "<input[^>]*type=\"hidden\"[^>]*>").Cast<Match>())
-        {
-            var name = Regex.Match(input.Value, "name=\"([^\"]+)\"");
-            if (!name.Success)
-            {
-                continue;
-            }
-
-            var value = Regex.Match(input.Value, "value=\"([^\"]*)\"");
-            form[WebUtility.HtmlDecode(name.Groups[1].Value)] =
-                WebUtility.HtmlDecode(value.Success ? value.Groups[1].Value : string.Empty);
-        }
-
-        form["Input.Email"] = WebAppFixture.AdminEmail;
-        form["Input.Password"] = WebAppFixture.AdminPassword;
-
-        using var signIn = await client.PostAsync("/dashboard/login", new FormUrlEncodedContent(form));
-
-        Assert.Equal(HttpStatusCode.Found, signIn.StatusCode);
     }
 }

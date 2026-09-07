@@ -1,0 +1,91 @@
+using Ganss.Xss;
+using Microsoft.Extensions.Options;
+
+namespace Triathlon.Web.Services;
+
+/// <summary>
+/// The only route editor input takes into storage. HTML is reduced to the allow-list below; file
+/// paths must be site-relative under <c>/docs</c> or the configured media prefix. Views keep
+/// rendering these fields with <c>Html.Raw</c>, so this class is the whole XSS boundary.
+/// </summary>
+public sealed class ContentGuard
+{
+    private const string DocsPrefix = "/docs";
+
+    private static readonly string[] AllowedTags =
+    [
+        "p", "br", "strong", "em", "b", "i", "u", "s", "ul", "ol", "li", "a", "h2", "h3", "h4",
+        "blockquote", "table", "thead", "tbody", "tr", "th", "td", "span", "div", "sup", "sub",
+    ];
+
+    private static readonly string[] AllowedAttributes = ["href", "title", "target", "rel", "class"];
+
+    private static readonly string[] AllowedSchemes = ["http", "https", "mailto", "tel"];
+
+    private readonly HtmlSanitizer _sanitizer;
+    private readonly string _mediaPrefix;
+
+    public ContentGuard(IOptions<MediaOptions> media)
+    {
+        ArgumentNullException.ThrowIfNull(media);
+        _mediaPrefix = media.Value.NormalizedPublicPrefix;
+
+        _sanitizer = new HtmlSanitizer();
+        _sanitizer.AllowedTags.Clear();
+        _sanitizer.AllowedTags.UnionWith(AllowedTags);
+        _sanitizer.AllowedAttributes.Clear();
+        _sanitizer.AllowedAttributes.UnionWith(AllowedAttributes);
+        _sanitizer.AllowedSchemes.Clear();
+        _sanitizer.AllowedSchemes.UnionWith(AllowedSchemes);
+        _sanitizer.AllowedCssProperties.Clear();
+        _sanitizer.AllowedAtRules.Clear();
+        _sanitizer.AllowDataAttributes = false;
+        _sanitizer.KeepChildNodes = true;
+    }
+
+    /// <summary>Editor HTML reduced to the allow-list; null when there is nothing left worth storing.</summary>
+    public string? Html(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return null;
+        }
+
+        var clean = _sanitizer.Sanitize(html).Trim();
+        return clean.Length == 0 ? null : clean;
+    }
+
+    /// <summary>The path unchanged when it is a site file, null when blank; otherwise a validation error.</summary>
+    public string? FilePath(string? path, string field = "FilePath")
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        return IsSiteFilePath(path)
+            ? path
+            : throw new ContentValidationException(field, $"'{path}' is not a file under {DocsPrefix}/ or {_mediaPrefix}/.");
+    }
+
+    public bool IsSiteFilePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || path[0] != '/' || path.Contains("//", StringComparison.Ordinal)
+            || path.Contains('?', StringComparison.Ordinal) || path.Contains('#', StringComparison.Ordinal)
+            || path.Contains('\\', StringComparison.Ordinal) || path.Contains(':', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var underDocs = path.StartsWith(DocsPrefix + "/", StringComparison.Ordinal);
+        var underMedia = path.StartsWith(_mediaPrefix + "/", StringComparison.Ordinal);
+        if (!underDocs && !underMedia)
+        {
+            return false;
+        }
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        // At least prefix + file name, and no dot-segments anywhere.
+        return segments.Length >= 2 && segments.All(s => s != "." && s != "..") && !path.EndsWith('/');
+    }
+}

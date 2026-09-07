@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Triathlon.Tests.Web;
@@ -58,7 +57,7 @@ public sealed class DashboardAuthTests(WebAppFixture app)
         });
 
         var loginPage = await client.GetStringAsync("/dashboard/login");
-        var form = HiddenFields(loginPage);
+        var form = DashboardClient.HiddenFields(loginPage);
         Assert.Contains("__RequestVerificationToken", form.Keys);
 
         form["Input.Email"] = WebAppFixture.AdminEmail;
@@ -86,7 +85,7 @@ public sealed class DashboardAuthTests(WebAppFixture app)
         });
 
         var loginPage = await client.GetStringAsync("/dashboard/login?returnUrl=%2F%2Fevil.com");
-        var form = HiddenFields(loginPage);
+        var form = DashboardClient.HiddenFields(loginPage);
         Assert.Contains("__RequestVerificationToken", form.Keys);
 
         form["Input.Email"] = WebAppFixture.AdminEmail;
@@ -108,12 +107,12 @@ public sealed class DashboardAuthTests(WebAppFixture app)
             BaseAddress = WebAppFixture.HttpsBaseAddress,
         });
 
-        await SignInAsync(client);
+        await DashboardClient.SignInAsync(client);
 
         // The sign-out form is rendered by the dashboard layout, so its antiforgery token comes from
         // the signed-in page — the same token the browser would post.
         var dashboard = await client.GetStringAsync("/dashboard");
-        var form = HiddenFields(dashboard);
+        var form = DashboardClient.HiddenFields(dashboard);
         Assert.Contains("__RequestVerificationToken", form.Keys);
 
         // What a hand-edited form would post. LocalRedirect throws on it, so an unguarded endpoint
@@ -130,40 +129,5 @@ public sealed class DashboardAuthTests(WebAppFixture app)
 
         Assert.Equal(HttpStatusCode.Found, afterLogout.StatusCode);
         Assert.Contains("/dashboard/login", afterLogout.Headers.Location!.ToString(), StringComparison.Ordinal);
-    }
-
-    /// <summary>Signs the seeded administrator in on <paramref name="client"/>, cookie and all.</summary>
-    private static async Task SignInAsync(HttpClient client)
-    {
-        var loginPage = await client.GetStringAsync("/dashboard/login");
-        var form = HiddenFields(loginPage);
-
-        form["Input.Email"] = WebAppFixture.AdminEmail;
-        form["Input.Password"] = WebAppFixture.AdminPassword;
-
-        using var signIn = await client.PostAsync("/dashboard/login", new FormUrlEncodedContent(form));
-
-        Assert.Equal(HttpStatusCode.Found, signIn.StatusCode);
-    }
-
-    /// <summary>Collects every hidden input on a page — the antiforgery token and Blazor's form handler.</summary>
-    private static Dictionary<string, string> HiddenFields(string html)
-    {
-        var fields = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        foreach (var input in Regex.Matches(html, "<input[^>]*type=\"hidden\"[^>]*>").Cast<Match>())
-        {
-            var name = Regex.Match(input.Value, "name=\"([^\"]+)\"");
-            if (!name.Success)
-            {
-                continue;
-            }
-
-            var value = Regex.Match(input.Value, "value=\"([^\"]*)\"");
-            fields[WebUtility.HtmlDecode(name.Groups[1].Value)] =
-                WebUtility.HtmlDecode(value.Success ? value.Groups[1].Value : string.Empty);
-        }
-
-        return fields;
     }
 }

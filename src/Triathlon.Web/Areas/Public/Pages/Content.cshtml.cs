@@ -27,6 +27,13 @@ public sealed class ContentModel(ContentService content) : PageModel
 
     public async Task<IActionResult> OnGetAsync(string slug, CancellationToken ct)
     {
+        // A reserved segment that reached this page has no dedicated handler for that exact URL
+        // (e.g. /en/api); it is a 404, never a CMS lookup.
+        if (PublicSite.ReservedSlugs.Contains(slug))
+        {
+            return NotFound();
+        }
+
         var found = await content.PageAsync(slug, ct);
         if (found is null)
         {

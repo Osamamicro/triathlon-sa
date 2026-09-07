@@ -368,11 +368,24 @@ public static class PublicApi
     /// real download rather than once per cache window.
     /// </summary>
     private static void MapDownload(IEndpointRouteBuilder endpoints, string pattern, DownloadKind kind) =>
-        endpoints.MapGet(pattern, async (Guid id, DocumentsService documents, HttpContext http, CancellationToken ct) =>
+        endpoints.MapGet(pattern, async (Guid id, DocumentsService documents, ContentGuard guard, ILoggerFactory loggers, HttpContext http, CancellationToken ct) =>
         {
             http.Response.Headers[HeaderNames.CacheControl] = "no-store";
             var path = await documents.RecordDownloadAsync(kind, id, ct);
-            return path is null ? Results.NotFound() : Results.Redirect(path);
+            if (path is null)
+            {
+                return Results.NotFound();
+            }
+
+            // The row is trusted content, but a redirect off-site is exactly what a tampered row
+            // would produce, so the stored path is checked the same way a save checks it.
+            if (!guard.IsSiteFilePath(path))
+            {
+                loggers.CreateLogger("Triathlon.Web.Api.Downloads").LogWarning("{Kind} {Id} has a non-site file path and was not served.", kind, id);
+                return Results.NotFound();
+            }
+
+            return Results.Redirect(path);
         })
         .CacheOutput(policy => policy.NoCache());
 

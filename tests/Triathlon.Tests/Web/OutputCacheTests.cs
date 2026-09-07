@@ -84,4 +84,27 @@ public sealed class OutputCacheTests(WebAppFixture app)
         Assert.False(first.Headers.Contains("Age"));
         Assert.False(second.Headers.Contains("Age"));
     }
+
+    [Fact]
+    public async Task Unknown_query_keys_do_not_fragment_the_cache()
+    {
+        using var client = app.CreateClient();
+
+        var first = await client.GetStringAsync(WebAppFixture.CacheTaggedPath);
+        var withUtm = await client.GetStringAsync(WebAppFixture.CacheTaggedPath + "?utm_source=x");
+
+        // The base policy varies by no query key, so ?utm_source is the same cache entry.
+        Assert.Equal(first, withUtm);
+    }
+
+    [Fact]
+    public async Task Pages_that_declare_query_keys_still_vary_on_them()
+    {
+        using var client = app.CreateClient();
+
+        var all = await client.GetStringAsync("/en/events");
+        var competition = await client.GetStringAsync("/en/events?type=competition");
+
+        Assert.NotEqual(all, competition);
+    }
 }

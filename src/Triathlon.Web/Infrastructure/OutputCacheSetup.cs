@@ -31,7 +31,23 @@ public static class OutputCacheSetup
     public static IServiceCollection AddAppOutputCache(this IServiceCollection services)
     {
         services.AddOutputCache(options =>
-            options.AddPolicy(PublicPolicy, policy => policy.Expire(PublicLifetime).Tag(CacheTags.Site)));
+        {
+            // The base policy varies by nothing: an unknown query key (utm_source, fbclid) must not
+            // create a second cache entry for the same page. Pages that read a query key declare it
+            // with VaryByQueryKeys, which is applied after the base policy and wins.
+            //
+            // excludeDefaultPolicy: true here, because the default policy is what makes every
+            // request eligible for caching in the first place — the base policy must add only the
+            // vary-by-query rule, or every route in the app (dashboard included) would become
+            // cacheable the moment it runs, opt-in attribute or not.
+            //
+            // The named policy repeats SetVaryByQuery([]): a named policy is itself built from its
+            // own default policy (the one that varies by every query key by default), so without
+            // repeating it here that default would win back over the base policy the moment a page
+            // resolves "Public" by name.
+            options.AddBasePolicy(policy => policy.SetVaryByQuery([]), excludeDefaultPolicy: true);
+            options.AddPolicy(PublicPolicy, policy => policy.SetVaryByQuery([]).Expire(PublicLifetime).Tag(CacheTags.Site));
+        });
 
         return services;
     }

@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Triathlon.Web.Services;
 
@@ -34,5 +35,37 @@ public sealed class DownloadTests(WebAppFixture app)
         using var client = app.CreateClient();
         using var response = await client.GetAsync($"/documents/{Guid.NewGuid()}/download");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_document_whose_stored_path_is_not_a_site_file_is_404_not_a_redirect()
+    {
+        Guid id;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Triathlon.Web.Data.AppDbContext>();
+            var doc = new Triathlon.Web.Domain.Documents.Document
+            {
+                TitleEn = "Tampered", TitleAr = "معدل", Category = Triathlon.Web.Domain.Documents.DocumentCategory.Governance,
+                Year = 2026, FilePath = "https://evil.example/x.pdf", IsPublished = true, SortOrder = 99,
+            };
+            db.Documents.Add(doc);
+            await db.SaveChangesAsync();
+            id = doc.Id;
+        }
+
+        try
+        {
+            using var client = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            using var response = await client.GetAsync($"/documents/{id}/download");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+        finally
+        {
+            await using var scope = app.Services.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<Triathlon.Web.Data.AppDbContext>();
+            db.Documents.Remove(await db.Documents.SingleAsync(d => d.Id == id));
+            await db.SaveChangesAsync();
+        }
     }
 }

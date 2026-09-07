@@ -29,6 +29,28 @@ public static class PublicSite
     public static readonly string[] SupportedCultures = ["en", "ar"];
 
     /// <summary>
+    /// First path segments the generic content page must never serve: every dedicated public route
+    /// and every infrastructure path. Shared by routing (<c>Content.cshtml.cs</c>), the sitemap and
+    /// CMS slug validation, so the three cannot drift apart.
+    /// </summary>
+    public static readonly IReadOnlySet<string> ReservedSlugs = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "index", "events", "register", "training", "rules", "governance", "statistics", "news",
+        "not-found", "error", "api", "media", "docs", "dashboard", "health", "sitemap.xml", "robots.txt",
+        "_framework", "_content", "_blazor", "css", "js", "img", "fonts",
+    };
+
+    /// <summary>
+    /// Slugs a CMS page may carry even though the segment is reserved: a dedicated page renders
+    /// these pages' blocks after its own aggregate (rules, training, governance, statistics) or
+    /// as the home page's copy.
+    /// </summary>
+    public static readonly IReadOnlySet<string> CompanionPageSlugs = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "home", "rules", "training", "governance", "statistics",
+    };
+
+    /// <summary>
     /// The route segment every public URL starts with. Plain "ar" rather than "ar-SA" on purpose:
     /// ar-SA's default calendar is Umm al-Qura, and the site shows Gregorian dates in both languages.
     /// </summary>

@@ -16,16 +16,6 @@ public static class SeoEndpoints
     private static readonly XNamespace SitemapNs = "http://www.sitemaps.org/schemas/sitemap/0.9";
     private static readonly XNamespace XhtmlNs = "http://www.w3.org/1999/xhtml";
 
-    /// <summary>
-    /// The slugs already given in dashboard-managed Pages that carry their own dedicated route
-    /// (the home page, join, contact, rules, training) — listed once, by hand, below, so a
-    /// published CMS page with the same slug is never emitted a second time as a generic page.
-    /// </summary>
-    private static readonly HashSet<string> ReservedPageSlugs = new(StringComparer.Ordinal)
-    {
-        "home", "join", "contact", "rules", "training",
-    };
-
     public static IEndpointRouteBuilder MapSeoEndpoints(this IEndpointRouteBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -56,7 +46,6 @@ public static class SeoEndpoints
             "", // home
             "events",
             "events/timeline",
-            "join",
             "register",
             "training",
             "rules",
@@ -64,7 +53,6 @@ public static class SeoEndpoints
             "governance/documents",
             "statistics",
             "news",
-            "contact",
         };
 
         var publishedEvents = await events.AllPublishedAsync(null, ct);
@@ -78,7 +66,8 @@ public static class SeoEndpoints
         paths.AddRange(posts.Select(p => "news/" + p.Slug));
 
         var pages = await content.PublishedPageSlugsAsync(ct);
-        paths.AddRange(pages.Where(slug => !ReservedPageSlugs.Contains(slug)));
+        // Home is "" above; companion pages (rules, training, …) are listed by their dedicated route.
+        paths.AddRange(pages.Where(slug => slug != "home" && !PublicSite.ReservedSlugs.Contains(slug)));
 
         var urlset = new XElement(SitemapNs + "urlset", new XAttribute(XNamespace.Xmlns + "xhtml", XhtmlNs));
 
