@@ -7,22 +7,30 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;
+using Triathlon.Web.Data;
 using Triathlon.Web.Infrastructure;
 using Triathlon.Web.Services;
 
 namespace Triathlon.Tests.Web;
 
 /// <summary>
-/// Boots the real application against a throwaway PostgreSQL container, with startup migration and
-/// identity seeding switched on, so the tests exercise the same wiring production uses.
+/// Boots the real application against a throwaway database container, with startup migration and
+/// identity seeding switched on, so the tests exercise the same wiring production uses. The provider
+/// defaults to PostgreSQL; set <c>STF_TEST_DB=SqlServer</c> to run the same suite against a SQL Server
+/// container instead (CI does both, in separate jobs).
 /// </summary>
 public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string AdminEmail = "seed-admin@triathlon.test";
     public const string AdminPassword = "Seed-Admin-Pass-2026!";
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private static readonly bool UseSqlServer = string.Equals(
+        Environment.GetEnvironmentVariable("STF_TEST_DB"), "SqlServer", StringComparison.OrdinalIgnoreCase);
+
+    private readonly PostgreSqlContainer? _postgres = UseSqlServer ? null : new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private readonly MsSqlContainer? _sqlServer = UseSqlServer ? new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build() : null;
 
     /// <summary>A rate-limited POST. No public form exists yet, so the policy needs a target.</summary>
     public const string RateLimitedPath = "/__test/limited";
@@ -42,7 +50,14 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
+        if (_sqlServer is not null)
+        {
+            await _sqlServer.StartAsync();
+        }
+        else
+        {
+            await _postgres!.StartAsync();
+        }
 
         // Program.ConfigureTestEndpoints is a static hook, so this must be set before any host is
         // built — including the ones WithWebHostBuilder creates for a differently configured site.
@@ -78,7 +93,15 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     async Task IAsyncLifetime.DisposeAsync()
     {
         await base.DisposeAsync();
-        await _postgres.DisposeAsync();
+
+        if (_sqlServer is not null)
+        {
+            await _sqlServer.DisposeAsync();
+        }
+        else
+        {
+            await _postgres!.DisposeAsync();
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -89,11 +112,16 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
         // form post in one rate-limiting bucket and make the tests interfere with each other.
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestClientIp>());
 
+        var connectionString = _sqlServer is not null
+            ? $"{_sqlServer.GetConnectionString()};TrustServerCertificate=True"
+            : _postgres!.GetConnectionString();
+        var provider = _sqlServer is not null ? DbSetup.SqlServer : DbSetup.Postgres;
+
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
-                ["ConnectionStrings:Default"] = _postgres.GetConnectionString(),
-                ["Database:Provider"] = "Postgres",
+                ["ConnectionStrings:Default"] = connectionString,
+                ["Database:Provider"] = provider,
                 ["Database:MigrateOnStartup"] = "true",
                 ["Database:SeedContent"] = "true",
                 ["Seed:AdminEmail"] = AdminEmail,

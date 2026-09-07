@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build, test and publish
+    name: Build, test (PostgreSQL) and publish
     runs-on: ubuntu-latest
 
     steps:
@@ -31,12 +31,25 @@ jobs:
         with:
           global-json-file: global.json
 
+      # dotnet-ef lives in .config/dotnet-tools.json (the local manifest); this installs it into the
+      # runner regardless of whatever dotnet-ef version, if any, is on the machine's global tool path.
+      - name: Restore local tools
+        run: dotnet tool restore
+
       - name: Restore
         run: dotnet restore
 
       # Warnings are errors (see Directory.Build.props), so this is also the lint step.
       - name: Build
         run: dotnet build -c Release --no-restore
+
+      # Fails the build if the model and the checked-in migrations have drifted apart for either
+      # provider — has-pending-model-changes exits non-zero when there is a pending change.
+      - name: Migrations match the model (both providers)
+        working-directory: src/Triathlon.Web
+        run: |
+          dotnet ef migrations has-pending-model-changes --context PostgresDbContext --no-build -c Release
+          dotnet ef migrations has-pending-model-changes --context SqlServerDbContext --no-build -c Release
 
       # The integration tests start a PostgreSQL container through Testcontainers; the Docker
       # daemon on the hosted Ubuntu runner is what makes that work without any extra setup.
@@ -47,7 +60,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-postgres
           path: '**/TestResults/*.trx'
           if-no-files-found: ignore
 
@@ -59,3 +72,52 @@ jobs:
         with:
           name: triathlon-web
           path: publish/
+
+      # Self-contained deployment bundles so a target server can apply migrations without the SDK or
+      # a checked-out repo — one per provider, plus a Windows build of the SQL Server bundle.
+      - name: Migration bundles
+        working-directory: src/Triathlon.Web
+        run: |
+          dotnet ef migrations bundle --context PostgresDbContext  -c Release --self-contained -r linux-x64 -o ../../bundles/migrate-postgres --force
+          dotnet ef migrations bundle --context SqlServerDbContext -c Release --self-contained -r linux-x64 -o ../../bundles/migrate-sqlserver --force
+          dotnet ef migrations bundle --context SqlServerDbContext -c Release --self-contained -r win-x64   -o ../../bundles/migrate-sqlserver.exe --force
+
+      - name: Upload migration bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-bundles
+          path: bundles/
+
+  test-sqlserver:
+    name: Test (SQL Server)
+    runs-on: ubuntu-latest
+    env:
+      STF_TEST_DB: SqlServer
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      # STF_TEST_DB=SqlServer makes WebAppFixture boot a mcr.microsoft.com/mssql/server:2022-latest
+      # Testcontainer and the app with Database:Provider=SqlServer instead of the Postgres default.
+      - name: Test
+        run: dotnet test -c Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-sqlserver
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
