@@ -14,9 +14,10 @@
             @for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                var accentVar = PublicText.AccentVar(item.Color) ?? "var(--swim)";
+                // The number is the colour: a step is a position in a sequence, not a category,
+                // so the rail runs in one green rather than cycling the discipline hues.
                 <div class="step reveal">
-                    <span class="step-num" style="--step-c:@accentVar">@Digits((i + 1).ToString(CultureInfo.InvariantCulture))</span>
+                    <span class="step-num">@Digits((i + 1).ToString(CultureInfo.InvariantCulture))</span>
                     <div>
                         <h3>@Bi(item.TitleEn ?? string.Empty, item.TitleAr ?? string.Empty)</h3>
                         <p>@Bi(item.BodyEn ?? string.Empty, item.BodyAr ?? string.Empty)</p>

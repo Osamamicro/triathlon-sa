@@ -24,16 +24,11 @@
           || here.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
 }
 <header class="site-header"><div class="container">
+    @* The Federation's own mark, fetched from triathlon.sa. The anchor's accessible name comes
+       from the wordmark beside it, so the image itself is decorative. *@
     <a class="brand" href="@PublicCulture.Url(culture)">
-        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
-            <path d="M22 5 L39 37 H33 L22 16 L11 37 H5 Z" fill="none" stroke="url(#triGrad)" stroke-width="3.4" stroke-linejoin="round" />
-            <defs>
-                <linearGradient id="triGrad" x1="0" y1="0" x2="44" y2="44">
-                    <stop offset="0" stop-color="#26C6E8" /><stop offset=".5" stop-color="#2EE68A" /><stop offset="1" stop-color="#FFA245" />
-                </linearGradient>
-            </defs>
-        </svg>
-        <span class="brand-name">@Bi("Saudi Triathlon", "الاتحاد السعودي للترايثلون")<small>@Bi("FEDERATION · SWIM BIKE RUN", "سباحة · دراجة · جري")</small></span>
+        <img class="brand-mark" src="~/img/brand/stf-mark-96.webp" width="34" height="34" alt="" decoding="async">
+        <span class="brand-name">@Bi("Saudi Triathlon", "ترايثلون السعودية")<small>@Bi("Federation", "الاتحاد السعودي")</small></span>
     </a>
     <nav class="main-nav" id="mainNav" aria-label="@L["MainNav"]">
         @foreach (var item in nav)

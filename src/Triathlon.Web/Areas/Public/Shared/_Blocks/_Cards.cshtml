@@ -27,7 +27,7 @@
     // The card's contents are the same whether it is a link or not, and only the element differs.
     // The prototype's "in preparation" cards (training.html) lead with the chip, ahead of the
     // eyebrow/title/body — so a muted card renders it first here too.
-    void CardBody(string? eyebrow, string? title, string? body, string? accentVar)
+    void CardBody(string? eyebrow, string? title, string? body)
     {
         if (isMuted)
         {
@@ -35,14 +35,7 @@
         }
         if (eyebrow is not null)
         {
-            if (accentVar is not null)
-            {
-                <span class="eyebrow" style="color:@accentVar">@eyebrow</span>
-            }
-            else
-            {
-                <span class="eyebrow">@eyebrow</span>
-            }
+            <span class="eyebrow">@eyebrow</span>
         }
         if (title is not null)
         {
@@ -78,7 +71,7 @@
                 if (isPathway)
                 {
                     <div class="path-node">
-                        <span class="path-dot" style="--pn-c:@(itemAccent ?? "var(--swim)")">@Digits(eyebrow ?? string.Empty)</span>
+                        <span class="path-dot">@Digits(eyebrow ?? string.Empty)</span>
                         <h4>@title</h4>
                         @if (body is not null)
                         {
@@ -88,16 +81,23 @@
                 }
                 else
                 {
-                    var accent = itemAccent is not null ? $"border-top:3px solid {itemAccent}" : null;
-                    var style = isMuted ? "opacity:.75;" + accent : accent;
+                    // An editorial colour becomes a short tab across the card's top inline start —
+                    // the same 2px segment the lane rule and the leg strip use — rather than a
+                    // full coloured border, which read as decoration rather than as a category.
+                    var accentClass = itemAccent is not null ? " has-accent" : string.Empty;
+                    var style = itemAccent is not null ? $"--card-c:{itemAccent}" : null;
+                    if (isMuted)
+                    {
+                        style = "opacity:.75;" + style;
+                    }
 
                     if (item.Href is { } href)
                     {
-                        <a class="card hover reveal" style="@style" href="@PublicText.Href(href)">@{ CardBody(eyebrow, title, body, itemAccent); }</a>
+                        <a class="card hover reveal@(accentClass)" style="@style" href="@PublicText.Href(href)">@{ CardBody(eyebrow, title, body); }</a>
                     }
                     else
                     {
-                        <div class="card reveal" style="@style">@{ CardBody(eyebrow, title, body, itemAccent); }</div>
+                        <div class="card reveal@(accentClass)" style="@style">@{ CardBody(eyebrow, title, body); }</div>
                     }
                 }
             }

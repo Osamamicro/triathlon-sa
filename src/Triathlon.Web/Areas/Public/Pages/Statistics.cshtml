@@ -12,7 +12,6 @@
     var growth = Model.Overview.Growth;
     var maxRegion = regions.Count == 0 ? 1 : regions.Max(r => r.Athletes);
     var maxGrowth = growth.Count == 0 ? 1 : growth.Max(g => g.Athletes);
-    string[] cycle = ["swim", "bike", "run"];
 }
 
 <section class="page-hero">
@@ -37,13 +36,14 @@
         <span class="eyebrow">@Bi("Distribution", "التوزيع")</span>
         <h3>@Bi("Athletes by region", "الرياضيون حسب المنطقة")</h3>
         <div>
-          @for (var i = 0; i < regions.Count; i++)
+          @* One series, one colour: cycling the discipline hues down a single chart made the
+             colour carry no information at all. Length is the datum. *@
+          @foreach (var r in regions)
           {
-            var r = regions[i];
             var w = (int)Math.Round(r.Athletes / (double)maxRegion * 100);
             <div class="bar-row">
               <span class="bar-label">@Bi(r.NameEn, r.NameAr)</span>
-              <span class="bar-track"><span class="bar-fill" data-w="@w" style="--bar-c:@AccentVar(cycle[i % 3])"></span></span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w"></span></span>
               <span class="bar-val mono">@Number(r.Athletes)</span>
             </div>
           }
@@ -57,8 +57,9 @@
           {
             var w = (int)Math.Round(g.Athletes / (double)maxGrowth * 100);
             <div class="bar-row">
-              <span class="bar-label mono">@Number(g.Year)</span>
-              <span class="bar-track"><span class="bar-fill" data-w="@w" style="--bar-c:@AccentVar("bike")"></span></span>
+              @* A year is a label, not a quantity: no thousands separator. *@
+              <span class="bar-label mono">@Digits(g.Year.ToString(CultureInfo.InvariantCulture))</span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w"></span></span>
               <span class="bar-val mono">@Number(g.Athletes)</span>
             </div>
           }
