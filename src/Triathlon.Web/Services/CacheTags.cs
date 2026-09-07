@@ -27,6 +27,13 @@ public static class CacheTags
     public const string Rules = "rules";
     public const string Guides = "guides";
 
+    /// <summary>
+    /// The affiliated club list. It is its own tag because the clubs block appears on pages that
+    /// otherwise have nothing to do with each other — the join page and the training page today.
+    /// Committees have no tag of their own: they only ever render under <see cref="Governance"/>.
+    /// </summary>
+    public const string Clubs = "clubs";
+
     /// <summary>Tag for one CMS page, so editing it does not evict every other page.</summary>
     public static string Page(string slug) => $"page:{slug}";
 

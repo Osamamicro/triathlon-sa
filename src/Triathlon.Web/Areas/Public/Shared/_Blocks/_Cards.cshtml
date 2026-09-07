@@ -1,0 +1,80 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    The workhorse block. Variant picks the layout:
+      grid-3 (default) · grid-4  — a row of cards, linked when the item carries an href
+      pathway                    — the join page's numbered rail of milestones
+      muted                      — cards for something not published yet, chipped "In preparation"
+
+    Card bodies are editor-written HTML (the rules cards are checklists), so they go through
+    Html.Raw; the Week 4 dashboard sanitises on save.
+*@
+@{
+    var items = Model.Items;
+    var variant = Model.Variant ?? "grid-3";
+    var isPathway = variant == "pathway";
+    var isMuted = variant == "muted";
+    var gridClass = isPathway ? "pathway reveal" : $"grid {(isMuted ? "grid-3" : variant)}";
+
+    // The card's contents are the same whether it is a link or not, and only the element differs.
+    void CardBody(string? eyebrow, string? title, string? body)
+    {
+        if (eyebrow is not null)
+        {
+            <span class="eyebrow">@eyebrow</span>
+        }
+        if (title is not null)
+        {
+            <h3>@title</h3>
+        }
+        if (body is not null)
+        {
+            @Html.Raw(body)
+        }
+        if (isMuted)
+        {
+            <span class="chip">@Bi("In preparation", "قيد الإعداد")</span>
+        }
+    }
+}
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        <div class="@gridClass">
+            @foreach (var item in items)
+            {
+                var eyebrow = item.EyebrowEn is { } eyebrowEn && item.EyebrowAr is { } eyebrowAr ? Bi(eyebrowEn, eyebrowAr) : null;
+                var title = item.TitleEn is { } titleEn && item.TitleAr is { } titleAr ? Bi(titleEn, titleAr) : null;
+                var body = item.BodyEn is not null || item.BodyAr is not null
+                    ? Bi(item.BodyEn ?? string.Empty, item.BodyAr ?? string.Empty)
+                    : null;
+
+                if (isPathway)
+                {
+                    <div class="path-node">
+                        <span class="path-dot" style="--pn-c:var(--@(item.Color ?? "swim"))">@Digits(eyebrow ?? string.Empty)</span>
+                        <h4>@title</h4>
+                        @if (body is not null)
+                        {
+                            <p>@Html.Raw(body)</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    var accent = item.Color is { } color ? $"border-top:3px solid var(--{color})" : null;
+                    var style = isMuted ? "opacity:.75;" + accent : accent;
+
+                    if (item.Href is { } href)
+                    {
+                        <a class="card hover reveal" style="@style" href="@PublicText.Href(href)">@{ CardBody(eyebrow, title, body); }</a>
+                    }
+                    else
+                    {
+                        <div class="card reveal" style="@style">@{ CardBody(eyebrow, title, body); }</div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</section>

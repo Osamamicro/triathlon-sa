@@ -1,0 +1,32 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    The banner that closes a page: a headline, a line of copy, and one or two buttons.
+*@
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <div class="cta-banner reveal">
+            <div>
+                @if (Model.EyebrowEn is { } eyebrowEn && Model.EyebrowAr is { } eyebrowAr)
+                {
+                    <span class="eyebrow">@Bi(eyebrowEn, eyebrowAr)</span>
+                }
+                <h2>@Bi(Model.TitleEn ?? string.Empty, Model.TitleAr ?? string.Empty)</h2>
+                @if (Model.BodyEn is not null || Model.BodyAr is not null)
+                {
+                    <p>@Html.Raw(Bi(Model.BodyEn ?? string.Empty, Model.BodyAr ?? string.Empty))</p>
+                }
+            </div>
+            <div class="hero-actions" style="margin:0">
+                @if (Model.CtaHref is { } ctaHref)
+                {
+                    <a class="btn btn-primary" href="@PublicText.Href(ctaHref)">@Bi(Model.CtaLabelEn ?? string.Empty, Model.CtaLabelAr ?? string.Empty)</a>
+                }
+                @if (Model.SecondaryHref is { } secondaryHref)
+                {
+                    <a class="btn btn-ghost" href="@PublicText.Href(secondaryHref)">@Bi(Model.SecondaryLabelEn ?? string.Empty, Model.SecondaryLabelAr ?? string.Empty)</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>

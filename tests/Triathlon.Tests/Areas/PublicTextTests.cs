@@ -40,4 +40,19 @@ public sealed class PublicTextTests
         Assert.Equal("١٨٬٦٥٠", Under("ar", () => PublicText.Number(18650)));
         Assert.Equal("٠٦:٣٠", Under("ar", () => PublicText.Time(new TimeOnly(6, 30))));
     }
+
+    [Fact]
+    public void Editor_written_links_keep_absolute_targets_and_gain_the_culture_segment()
+    {
+        // Paths inside the site, including the home page and a path carrying a fragment.
+        Assert.Equal("/en/events", Under("en", () => PublicText.Href("events")));
+        Assert.Equal("/ar/join#clubs", Under("ar", () => PublicText.Href("join#clubs")));
+        Assert.Equal("/en", Under("en", () => PublicText.Href("")));
+
+        // Targets that already say where they go are left alone.
+        Assert.Equal("https://x.com/triathlonksa", Under("en", () => PublicText.Href("https://x.com/triathlonksa")));
+        Assert.Equal("http://example.test/a", Under("en", () => PublicText.Href("http://example.test/a")));
+        Assert.Equal("mailto:info@triathlon.sa", Under("ar", () => PublicText.Href("mailto:info@triathlon.sa")));
+        Assert.Equal("#clubs", Under("en", () => PublicText.Href("#clubs")));
+    }
 }

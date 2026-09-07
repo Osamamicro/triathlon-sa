@@ -1,0 +1,29 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
+@model PageBlock
+@inject ContentService Content
+@*
+    The affiliated club list. The block carries only its heading — the clubs themselves are CRM
+    records, so the block reads them rather than storing a copy that would go stale. Pages that use
+    it carry CacheTags.Clubs, so approving a club evicts them.
+*@
+@{
+    var clubs = await Content.ClubsAsync(Context.RequestAborted);
+}
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        <div class="grid grid-3">
+            @foreach (var club in clubs)
+            {
+                <div class="card reveal">
+                    <span class="eyebrow">@Bi(club.CityEn, club.CityAr)</span>
+                    <h3>@Bi(club.NameEn, club.NameAr)</h3>
+                    <p class="muted" style="font-size:.9rem;margin:0">
+                        @Bi("Coached swim, bike and run sessions · beginner friendly", "حصص سباحة ودراجة وجري بإشراف مدربين · مناسبة للمبتدئين")
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</section>

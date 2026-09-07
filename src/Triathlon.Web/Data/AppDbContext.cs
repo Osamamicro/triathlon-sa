@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Domain.Content;
+using Triathlon.Web.Domain.Crm;
 using Triathlon.Web.Domain.Documents;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
@@ -32,6 +34,15 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<RuleOrGuide> Rules => Set<RuleOrGuide>();
     public DbSet<TrainingGuide> TrainingGuides => Set<TrainingGuide>();
     public DbSet<TrainingGuideChapter> TrainingGuideChapters => Set<TrainingGuideChapter>();
+
+    public DbSet<Page> Pages => Set<Page>();
+    public DbSet<PageBlock> PageBlocks => Set<PageBlock>();
+    public DbSet<NavItem> NavItems => Set<NavItem>();
+    public DbSet<Committee> Committees => Set<Committee>();
+    public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
+
+    public DbSet<Club> Clubs => Set<Club>();
+    public DbSet<Athlete> Athletes => Set<Athlete>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

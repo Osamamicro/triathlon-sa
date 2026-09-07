@@ -1,0 +1,21 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    The eyebrow-and-headline pair every block but the hero opens with. Renders nothing when the
+    block has neither, so a bare list of cards stays a bare list of cards.
+*@
+@if (Model.TitleEn is not null || Model.EyebrowEn is not null)
+{
+    <div class="section-head reveal">
+        <div>
+            @if (Model.EyebrowEn is { } eyebrowEn && Model.EyebrowAr is { } eyebrowAr)
+            {
+                <span class="eyebrow">@Bi(eyebrowEn, eyebrowAr)</span>
+            }
+            @if (Model.TitleEn is { } titleEn && Model.TitleAr is { } titleAr)
+            {
+                <h2>@Bi(titleEn, titleAr)</h2>
+            }
+        </div>
+    </div>
+}

@@ -1,0 +1,47 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    A comparison table — the join page's categories. The first item is the header row; every other
+    item is a body row. A cell whose English and Arabic read identically is a code, an age band or a
+    distance, so it renders in the mono face: that is the prototype's own rule, expressed as data
+    rather than as a per-cell flag an editor would have to remember to set.
+*@
+@{
+    var rows = Model.Items;
+    var header = rows.Count > 0 ? rows[0] : null;
+}
+<section class="section" id="@Model.Anchor">
+    <div class="container">
+        <partial name="_Blocks/_SectionHead" model="Model" />
+        <div class="table-wrap reveal">
+            <table>
+                @if (header is not null)
+                {
+                    <thead>
+                        <tr>
+                            @for (var c = 0; c < (header.CellsEn?.Length ?? 0); c++)
+                            {
+                                var en = header.CellsEn![c];
+                                var ar = header.CellsAr is { } cellsAr && c < cellsAr.Length ? cellsAr[c] : en;
+                                <th class="@(en == ar ? "mono" : null)">@Bi(en, ar)</th>
+                            }
+                        </tr>
+                    </thead>
+                }
+                <tbody>
+                    @foreach (var row in rows.Skip(1))
+                    {
+                        <tr>
+                            @for (var c = 0; c < (row.CellsEn?.Length ?? 0); c++)
+                            {
+                                var en = row.CellsEn![c];
+                                var ar = row.CellsAr is { } cellsAr && c < cellsAr.Length ? cellsAr[c] : en;
+                                <td class="@(en == ar ? "mono" : null)">@Bi(en, ar)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

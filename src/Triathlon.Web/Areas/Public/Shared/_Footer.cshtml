@@ -1,24 +1,14 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
 @inject IStringLocalizer<Shared> L
+@inject ContentService Content
 @{
-    var culture = PublicCulture.Of(ViewContext);
     var year = DateTime.UtcNow.Year;
 
-    (string Href, string En, string Ar)[] compete =
-    [
-        (PublicCulture.Url(culture, "events"), "Events & calendar", "الفعاليات والتقويم"),
-        (PublicCulture.Url(culture, "events/timeline"), "Season timeline", "الجدول الزمني للموسم"),
-        (PublicCulture.Url(culture, "rules"), "Rules & regulations", "اللوائح والأنظمة"),
-        (PublicCulture.Url(culture, "statistics"), "Federation statistics", "إحصائيات الاتحاد"),
-    ];
-
-    (string Href, string En, string Ar)[] involved =
-    [
-        (PublicCulture.Url(culture, "register"), "Athlete registration", "تسجيل الرياضيين"),
-        (PublicCulture.Url(culture, "join"), "Become an athlete", "كن رياضياً"),
-        (PublicCulture.Url(culture, "training"), "Training guide", "دليل التدريب"),
-        (PublicCulture.Url(culture, "join") + "#clubs", "Affiliated clubs", "الأندية المنتسبة"),
-        (PublicCulture.Url(culture, "governance"), "Governance & transparency", "الحوكمة والشفافية"),
-    ];
+    // The two link columns are rows in the same table the header reads; the contact column stays
+    // here because it is the federation's own details rather than site navigation.
+    var compete = await Content.NavigationAsync(NavLocation.FooterCompete, Context.RequestAborted);
+    var involved = await Content.NavigationAsync(NavLocation.FooterInvolved, Context.RequestAborted);
 }
 <footer class="site-footer">
     <div class="footer-tri"></div>
@@ -45,7 +35,7 @@
                 <ul>
                     @foreach (var link in compete)
                     {
-                        <li><a href="@link.Href">@Bi(link.En, link.Ar)</a></li>
+                        <li><a href="@PublicText.Href(link.Href)">@Bi(link.LabelEn, link.LabelAr)</a></li>
                     }
                 </ul>
             </div>
@@ -54,7 +44,7 @@
                 <ul>
                     @foreach (var link in involved)
                     {
-                        <li><a href="@link.Href">@Bi(link.En, link.Ar)</a></li>
+                        <li><a href="@PublicText.Href(link.Href)">@Bi(link.LabelEn, link.LabelAr)</a></li>
                     }
                 </ul>
             </div>

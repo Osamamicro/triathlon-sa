@@ -1,0 +1,12 @@
+@using Triathlon.Web.Domain.Content
+@model PageBlock
+@*
+    A stretch of editor-written prose — headings, paragraphs, lists and tables — styled by
+    .rich-text so an editor never has to reach for a class name. Rendered raw; the Week 4 dashboard
+    sanitises on save, and everything reaching it today came from a seed.
+*@
+<section class="section" id="@Model.Anchor">
+    <div class="container rich-text">
+        @Html.Raw(Bi(Model.BodyEn ?? string.Empty, Model.BodyAr ?? string.Empty))
+    </div>
+</section>

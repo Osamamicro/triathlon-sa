@@ -70,6 +70,8 @@ builder.Services.AddIdentityCore<AppUser>(options =>
 builder.Services.AddScoped<IActivityLogger, ActivityLogger>();
 builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<DocumentsService>();
+builder.Services.AddScoped<ContentService>();
+builder.Services.AddScoped<NewsService>();
 builder.Services.AddAppMedia(builder.Configuration);
 builder.Services.AddAppEmail(builder.Configuration);
 builder.Services.AddAppJobs(builder.Configuration);

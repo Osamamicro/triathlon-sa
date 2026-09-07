@@ -712,6 +712,38 @@ select.input{appearance:none}
 .back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-family:var(--mono);font-size:.8rem;margin-bottom:14px;transition:color .15s}
 .back-link:hover{color:var(--ink)}
 
+/* ---------- CMS blocks ---------- */
+
+/* FAQ block: native <details>, so it opens without script and prints open. */
+.faq-list{border-top:1px solid var(--line)}
+.faq{border-bottom:1px solid var(--line)}
+.faq summary{
+  cursor:pointer;list-style:none;padding:18px 0;
+  font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--ink);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:"+";flex:none;font-family:var(--mono);font-size:1.2rem;color:var(--muted);transition:transform .18s,color .18s;
+}
+.faq[open] summary::after{content:"−";color:var(--bike)}
+.faq summary:hover{color:var(--bike)}
+.faq > div{padding:0 0 20px;color:var(--muted);font-size:.95rem}
+.faq > div > :last-child{margin-bottom:0}
+
+/* Rich-text block: editor prose, styled so no class names are needed in the editor. */
+.rich-text{max-width:76ch}
+.rich-text > :first-child{margin-top:0}
+.rich-text > :last-child{margin-bottom:0}
+.rich-text h2{font-size:clamp(1.4rem,2.4vw,1.9rem);margin:1.6em 0 .5em}
+.rich-text h3{font-size:1.15rem;margin:1.4em 0 .4em}
+.rich-text p{color:var(--muted);margin:0 0 1em}
+.rich-text ul,.rich-text ol{color:var(--muted);margin:0 0 1em;padding-inline-start:1.4em}
+.rich-text li{margin-bottom:.5em}
+.rich-text a{color:var(--bike);text-decoration:underline;text-underline-offset:3px}
+.rich-text table{margin-bottom:1em;min-width:0}
+.rich-text code{font-family:var(--mono);font-size:.88em;background:var(--glass);border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+
 /* RTL: flip directional arrows */
 html[dir="rtl"] .cta-arrow{display:inline-block;transform:scaleX(-1)}
 html[dir="rtl"] .back-link [aria-hidden]{display:inline-block;transform:scaleX(-1)}

@@ -75,6 +75,29 @@ public static class PublicText
     public static string Time(TimeOnly time) => Digits(time.ToString("HH:mm", CultureInfo.InvariantCulture));
 
     /// <summary>
+    /// Resolves an editor-written link for rendering. An absolute URL, a <c>mailto:</c> address and
+    /// an in-page fragment are left exactly as they were typed; everything else is a path inside the
+    /// site and gets the current culture segment, so <c>join#clubs</c> becomes <c>/en/join#clubs</c>
+    /// and the empty string becomes <c>/en</c>.
+    /// <para>
+    /// Views must call this as <c>@PublicText.Href(…)</c>, not as a bare <c>@Href(…)</c>: every
+    /// Razor view inherits <c>RazorPageBase.Href</c>, which resolves <c>~/</c> content paths and
+    /// wins over a static import, so an unqualified call silently emits the raw value.
+    /// </para>
+    /// </summary>
+    public static string Href(string href)
+    {
+        ArgumentNullException.ThrowIfNull(href);
+
+        return href.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith('#')
+            ? href
+            : PublicCulture.Url(Culture, href);
+    }
+
+    /// <summary>
     /// Whether a value edited through the dashboard is safe to render into an <c>href</c>: an
     /// absolute <c>http</c>/<c>https</c> URL. Blocks <c>javascript:</c>, <c>data:</c> and malformed
     /// values, and a relative path (which would resolve against the current page rather than go

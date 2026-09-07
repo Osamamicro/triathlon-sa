@@ -1,4 +1,7 @@
+@using Triathlon.Web.Domain.Content
+@using Triathlon.Web.Services
 @inject IStringLocalizer<Shared> L
+@inject ContentService Content
 @{
     var culture = PublicCulture.Of(ViewContext);
 
@@ -10,18 +13,10 @@
         here = string.Empty;
     }
 
-    // Sections shipping in later weeks are already in the navigation; they 404 until they land.
-    (string Path, string En, string Ar)[] nav =
-    [
-        ("", "Home", "الرئيسية"),
-        ("events", "Events", "الفعاليات"),
-        ("events/timeline", "Season", "الموسم"),
-        ("join", "Join", "الانضمام"),
-        ("training", "Training", "التدريب"),
-        ("rules", "Rules", "اللوائح"),
-        ("governance", "Governance", "الحوكمة"),
-        ("statistics", "Statistics", "الإحصائيات"),
-    ];
+    // Rows, not markup: renaming a section is an edit in the dashboard. Sections shipping in later
+    // weeks are already listed; they 404 until they land. Every public page is cached under
+    // CacheTags.Site, so a navigation publish evicts the whole site in one call.
+    var nav = await Content.NavigationAsync(NavLocation.Header, Context.RequestAborted);
 
     bool Current(string path) => path.Length == 0
         ? here.Length == 0
@@ -43,7 +38,7 @@
     <nav class="main-nav" id="mainNav" aria-label="@L["MainNav"]">
         @foreach (var item in nav)
         {
-            <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)">@Bi(item.En, item.Ar)</a>
+            <a href="@PublicText.Href(item.Href)" aria-current="@(Current(item.Href) ? "page" : null)">@Bi(item.LabelEn, item.LabelAr)</a>
         }
     </nav>
     <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]" data-label-light="@L["SwitchToLight"]" data-label-dark="@L["SwitchToDark"]">
