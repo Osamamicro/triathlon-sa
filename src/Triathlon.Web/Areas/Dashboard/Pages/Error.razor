@@ -2,18 +2,21 @@
 @layout AuthLayout
 @attribute [AllowAnonymous]
 @using System.Diagnostics
+@using Microsoft.Extensions.Localization
 
-<PageTitle>Error</PageTitle>
+@inject IStringLocalizer<DashboardStrings> L
 
-<h1>Something went wrong</h1>
-<p>The request could not be completed. Please try again, or contact the federation IT team if it keeps happening.</p>
+<PageTitle>@L["ErrorTitle"]</PageTitle>
+
+<h1>@L["ErrorTitle"]</h1>
+<p>@L["ErrorBody"]</p>
 
 @if (!string.IsNullOrEmpty(requestId))
 {
     <p class="muted">Reference: <code>@requestId</code></p>
 }
 
-<p><a href="dashboard">Back to the dashboard</a></p>
+<p><a href="dashboard">@L["BackToDashboard"]</a></p>
 
 @code {
     private string? requestId;

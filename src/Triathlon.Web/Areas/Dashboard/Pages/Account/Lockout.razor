@@ -2,9 +2,13 @@
 @layout AuthLayout
 @attribute [AllowAnonymous]
 
-<PageTitle>Account locked</PageTitle>
+@using Microsoft.Extensions.Localization
 
-<h1>Account locked</h1>
-<p role="alert">Too many failed sign-in attempts. This account is locked for 15 minutes.</p>
+@inject IStringLocalizer<DashboardStrings> L
 
-<p><a href="dashboard/login">Back to sign in</a></p>
+<PageTitle>@L["LockedOutTitle"]</PageTitle>
+
+<h1>@L["LockedOutTitle"]</h1>
+<p role="alert">@L["LockedOutBody"]</p>
+
+<p><a href="dashboard/login">@L["BackToDashboard"]</a></p>

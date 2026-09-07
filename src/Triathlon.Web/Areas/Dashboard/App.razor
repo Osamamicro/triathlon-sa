@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components.Endpoints
+@using System.Globalization
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@Lang" dir="@Dir">
 
 <head>
     <meta charset="utf-8" />
@@ -33,4 +34,11 @@
     // those are marked [ExcludeFromInteractiveRouting] and render as plain server HTML.
     private IComponentRenderMode? PageRenderMode =>
         HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+
+    // The dashboard has no "culture" URL segment (see PublicSite.AddPublicSite); its language comes
+    // from the culture cookie set by /dashboard/culture/{culture}, which request localization has
+    // already resolved into CurrentUICulture by the time this component renders.
+    private static string Lang => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    private static string Dir => Lang == "ar" ? "rtl" : "ltr";
 }

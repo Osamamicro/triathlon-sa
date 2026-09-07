@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Brand" xml:space="preserve">
+    <value>الاتحاد السعودي للترايثلون</value>
+    <comment>Federation name shown above the sign-in card.</comment>
+  </data>
+  <data name="SignInTitle" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+    <comment>Browser title and heading of the dashboard sign-in page.</comment>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>البريد الإلكتروني</value>
+    <comment>Label of the email field on the sign-in form.</comment>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>كلمة المرور</value>
+    <comment>Label of the password field on the sign-in form.</comment>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>تذكرني</value>
+    <comment>Label of the "remember me" checkbox on the sign-in form.</comment>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>تسجيل الدخول</value>
+    <comment>Text of the sign-in submit button.</comment>
+  </data>
+  <data name="AccountsByAdmin" xml:space="preserve">
+    <value>تُنشئ حسابات لوحة التحكم بواسطة مسؤول الاتحاد.</value>
+    <comment>Note below the sign-in form: there is no self-service sign-up.</comment>
+  </data>
+  <data name="InvalidSignIn" xml:space="preserve">
+    <value>خطأ: محاولة تسجيل دخول غير صالحة.</value>
+    <comment>Shown when the email/password pair does not match; deliberately does not say which half was wrong.</comment>
+  </data>
+  <data name="LockedOutTitle" xml:space="preserve">
+    <value>الحساب مقفل</value>
+    <comment>Browser title and heading of the account-locked page.</comment>
+  </data>
+  <data name="LockedOutBody" xml:space="preserve">
+    <value>عدد كبير جدًا من محاولات تسجيل الدخول الفاشلة. تم قفل هذا الحساب لمدة 15 دقيقة.</value>
+    <comment>Body text of the account-locked page.</comment>
+  </data>
+  <data name="AccessDeniedTitle" xml:space="preserve">
+    <value>الوصول مرفوض</value>
+    <comment>Browser title and heading of the access-denied page.</comment>
+  </data>
+  <data name="AccessDeniedBody" xml:space="preserve">
+    <value>لا يملك حسابك الصلاحية لفتح هذا الجزء من لوحة التحكم.</value>
+    <comment>Body text of the access-denied page.</comment>
+  </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>الصفحة غير موجودة</value>
+    <comment>Browser title and heading of the dashboard 404 page.</comment>
+  </data>
+  <data name="NotFoundBody" xml:space="preserve">
+    <value>لا يوجد شيء في هذا العنوان.</value>
+    <comment>Body text of the dashboard 404 page.</comment>
+  </data>
+  <data name="BackToDashboard" xml:space="preserve">
+    <value>العودة إلى لوحة التحكم</value>
+    <comment>Link back to the dashboard shown on the lockout, access-denied, not-found and error pages.</comment>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>حدث خطأ ما</value>
+    <comment>Browser title and heading of the dashboard error page.</comment>
+  </data>
+  <data name="ErrorBody" xml:space="preserve">
+    <value>تعذر إتمام الطلب. يرجى المحاولة مرة أخرى، أو التواصل مع فريق تقنية المعلومات في الاتحاد إذا استمرت المشكلة.</value>
+    <comment>Body text of the dashboard error page.</comment>
+  </data>
+</root>

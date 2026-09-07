@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Brand" xml:space="preserve">
+    <value>Saudi Triathlon Federation</value>
+    <comment>Federation name shown above the sign-in card.</comment>
+  </data>
+  <data name="SignInTitle" xml:space="preserve">
+    <value>Sign in</value>
+    <comment>Browser title and heading of the dashboard sign-in page.</comment>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+    <comment>Label of the email field on the sign-in form.</comment>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+    <comment>Label of the password field on the sign-in form.</comment>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Remember me</value>
+    <comment>Label of the "remember me" checkbox on the sign-in form.</comment>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Sign in</value>
+    <comment>Text of the sign-in submit button.</comment>
+  </data>
+  <data name="AccountsByAdmin" xml:space="preserve">
+    <value>Dashboard accounts are created by a federation administrator.</value>
+    <comment>Note below the sign-in form: there is no self-service sign-up.</comment>
+  </data>
+  <data name="InvalidSignIn" xml:space="preserve">
+    <value>Error: Invalid sign-in attempt.</value>
+    <comment>Shown when the email/password pair does not match; deliberately does not say which half was wrong.</comment>
+  </data>
+  <data name="LockedOutTitle" xml:space="preserve">
+    <value>Account locked</value>
+    <comment>Browser title and heading of the account-locked page.</comment>
+  </data>
+  <data name="LockedOutBody" xml:space="preserve">
+    <value>Too many failed sign-in attempts. This account is locked for 15 minutes.</value>
+    <comment>Body text of the account-locked page.</comment>
+  </data>
+  <data name="AccessDeniedTitle" xml:space="preserve">
+    <value>Access denied</value>
+    <comment>Browser title and heading of the access-denied page.</comment>
+  </data>
+  <data name="AccessDeniedBody" xml:space="preserve">
+    <value>Your account does not have permission to open that part of the dashboard.</value>
+    <comment>Body text of the access-denied page.</comment>
+  </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>Not found</value>
+    <comment>Browser title and heading of the dashboard 404 page.</comment>
+  </data>
+  <data name="NotFoundBody" xml:space="preserve">
+    <value>There is nothing at this address.</value>
+    <comment>Body text of the dashboard 404 page.</comment>
+  </data>
+  <data name="BackToDashboard" xml:space="preserve">
+    <value>Back to the dashboard</value>
+    <comment>Link back to the dashboard shown on the lockout, access-denied, not-found and error pages.</comment>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Something went wrong</value>
+    <comment>Browser title and heading of the dashboard error page.</comment>
+  </data>
+  <data name="ErrorBody" xml:space="preserve">
+    <value>The request could not be completed. Please try again, or contact the federation IT team if it keeps happening.</value>
+    <comment>Body text of the dashboard error page.</comment>
+  </data>
+</root>

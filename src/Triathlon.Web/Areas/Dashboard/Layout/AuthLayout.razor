@@ -1,8 +1,29 @@
 @inherits LayoutComponentBase
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<DashboardStrings> L
 
 <main class="auth-shell">
     <div class="auth-card">
-        <p class="auth-brand">Saudi Triathlon Federation</p>
+        <p class="auth-brand">@L["Brand"]</p>
         @Body
     </div>
+    <p class="auth-lang">
+        <a href="@CultureLink("ar")" lang="ar">العربية</a> · <a href="@CultureLink("en")">English</a>
+    </p>
 </main>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    /// <summary>
+    /// Builds a link to the culture-switch endpoint that returns to this same page. Both language
+    /// links always render — the current language's own link is harmless, and it keeps this layout
+    /// from needing to know which page hosts it.
+    /// </summary>
+    private string CultureLink(string culture)
+    {
+        var path = HttpContext?.Request.Path.Value is { Length: > 0 } value ? value : "/dashboard";
+        return $"/dashboard/culture/{culture}?returnUrl={Uri.EscapeDataString(path)}";
+    }
+}

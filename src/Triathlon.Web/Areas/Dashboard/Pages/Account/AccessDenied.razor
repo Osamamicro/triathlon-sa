@@ -1,9 +1,13 @@
 @page "/dashboard/access-denied"
 @layout AuthLayout
 
-<PageTitle>Access denied</PageTitle>
+@using Microsoft.Extensions.Localization
 
-<h1>Access denied</h1>
-<p>Your account does not have permission to open that part of the dashboard.</p>
+@inject IStringLocalizer<DashboardStrings> L
 
-<p><a href="dashboard">Back to the dashboard</a></p>
+<PageTitle>@L["AccessDeniedTitle"]</PageTitle>
+
+<h1>@L["AccessDeniedTitle"]</h1>
+<p>@L["AccessDeniedBody"]</p>
+
+<p><a href="dashboard">@L["BackToDashboard"]</a></p>

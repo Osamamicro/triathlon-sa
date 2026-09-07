@@ -59,13 +59,18 @@ public static class PublicSite
             options.SupportedUICultures = cultures;
             options.ApplyCurrentCultureToResponseHeaders = true;
 
-            // The URL is the single source of truth for language; nothing else gets a vote.
+            // The URL is the single source of truth for language on the public site; nothing else
+            // gets a vote there. The cookie provider is added after it purely for the dashboard,
+            // which has no "culture" route segment: the route provider returns no result for a
+            // /dashboard request, so the cookie decides there, but it never outranks a matched
+            // culture segment on a public URL (see PublicPagesTests.Public_url_culture_beats_the_cookie).
             options.RequestCultureProviders.Clear();
             options.RequestCultureProviders.Add(new RouteDataRequestCultureProvider
             {
                 RouteDataStringKey = "culture",
                 UIRouteDataStringKey = "culture",
             });
+            options.RequestCultureProviders.Add(new CookieRequestCultureProvider());
         });
 
         services.AddRazorPages(options =>
