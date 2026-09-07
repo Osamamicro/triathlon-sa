@@ -162,8 +162,8 @@ public static class SeedPages
                 [
                     new BlockItem(
                         TitleEn: "Pick a club near you", TitleAr: "اختر نادياً قريباً منك",
-                        BodyEn: "Seventeen affiliated clubs across nine regions run coached sessions for every level; the list is below.",
-                        BodyAr: "سبعة عشر نادياً منتسباً في تسع مناطق تقدم حصصاً بإشراف مدربين لجميع المستويات، والقائمة أدناه."),
+                        BodyEn: "Affiliated clubs across the Kingdom run coached sessions for every level — see the list below.",
+                        BodyAr: "الأندية المنتسبة في مختلف مناطق المملكة تقدم حصصاً بإشراف مدربين لجميع المستويات، انظر القائمة أدناه."),
                     new BlockItem(
                         TitleEn: "Register with the federation", TitleAr: "سجّل لدى الاتحاد",
                         BodyEn: "Submit your national ID / iqama, a medical declaration, and your category. Registration is done once and renewed each season.",

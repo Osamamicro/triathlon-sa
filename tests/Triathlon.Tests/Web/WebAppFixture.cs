@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Time.Testing;
 using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;
 using Triathlon.Web.Data;
@@ -26,6 +27,22 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
 {
     public const string AdminEmail = "seed-admin@triathlon.test";
     public const string AdminPassword = "Seed-Admin-Pass-2026!";
+
+    /// <summary>
+    /// The instant the app's <see cref="TimeProvider"/> is pinned to for every test host this fixture
+    /// builds. Seeded event dates (e.g. <c>riyadh-sprint-2026</c> = 2026-10-17) are fixture data, not
+    /// relative-to-today data — without a pinned clock, tests that assert on "upcoming" vs "past"
+    /// against those dates silently start failing the day the real calendar catches up to them.
+    /// <para>
+    /// 09:00 Riyadh time (UTC+3) on 2026-09-07, expressed with a zero offset: <see cref="FakeTimeProvider"/>
+    /// returns exactly the <see cref="DateTimeOffset"/> it is given — it does not normalise a non-zero
+    /// offset the way the real clock's <c>GetUtcNow()</c> would — and that value flows straight into
+    /// <c>timestamp with time zone</c> columns via <c>StampInterceptor</c>, which Npgsql only accepts
+    /// at <c>Offset=0</c>. A +03:00 offset here fails every seed write with
+    /// "Cannot write DateTimeOffset with Offset=03:00:00 ... only offset 0 (UTC) is supported."
+    /// </para>
+    /// </summary>
+    public static readonly DateTimeOffset FixedNow = new(2026, 9, 7, 6, 0, 0, TimeSpan.Zero);
 
     private static readonly bool UseSqlServer = string.Equals(
         Environment.GetEnvironmentVariable("STF_TEST_DB"), "SqlServer", StringComparison.OrdinalIgnoreCase);
@@ -138,6 +155,14 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
             // messages instead, which is what lets a registration test read the mail it caused.
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(new RecordingEmailSender(_sentEmails));
+
+            // Pin the clock so tests that assert on seeded event dates (upcoming vs past, "closes
+            // in N days", etc.) don't start failing once the real calendar catches up to them. Every
+            // consumer resolves TimeProvider from DI (EventsService, StampInterceptor, ...), so
+            // replacing the one registration here is enough; Hangfire's own scheduling does not
+            // resolve this TimeProvider.
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(new FakeTimeProvider(FixedNow));
         });
 
         var connectionString = _sqlServer is not null
