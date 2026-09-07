@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Triathlon.Web.Areas.Public;
+using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Infrastructure;
 using Triathlon.Web.Services;
 
@@ -39,6 +41,58 @@ public static class PublicApi
         ArgumentNullException.ThrowIfNull(app);
 
         var api = app.MapGroup("/api");
+
+        // The same season the timeline page renders, as data: the Kingdom map's coordinates and one
+        // entry per event, in whichever culture the caller asks for. Cached under the events tag, so
+        // publishing an event drops the page and the feed together.
+        api.MapGet("/timeline", async (string? season, string? type, string? culture, EventsService events, CancellationToken ct) =>
+        {
+            var ar = string.Equals(culture, "ar", StringComparison.OrdinalIgnoreCase);
+            var lang = ar ? "ar" : PublicSite.DefaultCulture;
+            var data = await events.TimelineAsync(season, ParseType(type), ct);
+            var today = events.Today;
+
+            return Results.Ok(new
+            {
+                data.Season,
+                data.Seasons,
+                Cities = data.Cities.Select(c => new { c.Key, Name = ar ? c.NameAr : c.NameEn, X = c.SvgX, Y = c.SvgY, c.LabelAtEnd, c.LabelDy }),
+                Events = data.Events.Select(e => new
+                {
+                    e.Slug,
+                    Url = PublicCulture.Url(lang, "events/" + e.Slug),
+                    Title = ar ? e.TitleAr : e.TitleEn,
+                    Type = e.Type.ToString().ToLowerInvariant(),
+                    Status = e.StatusOn(today).ToString(),
+                    Date = e.DateStart,
+                    Time = e.StartTime,
+                    CityKey = e.City.Key,
+                    Venue = ar ? e.VenueAr : e.VenueEn,
+                    Swim = e.SwimDistance,
+                    Bike = e.BikeDistance,
+                    Run = e.RunDistance,
+                }),
+            });
+        })
+        .CacheOutput(policy => policy
+            .Expire(OutputCacheSetup.PublicLifetime)
+            .Tag(CacheTags.Events, CacheTags.Site)
+            .SetVaryByQuery("season", "type", "culture"));
+
+        // The whole calendar as a subscribable feed, so an athlete's phone keeps the season without
+        // visiting the site again.
+        api.MapGet("/calendar.ics", async (string? type, string? culture, EventsService events, HttpContext http, CancellationToken ct) =>
+        {
+            var lang = string.Equals(culture, "ar", StringComparison.OrdinalIgnoreCase) ? "ar" : PublicSite.DefaultCulture;
+            var list = await events.AllPublishedAsync(ParseType(type), ct);
+            var ics = IcsWriter.Write(list, lang, $"{http.Request.Scheme}://{http.Request.Host}");
+
+            return Results.Text(ics, "text/calendar", Encoding.UTF8);
+        })
+        .CacheOutput(policy => policy
+            .Expire(OutputCacheSetup.PublicLifetime)
+            .Tag(CacheTags.Events, CacheTags.Site)
+            .SetVaryByQuery("type", "culture"));
 
         api.MapPost("/events/{slug}/register", async (
             string slug,
@@ -131,6 +185,14 @@ public static class PublicApi
 
         return app;
     }
+
+    /// <summary>An unknown value is no filter at all, the same reading the events list gives it.</summary>
+    private static EventType? ParseType(string? type) => type?.ToLowerInvariant() switch
+    {
+        "competition" => EventType.Competition,
+        "community" => EventType.Community,
+        _ => null,
+    };
 
     private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

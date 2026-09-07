@@ -93,6 +93,9 @@
 }
 
 *{box-sizing:border-box}
+/* script hides timeline items and month headings with the hidden property; every rule
+   that gives an element a display of its own has to lose to it. */
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{
   margin:0;
@@ -435,6 +438,13 @@ html[lang="ar"] .seg a{text-transform:none;letter-spacing:0;font-size:.98rem}
 html[dir="rtl"] .select{padding:10px 18px 10px 38px;background-position:left 16px center}
 
 /* ---------- timeline ---------- */
+/* calendar and map side by side; on a narrow screen the map leads and the calendar
+   runs under it, which is the order the prototype's page stylesheet set. */
+.season-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,54px);align-items:start}
+@media (max-width:920px){
+  .season-grid{grid-template-columns:1fr}
+  .map-wrap{position:static;order:-1;margin-bottom:10px}
+}
 .season-timeline{position:relative;margin-block:26px;padding-inline-start:34px}
 .season-timeline::before{
   content:"";position:absolute;inset-block:8px;inset-inline-start:10px;width:3px;border-radius:3px;
@@ -451,7 +461,11 @@ html[dir="rtl"] .select{padding:10px 18px 10px 38px;background-position:left 16p
 .tl-item.t-community{--tl-c:var(--run)}
 .tl-item.t-competition{--tl-c:var(--swim)}
 .tl-item:hover::before,.tl-item.active::before{box-shadow:0 0 0 7px rgba(46,230,138,.18)}
-.tl-card{cursor:pointer}
+.tl-card{cursor:pointer;padding:20px}
+.tl-card h3{font-size:1.06rem;margin:0 0 4px}
+.tl-card .event-meta{margin-bottom:10px}
+/* the events grid hangs its chips off the date block; the timeline card has none. */
+.tl-chips{margin-bottom:10px}
 .tl-month{
   font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;
   color:var(--faint);margin:26px 0 2px;padding-inline-start:2px;
@@ -474,11 +488,23 @@ html[lang="ar"] .tl-month{letter-spacing:.06em;font-size:.8rem}
 }
 .ksa-map .marker.active text,.ksa-map .marker:hover text{fill:var(--ink)}
 .ksa-map .marker.active circle.core{fill:var(--bike)}
+/* a marker whose every event the type filter hid. Not the hidden property: a hidden <g>
+   would still be focusable in some engines, and this keeps SVG display handling in one place. */
+.ksa-map .marker.is-hidden{display:none}
+/* markers are keyboard-operable, so the focus ring has to read on the map too */
+.ksa-map .marker:focus-visible{outline:2px solid var(--swim);outline-offset:2px}
+.ksa-map .marker:focus-visible text{fill:var(--ink)}
 @media (prefers-reduced-motion:no-preference){
   .ksa-map .marker circle.halo{animation:pulse 2.6s ease-out infinite}
   @keyframes pulse{0%{transform:scale(.6);opacity:.7}80%{transform:scale(2.1);opacity:0}100%{opacity:0}}
   .ksa-map .marker circle.halo{transform-origin:center;transform-box:fill-box}
 }
+
+.map-legend{display:flex;gap:18px;margin-top:14px;font-family:var(--mono);font-size:.7rem;color:var(--muted);flex-wrap:wrap}
+.map-legend span{display:inline-flex;align-items:center;gap:8px}
+.map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.map-caption{font-family:var(--mono);font-size:.66rem;color:var(--faint);margin-top:10px}
+html[lang="ar"] .map-legend,html[lang="ar"] .map-caption{font-family:var(--body);font-size:.78rem}
 
 /* ---------- documents library ---------- */
 .doc-row{

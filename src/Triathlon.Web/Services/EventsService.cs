@@ -58,6 +58,14 @@ public sealed partial class EventsService(AppDbContext db, TimeProvider clock)
             .Include(e => e.Results.OrderBy(r => r.Position))
             .SingleOrDefaultAsync(e => e.Slug == slug, ct);
 
+    /// <summary>
+    /// Every published event, past and future, in date order — the calendar feed's source. A
+    /// subscriber's client keeps the whole series, so the feed is not trimmed to a season the way
+    /// the timeline is.
+    /// </summary>
+    public async Task<IReadOnlyList<Event>> AllPublishedAsync(EventType? type, CancellationToken ct) =>
+        await Filter(Published(), type, null).OrderBy(e => e.DateStart).ThenBy(e => e.TitleEn).ToListAsync(ct);
+
     public async Task<IReadOnlyList<City>> CitiesAsync(CancellationToken ct) =>
         await db.Cities.AsNoTracking().OrderBy(c => c.SortOrder).ToListAsync(ct);
 
