@@ -87,6 +87,11 @@ var app = builder.Build();
 //                        site cannot leak through static assets or the output cache.
 //   media files        — right after the staging gate, so an unfinished staging site's uploads are
 //                        challenged the same as everything else on it.
+//   security headers   — after forwarded headers and before everything that can write a body, so
+//                        even the staging gate's 401 challenge carries them.
+//   status pages       — chosen per area: the branch a request falls into decides whether a 404 or
+//                        an unhandled exception renders the dashboard's page or the public site's,
+//                        and in which language.
 //   exception handling — outside compression, so a failure inside it still renders an error page.
 //   compression        — before routing, so it wraps static assets and endpoints alike.
 //   rate limiter       — after routing, because the policy is chosen from endpoint metadata.
@@ -94,23 +99,42 @@ var app = builder.Build();
 // ---------------------------------------------------------------------------------------------
 
 app.UseAppProxy();
+app.UseSecurityHeaders();
 app.UseStagingBasicAuth();
 app.UseMediaFiles();
 
-if (app.Environment.IsDevelopment())
+var isDevelopment = app.Environment.IsDevelopment();
+
+// The dashboard's status pages are Blazor components and the public site's are Razor Pages under a
+// culture segment, so which pair a request gets is a decision about the path it arrived on.
+// Development keeps the developer exception page; only the 404 re-execute runs there.
+void ErrorPages(IApplicationBuilder branch, string errorPath, string notFoundPath)
+{
+    if (!isDevelopment)
+    {
+        branch.UseExceptionHandler(errorPath, createScopeForErrors: true);
+    }
+
+    branch.UseStatusCodePagesWithReExecute(notFoundPath, createScopeForStatusCodePages: true);
+}
+
+app.UseWhen(c => PublicSite.IsDashboardPath(c.Request.Path), b => ErrorPages(b, "/dashboard/error", "/dashboard/not-found"));
+app.UseWhen(c => !PublicSite.IsDashboardPath(c.Request.Path) && PublicSite.WantsHtmlStatusPage(c) && PublicSite.IsArabicPath(c.Request.Path),
+    b => ErrorPages(b, "/ar/error", "/ar/not-found"));
+app.UseWhen(c => !PublicSite.IsDashboardPath(c.Request.Path) && PublicSite.WantsHtmlStatusPage(c) && !PublicSite.IsArabicPath(c.Request.Path),
+    b => ErrorPages(b, "/en/error", "/en/not-found"));
+
+if (isDevelopment)
 {
     app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseExceptionHandler("/dashboard/error", createScopeForErrors: true);
     // The default HSTS value is 30 days. See https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseResponseCompression();
-
-app.UseStatusCodePagesWithReExecute("/dashboard/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
 // Explicit so request localization can sit behind it: the culture comes out of the matched route.

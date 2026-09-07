@@ -38,12 +38,12 @@
                 </linearGradient>
             </defs>
         </svg>
-        <span class="brand-name"><span class="en">Saudi Triathlon</span><span class="ar">الاتحاد السعودي للترايثلون</span><small><span class="en">FEDERATION · SWIM BIKE RUN</span><span class="ar">سباحة · دراجة · جري</span></small></span>
+        <span class="brand-name">@Bi("Saudi Triathlon", "الاتحاد السعودي للترايثلون")<small>@Bi("FEDERATION · SWIM BIKE RUN", "سباحة · دراجة · جري")</small></span>
     </a>
     <nav class="main-nav" id="mainNav" aria-label="@L["MainNav"]">
         @foreach (var item in nav)
         {
-            <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)"><span class="en">@item.En</span><span class="ar">@item.Ar</span></a>
+            <a href="@PublicCulture.Url(culture, item.Path)" aria-current="@(Current(item.Path) ? "page" : null)">@Bi(item.En, item.Ar)</a>
         }
     </nav>
     <button class="theme-toggle" type="button" aria-label="@L["ThemeToggle"]" data-label-light="@L["SwitchToLight"]" data-label-dark="@L["SwitchToDark"]">

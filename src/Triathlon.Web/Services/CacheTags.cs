@@ -12,6 +12,12 @@ namespace Triathlon.Web.Services;
 /// </summary>
 public static class CacheTags
 {
+    /// <summary>
+    /// Carried by every public page; evicting it drops the whole public cache — used when the
+    /// navigation or a site setting changes, which is content no single page tag covers.
+    /// </summary>
+    public const string Site = "site";
+
     public const string Home = "home";
     public const string Events = "events";
     public const string Stats = "stats";

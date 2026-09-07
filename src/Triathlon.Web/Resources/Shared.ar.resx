@@ -94,4 +94,10 @@
   <data name="HomeTitle" xml:space="preserve">
     <value>سباحة ودراجة وجري</value>
   </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>الصفحة غير موجودة</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>حدث خطأ ما</value>
+  </data>
 </root>

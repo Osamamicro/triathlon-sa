@@ -8,29 +8,21 @@
   <section class="hero">
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="container">
-      <span class="hero-kicker mono">
-        <span class="en">National Series 2026–27 · Registration open</span>
-        <span class="ar">السلسلة الوطنية 2026–27 · التسجيل مفتوح</span>
-      </span>
+      <span class="hero-kicker mono">@Bi("National Series 2026–27 · Registration open", "السلسلة الوطنية 2026–27 · التسجيل مفتوح")</span>
       <h1>
-        <span class="en">Swim. Ride. Run.<br><span class="grad">Forward.</span></span>
-        <span class="ar">اسبح. اركب. اجرِ.<br><span class="grad">نحو الأمام.</span></span>
+        @if (IsArabic)
+        {
+          <text>اسبح. اركب. اجرِ.<br><span class="grad">نحو الأمام.</span></text>
+        }
+        else
+        {
+          <text>Swim. Ride. Run.<br><span class="grad">Forward.</span></text>
+        }
       </h1>
-      <p class="hero-lead">
-        <span class="en">The Saudi Triathlon Federation is the national home of multisport — from your
-        first community aquathlon to the national team. Find your race, join a club, and follow
-        the series across the Kingdom.</span>
-        <span class="ar">الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة — من أول
-        أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ،
-        وتابع السلسلة في جميع مناطق المملكة.</span>
-      </p>
+      <p class="hero-lead">@Bi("The Saudi Triathlon Federation is the national home of multisport — from your first community aquathlon to the national team. Find your race, join a club, and follow the series across the Kingdom.", "الاتحاد السعودي للترايثلون هو البيت الوطني للرياضات المتعددة — من أول أكواثلون مجتمعي تخوضه وصولاً إلى المنتخب الوطني. اعثر على سباقك، وانضم إلى نادٍ، وتابع السلسلة في جميع مناطق المملكة.")</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events")">
-          <span class="en">Find your race</span><span class="ar">اعثر على سباقك</span>
-        </a>
-        <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "join")">
-          <span class="en">Become an athlete</span><span class="ar">كن رياضياً</span>
-        </a>
+        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events")">@Bi("Find your race", "اعثر على سباقك")</a>
+        <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "join")">@Bi("Become an athlete", "كن رياضياً")</a>
       </div>
 
       <!-- course line: swim → T1 → bike → T2 → run -->
@@ -52,16 +44,16 @@
 
       <div class="tri-strip reveal">
         <div class="tri-leg leg-swim">
-          <span class="leg-name"><span class="en">Swim</span><span class="ar">سباحة</span></span>
-          <span class="leg-data mono"><span class="en">750M – 1500M · OPEN WATER</span><span class="ar">750م – 1500م · مياه مفتوحة</span></span>
+          <span class="leg-name">@Bi("Swim", "سباحة")</span>
+          <span class="leg-data mono">@Bi("750M – 1500M · OPEN WATER", "750م – 1500م · مياه مفتوحة")</span>
         </div>
         <div class="tri-leg leg-bike">
-          <span class="leg-name"><span class="en">Bike</span><span class="ar">دراجة</span></span>
-          <span class="leg-data mono"><span class="en">20KM – 40KM · CLOSED ROADS</span><span class="ar">20كم – 40كم · طرق مغلقة</span></span>
+          <span class="leg-name">@Bi("Bike", "دراجة")</span>
+          <span class="leg-data mono">@Bi("20KM – 40KM · CLOSED ROADS", "20كم – 40كم · طرق مغلقة")</span>
         </div>
         <div class="tri-leg leg-run">
-          <span class="leg-name"><span class="en">Run</span><span class="ar">جري</span></span>
-          <span class="leg-data mono"><span class="en">5KM – 10KM · CITY CIRCUITS</span><span class="ar">5كم – 10كم · مسارات المدن</span></span>
+          <span class="leg-name">@Bi("Run", "جري")</span>
+          <span class="leg-data mono">@Bi("5KM – 10KM · CITY CIRCUITS", "5كم – 10كم · مسارات المدن")</span>
         </div>
       </div>
     </div>
@@ -72,33 +64,31 @@
     <div class="container">
       <div class="section-head reveal">
         <div>
-          <span class="eyebrow"><span class="en">Federation in numbers</span><span class="ar">الاتحاد بالأرقام</span></span>
-          <h2><span class="en">A sport growing fast</span><span class="ar">رياضة تنمو بسرعة</span></h2>
+          <span class="eyebrow">@Bi("Federation in numbers", "الاتحاد بالأرقام")</span>
+          <h2>@Bi("A sport growing fast", "رياضة تنمو بسرعة")</h2>
         </div>
-        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "statistics")">
-          <span class="en">All statistics</span><span class="ar">جميع الإحصائيات</span>
-        </a>
+        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "statistics")">@Bi("All statistics", "جميع الإحصائيات")</a>
       </div>
       <div class="stat-band">
         <div class="stat reveal">
-          <div class="stat-value mono" data-count="1284" data-plus>0</div>
-          <div class="stat-label"><span class="en">Registered athletes</span><span class="ar">رياضي مسجل</span></div>
-          <div class="stat-note mono"><span class="en">+31% VS 2025</span><span class="ar">‎+31% مقارنة بـ2025</span></div>
+          <div class="stat-value mono" data-count="1284">0<span class="plus">+</span></div>
+          <div class="stat-label">@Bi("Registered athletes", "رياضي مسجل")</div>
+          <div class="stat-note mono">@Bi("+31% VS 2025", "‎+31% مقارنة بـ2025")</div>
         </div>
         <div class="stat reveal" style="--stat-c:var(--swim)">
           <div class="stat-value mono" data-count="42">0</div>
-          <div class="stat-label"><span class="en">Elite athletes</span><span class="ar">رياضيو النخبة</span></div>
-          <div class="stat-note mono"><span class="en">NATIONAL SQUAD POOL</span><span class="ar">قاعدة المنتخب الوطني</span></div>
+          <div class="stat-label">@Bi("Elite athletes", "رياضيو النخبة")</div>
+          <div class="stat-note mono">@Bi("NATIONAL SQUAD POOL", "قاعدة المنتخب الوطني")</div>
         </div>
         <div class="stat reveal" style="--stat-c:var(--bike)">
           <div class="stat-value mono" data-count="24">0</div>
-          <div class="stat-label"><span class="en">Tournaments held</span><span class="ar">بطولة أقيمت</span></div>
-          <div class="stat-note mono"><span class="en">ACROSS 9 REGIONS</span><span class="ar">في 9 مناطق</span></div>
+          <div class="stat-label">@Bi("Tournaments held", "بطولة أقيمت")</div>
+          <div class="stat-note mono">@Bi("ACROSS 9 REGIONS", "في 9 مناطق")</div>
         </div>
         <div class="stat reveal" style="--stat-c:var(--run)">
-          <div class="stat-value mono" data-count="18650" data-plus>0</div>
-          <div class="stat-label"><span class="en">Race participations</span><span class="ar">مشاركة في السباقات</span></div>
-          <div class="stat-note mono"><span class="en">SINCE 2023</span><span class="ar">منذ 2023</span></div>
+          <div class="stat-value mono" data-count="18650">0<span class="plus">+</span></div>
+          <div class="stat-label">@Bi("Race participations", "مشاركة في السباقات")</div>
+          <div class="stat-note mono">@Bi("SINCE 2023", "منذ 2023")</div>
         </div>
       </div>
     </div>
@@ -109,12 +99,10 @@
     <div class="container">
       <div class="section-head reveal">
         <div>
-          <span class="eyebrow"><span class="en">Next start lines</span><span class="ar">خطوط الانطلاق القادمة</span></span>
-          <h2><span class="en">Upcoming events</span><span class="ar">الفعاليات القادمة</span></h2>
+          <span class="eyebrow">@Bi("Next start lines", "خطوط الانطلاق القادمة")</span>
+          <h2>@Bi("Upcoming events", "الفعاليات القادمة")</h2>
         </div>
-        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "events")">
-          <span class="en">Full calendar</span><span class="ar">التقويم الكامل</span>
-        </a>
+        <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "events")">@Bi("Full calendar", "التقويم الكامل")</a>
       </div>
       <div class="grid grid-3" id="homeEvents"></div>
     </div>
@@ -125,18 +113,11 @@
     <div class="container">
       <div class="cta-banner reveal">
         <div>
-          <span class="eyebrow"><span class="en">2026–27 season</span><span class="ar">موسم 2026–27</span></span>
-          <h2><span class="en">One season, eight cities</span><span class="ar">موسم واحد، ثماني مدن</span></h2>
-          <p>
-            <span class="en">Follow the national series on an interactive timeline and map — from the Red Sea
-            to the Gulf, competition and community side by side.</span>
-            <span class="ar">تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية — من البحر الأحمر إلى الخليج،
-            بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب.</span>
-          </p>
+          <span class="eyebrow">@Bi("2026–27 season", "موسم 2026–27")</span>
+          <h2>@Bi("One season, eight cities", "موسم واحد، ثماني مدن")</h2>
+          <p>@Bi("Follow the national series on an interactive timeline and map — from the Red Sea to the Gulf, competition and community side by side.", "تابع السلسلة الوطنية عبر جدول زمني وخريطة تفاعلية — من البحر الأحمر إلى الخليج، بطولاتٍ وفعاليات مجتمعية جنباً إلى جنب.")</p>
         </div>
-        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/timeline")">
-          <span class="en">Explore the season</span><span class="ar">استكشف الموسم</span>
-        </a>
+        <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/timeline")">@Bi("Explore the season", "استكشف الموسم")</a>
       </div>
     </div>
   </section>
@@ -146,42 +127,30 @@
     <div class="container">
       <div class="section-head reveal">
         <div>
-          <span class="eyebrow"><span class="en">For every role</span><span class="ar">لكل الأدوار</span></span>
-          <h2><span class="en">Where do you start?</span><span class="ar">من أين تبدأ؟</span></h2>
+          <span class="eyebrow">@Bi("For every role", "لكل الأدوار")</span>
+          <h2>@Bi("Where do you start?", "من أين تبدأ؟")</h2>
         </div>
       </div>
       <div class="grid grid-4">
         <a class="card hover reveal" href="@PublicCulture.Url(culture, "join")">
-          <span class="eyebrow"><span class="en">Athletes</span><span class="ar">الرياضيون</span></span>
-          <h3><span class="en">Join the federation</span><span class="ar">الانضمام إلى الاتحاد</span></h3>
-          <p class="muted" style="font-size:.92rem">
-            <span class="en">Registration steps, categories, clubs — and the pathway to the national team.</span>
-            <span class="ar">خطوات التسجيل والفئات والأندية — والمسار نحو المنتخب الوطني.</span>
-          </p>
+          <span class="eyebrow">@Bi("Athletes", "الرياضيون")</span>
+          <h3>@Bi("Join the federation", "الانضمام إلى الاتحاد")</h3>
+          <p class="muted" style="font-size:.92rem">@Bi("Registration steps, categories, clubs — and the pathway to the national team.", "خطوات التسجيل والفئات والأندية — والمسار نحو المنتخب الوطني.")</p>
         </a>
         <a class="card hover reveal" href="@PublicCulture.Url(culture, "training")">
-          <span class="eyebrow"><span class="en">Beginners</span><span class="ar">المبتدئون</span></span>
-          <h3><span class="en">Training guide</span><span class="ar">دليل التدريب</span></h3>
-          <p class="muted" style="font-size:.92rem">
-            <span class="en">From zero to your first sprint in 12 weeks, one discipline at a time.</span>
-            <span class="ar">من الصفر إلى أول سباق قصير خلال 12 أسبوعاً، رياضةً تلو الأخرى.</span>
-          </p>
+          <span class="eyebrow">@Bi("Beginners", "المبتدئون")</span>
+          <h3>@Bi("Training guide", "دليل التدريب")</h3>
+          <p class="muted" style="font-size:.92rem">@Bi("From zero to your first sprint in 12 weeks, one discipline at a time.", "من الصفر إلى أول سباق قصير خلال 12 أسبوعاً، رياضةً تلو الأخرى.")</p>
         </a>
         <a class="card hover reveal" href="@PublicCulture.Url(culture, "rules")">
-          <span class="eyebrow"><span class="en">Officials & organizers</span><span class="ar">الحكام والمنظمون</span></span>
-          <h3><span class="en">Rules & regulations</span><span class="ar">اللوائح والأنظمة</span></h3>
-          <p class="muted" style="font-size:.92rem">
-            <span class="en">Competition rules, organizer manuals and officiating handbooks — all downloadable.</span>
-            <span class="ar">قوانين المنافسات وأدلة المنظمين والحكام — جميعها قابلة للتحميل.</span>
-          </p>
+          <span class="eyebrow">@Bi("Officials & organizers", "الحكام والمنظمون")</span>
+          <h3>@Bi("Rules & regulations", "اللوائح والأنظمة")</h3>
+          <p class="muted" style="font-size:.92rem">@Bi("Competition rules, organizer manuals and officiating handbooks — all downloadable.", "قوانين المنافسات وأدلة المنظمين والحكام — جميعها قابلة للتحميل.")</p>
         </a>
         <a class="card hover reveal" href="@PublicCulture.Url(culture, "governance")">
-          <span class="eyebrow"><span class="en">Media & partners</span><span class="ar">الإعلام والشركاء</span></span>
-          <h3><span class="en">Governance & transparency</span><span class="ar">الحوكمة والشفافية</span></h3>
-          <p class="muted" style="font-size:.92rem">
-            <span class="en">Annual reports, financial statements and board minutes in one documents library.</span>
-            <span class="ar">التقارير السنوية والقوائم المالية ومحاضر مجلس الإدارة في مكتبة مستندات واحدة.</span>
-          </p>
+          <span class="eyebrow">@Bi("Media & partners", "الإعلام والشركاء")</span>
+          <h3>@Bi("Governance & transparency", "الحوكمة والشفافية")</h3>
+          <p class="muted" style="font-size:.92rem">@Bi("Annual reports, financial statements and board minutes in one documents library.", "التقارير السنوية والقوائم المالية ومحاضر مجلس الإدارة في مكتبة مستندات واحدة.")</p>
         </a>
       </div>
     </div>
@@ -192,20 +161,20 @@
     <div class="container">
       <div class="cta-banner reveal">
         <div>
-          <h2><span class="en">Ready for your first start line?</span><span class="ar">جاهز لأول خط انطلاق؟</span></h2>
-          <p>
-            <span class="en">No racing background needed. Community events welcome every level — and every distance has a first-timer wave.</span>
-            <span class="ar">لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات — ولكل مسافة دفعة مخصصة للمبتدئين.</span>
-          </p>
+          <h2>@Bi("Ready for your first start line?", "جاهز لأول خط انطلاق؟")</h2>
+          <p>@Bi("No racing background needed. Community events welcome every level — and every distance has a first-timer wave.", "لا تحتاج إلى خلفية تنافسية. الفعاليات المجتمعية ترحب بجميع المستويات — ولكل مسافة دفعة مخصصة للمبتدئين.")</p>
         </div>
         <div class="hero-actions" style="margin:0">
-          <a class="btn btn-primary" href="@PublicCulture.Url(culture, "register")"><span class="en">Register online</span><span class="ar">سجّل إلكترونياً</span></a>
-          <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "training")"><span class="en">Training guide</span><span class="ar">دليل التدريب</span></a>
+          <a class="btn btn-primary" href="@PublicCulture.Url(culture, "register")">@Bi("Register online", "سجّل إلكترونياً")</a>
+          <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "training")">@Bi("Training guide", "دليل التدريب")</a>
         </div>
       </div>
     </div>
   </section>
 
+@* Replaced in 2.1.D by server-rendered cards read from the database. Until then the three upcoming
+   events still come from wwwroot/js/data.js, which is why this one inline script — and the skipped
+   inline-script test that guards it — is still here. *@
 @section Scripts {
 <script>
   (function () {

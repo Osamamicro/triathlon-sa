@@ -589,11 +589,11 @@ td.mono,th.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 }
 @media (max-width:860px){.footer-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.footer-grid{grid-template-columns:1fr}}
-.footer-grid h4{
+.footer-grid h3{
   font-family:var(--mono);font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
   color:var(--faint);margin:0 0 16px;font-weight:400;
 }
-html[lang="ar"] .footer-grid h4{letter-spacing:.04em;font-size:.78rem}
+html[lang="ar"] .footer-grid h3{letter-spacing:.04em;font-size:.78rem}
 .footer-grid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .footer-grid a{color:var(--muted);font-size:.92rem;transition:color .15s}
 .footer-grid a:hover{color:var(--ink)}

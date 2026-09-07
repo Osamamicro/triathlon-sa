@@ -34,33 +34,32 @@
                             </linearGradient>
                         </defs>
                     </svg>
-                    <span class="brand-name"><span class="en">Saudi Triathlon</span><span class="ar">الاتحاد السعودي للترايثلون</span></span>
+                    <span class="brand-name">@Bi("Saudi Triathlon", "الاتحاد السعودي للترايثلون")</span>
                 </div>
                 <p class="muted" style="font-size:.9rem;max-width:34ch">
-                    <span class="en">The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.</span>
-                    <span class="ar">الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.</span>
+                    @Bi("The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.", "الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.")
                 </p>
             </div>
             <div>
-                <h4><span class="en">Compete</span><span class="ar">المنافسات</span></h4>
+                <h3>@Bi("Compete", "المنافسات")</h3>
                 <ul>
                     @foreach (var link in compete)
                     {
-                        <li><a href="@link.Href"><span class="en">@link.En</span><span class="ar">@link.Ar</span></a></li>
+                        <li><a href="@link.Href">@Bi(link.En, link.Ar)</a></li>
                     }
                 </ul>
             </div>
             <div>
-                <h4><span class="en">Get involved</span><span class="ar">شارك معنا</span></h4>
+                <h3>@Bi("Get involved", "شارك معنا")</h3>
                 <ul>
                     @foreach (var link in involved)
                     {
-                        <li><a href="@link.Href"><span class="en">@link.En</span><span class="ar">@link.Ar</span></a></li>
+                        <li><a href="@link.Href">@Bi(link.En, link.Ar)</a></li>
                     }
                 </ul>
             </div>
             <div>
-                <h4><span class="en">Contact</span><span class="ar">تواصل معنا</span></h4>
+                <h3>@Bi("Contact", "تواصل معنا")</h3>
                 <ul>
                     <li><a href="https://triathlon.sa" rel="noopener">triathlon.sa</a></li>
                     <li><a href="mailto:info@@triathlon.sa">info@@triathlon.sa</a></li>
@@ -70,8 +69,8 @@
         </div>
         <div class="footer-bottom">
             <span>@L["FooterLegal", year]</span>
-            <a href="/dashboard"><span class="en">CONTENT DASHBOARD</span><span class="ar">لوحة إدارة المحتوى</span></a>
-            <span class="en">SWIM · BIKE · RUN</span><span class="ar">سباحة · دراجة · جري</span>
+            <a href="/dashboard">@Bi("CONTENT DASHBOARD", "لوحة إدارة المحتوى")</a>
+            <span>@Bi("SWIM · BIKE · RUN", "سباحة · دراجة · جري")</span>
         </div>
     </div>
 </footer>

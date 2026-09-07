@@ -138,8 +138,8 @@ public static class PublicSite
                 continue;
             }
 
-            // "Public" (the area's index) and "Public/whatever" are the only shapes the page route
-            // model factory produces for an area, and both lose the area name to the culture.
+            // "Public" (the area's index) and "Public/whatever" are what the page route model
+            // factory derives from a file path, and both lose the area name to the culture.
             if (template.Equals(AreaName, StringComparison.OrdinalIgnoreCase))
             {
                 selector.AttributeRouteModel!.Template = CultureSegment;
@@ -148,6 +148,39 @@ public static class PublicSite
             {
                 selector.AttributeRouteModel!.Template = CultureSegment + template[AreaName.Length..];
             }
+            else
+            {
+                // An absolute @page "/not-found" template: the framework does not put the area
+                // prefix in front of those, so the culture segment goes in front of it here.
+                selector.AttributeRouteModel!.Template = CultureSegment + "/" + template.TrimStart('/');
+            }
         }
+    }
+
+    /// <summary>Everything the staff dashboard owns, which is the half of the site this class does not.</summary>
+    public static bool IsDashboardPath(PathString path) =>
+        path.StartsWithSegments("/dashboard", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether a public request is on the Arabic side of the site. Segment-wise, so "/arabic" is
+    /// not Arabic; the URL is the only signal, because a 404 has no matched route to read a
+    /// culture from.
+    /// </summary>
+    public static bool IsArabicPath(PathString path) =>
+        path.StartsWithSegments("/ar", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Only page-like requests get an HTML status page; assets, APIs and probes get the bare code.</summary>
+    public static bool WantsHtmlStatusPage(HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var path = context.Request.Path;
+        if (path.StartsWithSegments("/api") || path.StartsWithSegments("/media") || path.StartsWithSegments("/health")
+            || path.StartsWithSegments("/_framework") || path.StartsWithSegments("/_content") || path.StartsWithSegments("/_blazor"))
+        {
+            return false;
+        }
+
+        return !Path.HasExtension(path.Value);
     }
 }

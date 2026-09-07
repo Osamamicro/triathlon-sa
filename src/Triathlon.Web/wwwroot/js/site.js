@@ -142,8 +142,8 @@
 
   /* ---------------- boot ---------------- */
   function boot() {
-    /* the inline bootstrap in <head> already painted the theme; this only
-       syncs the toggle's aria-label and re-persists the active choice */
+    /* theme.js in <head> already painted the theme; this only syncs the
+       toggle's aria-label and re-persists the active choice */
     applyTheme(currentTheme());
 
     document.addEventListener("click", ev => {

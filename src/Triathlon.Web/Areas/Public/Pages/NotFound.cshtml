@@ -1,0 +1,14 @@
+@page "/not-found"
+@model NotFoundModel
+<section class="page-hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow mono">404</span>
+    <h1>@Bi("Page not found", "الصفحة غير موجودة")</h1>
+    <p class="hero-lead">@Bi("The address you followed does not exist on triathlon.sa, or the page has moved.", "العنوان الذي وصلت إليه غير موجود على triathlon.sa، أو أن الصفحة انتقلت.")</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="@PublicCulture.Url(Culture)">@Bi("Back to home", "العودة إلى الرئيسية")</a>
+      <a class="btn btn-ghost" href="@PublicCulture.Url(Culture, "events")">@Bi("Find your race", "اعثر على سباقك")</a>
+    </div>
+  </div>
+</section>
