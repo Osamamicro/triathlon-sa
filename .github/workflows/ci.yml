@@ -47,9 +47,12 @@ jobs:
       # provider — has-pending-model-changes exits non-zero when there is a pending change.
       - name: Migrations match the model (both providers)
         working-directory: src/Triathlon.Web
+        # dotnet-ef's -c is short for --context (not --configuration, which has no short form), so
+        # "-c Release" here was clashing with --context and sending has-pending-model-changes looking
+        # at the default Debug output, which --no-build never built — use the long option name.
         run: |
-          dotnet ef migrations has-pending-model-changes --context PostgresDbContext --no-build -c Release
-          dotnet ef migrations has-pending-model-changes --context SqlServerDbContext --no-build -c Release
+          dotnet ef migrations has-pending-model-changes --context PostgresDbContext --no-build --configuration Release
+          dotnet ef migrations has-pending-model-changes --context SqlServerDbContext --no-build --configuration Release
 
       # The integration tests start a PostgreSQL container through Testcontainers; the Docker
       # daemon on the hosted Ubuntu runner is what makes that work without any extra setup.
@@ -77,10 +80,11 @@ jobs:
       # a checked-out repo — one per provider, plus a Windows build of the SQL Server bundle.
       - name: Migration bundles
         working-directory: src/Triathlon.Web
+        # Same -c/--context clash as above (bundle also builds its own project), so use --configuration.
         run: |
-          dotnet ef migrations bundle --context PostgresDbContext  -c Release --self-contained -r linux-x64 -o ../../bundles/migrate-postgres --force
-          dotnet ef migrations bundle --context SqlServerDbContext -c Release --self-contained -r linux-x64 -o ../../bundles/migrate-sqlserver --force
-          dotnet ef migrations bundle --context SqlServerDbContext -c Release --self-contained -r win-x64   -o ../../bundles/migrate-sqlserver.exe --force
+          dotnet ef migrations bundle --context PostgresDbContext  --configuration Release --self-contained -r linux-x64 -o ../../bundles/migrate-postgres --force
+          dotnet ef migrations bundle --context SqlServerDbContext --configuration Release --self-contained -r linux-x64 -o ../../bundles/migrate-sqlserver --force
+          dotnet ef migrations bundle --context SqlServerDbContext --configuration Release --self-contained -r win-x64   -o ../../bundles/migrate-sqlserver.exe --force
 
       - name: Upload migration bundles
         uses: actions/upload-artifact@v4
