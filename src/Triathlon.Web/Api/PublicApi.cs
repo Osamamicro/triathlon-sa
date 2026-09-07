@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,36 @@ public static class PublicApi
         [Required, StringLength(64)] public string Category { get; set; } = "";
 
         [StringLength(128)] public string? Club { get; set; }
+
+        /// <summary>The medical/rules declaration checkbox: absent when unticked, so Required covers it.</summary>
+        [Required] public string Declaration { get; set; } = "";
+    }
+
+    /// <summary>
+    /// The athlete registration form as the browser posts it. Everything is text here, including the
+    /// date and the two ids: what the visitor sends is a claim, and each one is checked against the
+    /// database below rather than trusted to a binder.
+    /// </summary>
+    public sealed class AthleteRegistrationForm
+    {
+        [Required, RegularExpression("^(en|ar)$")] public string Culture { get; set; } = "en";
+
+        [Required, StringLength(128, MinimumLength = 2)] public string FullName { get; set; } = "";
+
+        [Required, EmailAddress, StringLength(256)] public string Email { get; set; } = "";
+
+        /// <summary>ISO yyyy-MM-dd, which is what <c>&lt;input type="date"&gt;</c> posts in every locale.</summary>
+        [Required, StringLength(10)] public string DateOfBirth { get; set; } = "";
+
+        [StringLength(64)] public string? City { get; set; }
+
+        [Required, StringLength(64)] public string Category { get; set; } = "";
+
+        /// <summary>A club id, or empty for "no club yet".</summary>
+        [StringLength(64)] public string? Club { get; set; }
+
+        /// <summary>The id of the event that brought them here, or empty.</summary>
+        [StringLength(64)] public string? Event { get; set; }
 
         /// <summary>The medical/rules declaration checkbox: absent when unticked, so Required covers it.</summary>
         [Required] public string Declaration { get; set; } = "";
@@ -178,6 +209,145 @@ public static class PublicApi
                 RegistrationOutcome.Closed => Results.Redirect(PublicCulture.Url(culture, path)),
                 _ => Results.NotFound(),
             };
+        })
+        .RequireRateLimiting(RateLimitSetup.PublicPost)
+        // .NET 10 minimal-API validation would answer 400 JSON to a browser form; we validate the
+        // same attributes by hand above and redirect back to the form instead.
+        .DisableValidation();
+
+        // Athlete registration. Same shape as the guest entry above — validate by hand, round-trip a
+        // rejection through TempData, redirect either way — with two additions: the posted ids are
+        // resolved against the lists the form itself renders, and a Turnstile challenge stands in
+        // front of the write when the Federation has configured one.
+        api.MapPost("/register", async (
+            [FromForm] AthleteRegistrationForm form,
+            EventsService events,
+            ContentService content,
+            CrmService crm,
+            ITurnstileVerifier turnstile,
+            ITempDataDictionaryFactory tempDataFactory,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            // Built from a culture this method chose, never from the posted one: an unvalidated
+            // value would land in a Location header and make this an open redirect on the very
+            // branch that exists to handle bad input.
+            var culture = form.Culture == "ar" ? "ar" : PublicSite.DefaultCulture;
+            var formUrl = PublicCulture.Url(culture, "register");
+
+            // A browser posts "" for a select left on its blank option; those mean "not chosen".
+            form.City = NullIfBlank(form.City);
+            form.Club = NullIfBlank(form.Club);
+            form.Event = NullIfBlank(form.Event);
+
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(form, new ValidationContext(form), results, validateAllProperties: true);
+
+            void Reject(string reason, string field)
+            {
+                isValid = false;
+                results.Add(new ValidationResult(reason, [field]));
+            }
+
+            // The five categories the form offers, and nothing else: a crafted POST must not be able
+            // to write an arbitrary 64-character category onto an athlete record.
+            if (!AthleteCategories.All.Contains(form.Category, StringComparer.Ordinal))
+            {
+                Reject("Category is not one the federation registers.", nameof(AthleteRegistrationForm.Category));
+            }
+
+            var (earliest, latest) = CrmService.DateOfBirthRange(events.Today);
+            DateOnly? dateOfBirth = null;
+            if (DateOnly.TryParseExact(form.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var born)
+                && born >= earliest && born <= latest)
+            {
+                dateOfBirth = born;
+            }
+            else
+            {
+                Reject("Date of birth is missing, malformed or outside the registrable ages.", nameof(AthleteRegistrationForm.DateOfBirth));
+            }
+
+            // The affiliated clubs the form listed. An id that is not among them is either a stale
+            // option or a crafted post; neither should become a club affiliation on a CRM record.
+            Guid? clubId = null;
+            if (form.Club is not null)
+            {
+                var clubs = await content.ClubsAsync(ct);
+                if (Guid.TryParse(form.Club, out var id) && clubs.Any(c => c.Id == id))
+                {
+                    clubId = id;
+                }
+                else
+                {
+                    Reject("Club is not on the federation's list.", nameof(AthleteRegistrationForm.Club));
+                }
+            }
+
+            // Likewise the events the form listed: published, and still to be raced.
+            Guid? interestEventId = null;
+            if (form.Event is not null)
+            {
+                var upcoming = await events.UpcomingAsync(null, null, 0, ct);
+                if (Guid.TryParse(form.Event, out var id) && upcoming.Any(e => e.Id == id))
+                {
+                    interestEventId = id;
+                }
+                else
+                {
+                    Reject("Event is not one of the upcoming published events.", nameof(AthleteRegistrationForm.Event));
+                }
+            }
+
+            // The city is a convenience, not a claim worth rejecting an application over: an
+            // unrecognised key is simply not recorded, and the desk asks when it matters.
+            var cityKey = form.City is null
+                ? null
+                : (await events.CitiesAsync(ct)).FirstOrDefault(c => c.Key == form.City)?.Key;
+
+            if (!isValid)
+            {
+                var invalidFields = results
+                    .SelectMany(r => r.MemberNames)
+                    .Select(ToFieldName)
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                var posted = new Dictionary<string, string?>
+                {
+                    [nameof(AthleteRegistrationForm.FullName)] = form.FullName,
+                    [nameof(AthleteRegistrationForm.Email)] = form.Email,
+                    [nameof(AthleteRegistrationForm.DateOfBirth)] = form.DateOfBirth,
+                    [nameof(AthleteRegistrationForm.City)] = form.City ?? "",
+                    [nameof(AthleteRegistrationForm.Category)] = form.Category,
+                    [nameof(AthleteRegistrationForm.Club)] = form.Club ?? "",
+                    [nameof(AthleteRegistrationForm.Event)] = form.Event ?? "",
+                    [nameof(AthleteRegistrationForm.Declaration)] = form.Declaration,
+                }.ToDictionary(kv => ToFieldName(kv.Key), kv => kv.Value);
+
+                // A minimal API delegate never runs through MVC's result filters, which is what
+                // saves TempData for a Razor Page automatically — so this endpoint saves it by hand.
+                var tempData = tempDataFactory.GetTempData(httpContext);
+                FormRoundTrip.Store(tempData, posted, invalidFields);
+                tempData.Save();
+
+                return Results.Redirect(formUrl + "?invalid=1");
+            }
+
+            // After the form's own checks: there is nothing to protect until the input is worth
+            // writing, and a visitor with a typo should see the typo rather than a challenge.
+            // Cloudflare's field name is not a legal C# identifier, so it is read straight off the
+            // form rather than bound. Verification is a no-op when no keys are configured.
+            var challenge = httpContext.Request.Form["cf-turnstile-response"].ToString();
+            if (!await turnstile.VerifyAsync(challenge, httpContext.Connection.RemoteIpAddress?.ToString(), ct))
+            {
+                return Results.Redirect(formUrl + "?turnstile=1");
+            }
+
+            await crm.ApplyAsync(
+                new AthleteApplication(form.FullName, form.Email, dateOfBirth!.Value, cityKey, form.Category, clubId, interestEventId, culture),
+                ct);
+
+            return Results.Redirect(PublicCulture.Url(culture, "register/received") + "?name=" + Uri.EscapeDataString(form.FullName));
         })
         .RequireRateLimiting(RateLimitSetup.PublicPost)
         // .NET 10 minimal-API validation would answer 400 JSON to a browser form; we validate the

@@ -73,6 +73,26 @@ builder.Services.AddScoped<DocumentsService>();
 builder.Services.AddScoped<ContentService>();
 builder.Services.AddScoped<NewsService>();
 builder.Services.AddScoped<StatsService>();
+builder.Services.AddScoped<CrmService>();
+
+// Cloudflare Turnstile guards the public registration form. Both keys or nothing: an unset pair —
+// a developer machine, the test suite — registers the verifier that passes everything, so the form
+// still works without a Cloudflare account. The choice is made once, here, and the form, the CSP
+// and the endpoint all read it from the same options object.
+var turnstileSection = builder.Configuration.GetSection(TurnstileOptions.SectionName);
+builder.Services.Configure<TurnstileOptions>(turnstileSection);
+var turnstile = turnstileSection.Get<TurnstileOptions>() ?? new TurnstileOptions();
+
+if (turnstile.Enabled)
+{
+    builder.Services.AddHttpClient(TurnstileVerifier.ClientName, client => client.Timeout = TurnstileVerifier.Timeout);
+    builder.Services.AddSingleton<ITurnstileVerifier, TurnstileVerifier>();
+}
+else
+{
+    builder.Services.AddSingleton<ITurnstileVerifier, NoopTurnstileVerifier>();
+}
+
 builder.Services.AddAppMedia(builder.Configuration);
 builder.Services.AddAppEmail(builder.Configuration);
 builder.Services.AddAppJobs(builder.Configuration);
@@ -81,6 +101,11 @@ builder.Services.AddAppJobs(builder.Configuration);
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 var app = builder.Build();
+
+if (!turnstile.Enabled)
+{
+    app.Logger.LogInformation("Turnstile disabled: Turnstile:SiteKey/SecretKey not set.");
+}
 
 // ---------------------------------------------------------------------------------------------
 // Pipeline order, and why:

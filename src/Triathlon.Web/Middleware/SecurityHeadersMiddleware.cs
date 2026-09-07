@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using Triathlon.Web.Areas.Public;
+using Triathlon.Web.Services;
 
 namespace Triathlon.Web.Middleware;
 
@@ -16,11 +18,26 @@ namespace Triathlon.Web.Middleware;
 /// the server's response feature, not by the header collection, so they survive that clear and run
 /// once, right before the final (possibly re-executed) response is sent.
 /// </summary>
-public sealed class SecurityHeadersMiddleware(RequestDelegate next)
+public sealed class SecurityHeadersMiddleware(RequestDelegate next, IOptions<TurnstileOptions> turnstile)
 {
     private const string PublicCsp =
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
         "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
+
+    /// <summary>Cloudflare serves the Turnstile widget's script from here and frames its challenge from it.</summary>
+    private const string TurnstileHost = "https://challenges.cloudflare.com";
+
+    /// <summary>
+    /// The public policy the deployment actually runs under. The Turnstile host is named only where
+    /// the challenge is configured, so a site without a key pair keeps the strictest policy it can:
+    /// a permission granted for a widget that never renders is a permission granted for nothing.
+    /// Resolved once, at construction — the middleware is a singleton and the keys cannot change
+    /// without a restart.
+    /// </summary>
+    private readonly string _publicCsp = turnstile.Value.Enabled
+        ? PublicCsp.Replace("script-src 'self'", "script-src 'self' " + TurnstileHost, StringComparison.Ordinal)
+          + "; frame-src " + TurnstileHost
+        : PublicCsp;
 
     private const string DashboardCsp =
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; " +
@@ -54,7 +71,7 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
             }
             else
             {
-                headers["Content-Security-Policy"] = PublicCsp;
+                headers["Content-Security-Policy"] = _publicCsp;
             }
 
             return Task.CompletedTask;

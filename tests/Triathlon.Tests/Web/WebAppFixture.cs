@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;
 using Triathlon.Web.Data;
@@ -47,6 +48,24 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     /// i.e. one built outside the Development environment.
     /// </summary>
     public const string ThrowingPath = "/__test/throw";
+
+    private readonly List<EmailMessage> _sentEmails = [];
+
+    /// <summary>
+    /// Every message the application handed to <see cref="IEmailSender"/> since the host started —
+    /// a snapshot, taken under the same lock the recorder writes with, so a test can enumerate it
+    /// while another test's request is still sending.
+    /// </summary>
+    public List<EmailMessage> Emails
+    {
+        get
+        {
+            lock (_sentEmails)
+            {
+                return [.. _sentEmails];
+            }
+        }
+    }
 
     public async Task InitializeAsync()
     {
@@ -108,9 +127,18 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     {
         builder.UseEnvironment("Development");
 
-        // TestServer gives every request the same (absent) remote address, which would put every
-        // form post in one rate-limiting bucket and make the tests interfere with each other.
-        builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestClientIp>());
+        builder.ConfigureServices(services =>
+        {
+            // TestServer gives every request the same (absent) remote address, which would put every
+            // form post in one rate-limiting bucket and make the tests interfere with each other.
+            services.AddTransient<IStartupFilter, TestClientIp>();
+
+            // No SMTP host is configured here, so the application would otherwise resolve the
+            // logging sender and a test could only assert that nothing threw. The recorder keeps the
+            // messages instead, which is what lets a registration test read the mail it caused.
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(new RecordingEmailSender(_sentEmails));
+        });
 
         var connectionString = _sqlServer is not null
             ? $"{_sqlServer.GetConnectionString()};TrustServerCertificate=True"
@@ -137,6 +165,26 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     /// TestServer accepts "https" without a real TLS handshake, so this is otherwise a normal client.
     /// </summary>
     public static readonly Uri HttpsBaseAddress = new("https://localhost");
+}
+
+/// <summary>
+/// Keeps every outgoing message instead of sending it, so a test can assert on the mail a request
+/// produced. The list is owned by the fixture and shared with every host it builds; both sides lock
+/// on it, because requests run concurrently and a test may read while one is still in flight.
+/// </summary>
+public sealed class RecordingEmailSender(List<EmailMessage> sent) : IEmailSender
+{
+    public Task SendAsync(EmailMessage message, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sent);
+
+        lock (sent)
+        {
+            sent.Add(message);
+        }
+
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>Shares one container and one application host across every web test class.</summary>
