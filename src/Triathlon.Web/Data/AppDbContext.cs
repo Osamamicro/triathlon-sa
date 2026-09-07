@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Domain.Common;
+using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
 
 namespace Triathlon.Web.Data;
@@ -19,6 +20,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     /// <summary>Append-only audit trail; never soft-deleted, so it is exempt from the filter below.</summary>
     public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventGalleryImage> EventGalleryImages => Set<EventGalleryImage>();
+    public DbSet<EventResult> EventResults => Set<EventResult>();
+    public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
