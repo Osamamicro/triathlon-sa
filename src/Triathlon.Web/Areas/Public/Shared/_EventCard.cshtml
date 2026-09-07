@@ -1,0 +1,45 @@
+@using Triathlon.Web.Domain.Events
+@model Event
+@*
+    One event card, server-rendered in the culture of the request — the port of eventCard() in the
+    prototype's assets/js/app.js. "today" travels in ViewData because the status a card shows is a
+    function of the Riyadh date the page was rendered on, and every card on a page shares it.
+*@
+@{
+    var today = (DateOnly)ViewData["today"]!;
+    var status = Model.StatusOn(today);
+    var past = status == EventStatus.Completed;
+    var cardClass = past ? "card event-card reveal past" : "card event-card reveal";
+    var typeLabel = Model.Type == EventType.Competition ? Bi("Competition", "بطولات") : Bi("Community", "مجتمعي");
+    var (statusClass, statusLabel) = status switch
+    {
+        EventStatus.Open => ("chip-open", Bi("Registration open", "التسجيل مفتوح")),
+        EventStatus.Completed => ("chip-done", Bi("Completed", "انتهت")),
+        _ => ("", Bi("Opens soon", "يفتح قريباً")),
+    };
+}
+<a class="@cardClass" href="@PublicCulture.Url(Culture, "events/" + Model.Slug)">
+  <div class="date-block">
+    <span class="date-tile">
+      <span class="d-m mono">@MonthShort(Model.DateStart)</span>
+      <span class="d-d">@DayNumber(Model.DateStart)</span>
+    </span>
+    <div class="chips">
+      <span class="chip chip-@Model.Type.ToString().ToLowerInvariant()">@typeLabel</span>
+      <span class="chip @statusClass">@statusLabel</span>
+    </div>
+  </div>
+  <h3>@Bi(Model.TitleEn, Model.TitleAr)</h3>
+  <div class="event-meta">
+    <span>◈ @Bi(Model.City.NameEn, Model.City.NameAr)</span>
+    @if (Model.StartTime is { } start)
+    {
+      <span class="mono">@Time(start)</span>
+    }
+  </div>
+  <partial name="_Distances" model="Model" />
+  <div class="card-cta">
+    <span>@(past ? Bi("Results & recap", "النتائج والملخص") : Bi("Event page", "صفحة الفعالية"))</span>
+    <span aria-hidden="true" class="cta-arrow">→</span>
+  </div>
+</a>

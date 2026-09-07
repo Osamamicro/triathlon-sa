@@ -65,7 +65,9 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Third_registration_over_a_capacity_of_two_is_waitlisted()
     {
         var slug = "cap-" + Guid.NewGuid().ToString("N")[..8];
-        Guid eventId;
+        // Empty until the event exists: the cleanup below runs even if creating it threw, and
+        // deleting an id that was never used is a no-op.
+        var eventId = Guid.Empty;
         try
         {
             await using (var scope = app.Services.CreateAsyncScope())

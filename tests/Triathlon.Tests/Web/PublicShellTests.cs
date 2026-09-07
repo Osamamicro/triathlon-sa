@@ -61,7 +61,7 @@ public sealed class PublicShellTests(WebAppFixture app)
         Assert.Contains("<h3>Compete</h3>", footer, StringComparison.Ordinal);
     }
 
-    [Fact(Skip = "Enabled in 2.1.D")]
+    [Fact]
     public async Task No_inline_scripts_on_the_home_page()
     {
         using var client = app.CreateClient();

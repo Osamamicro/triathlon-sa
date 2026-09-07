@@ -1,0 +1,90 @@
+@page "/events/{slug}/register"
+@model RegisterModel
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var ev = Model.Event;
+}
+
+  <section class="page-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container">
+      <span class="eyebrow">@Bi("Event entry", "التسجيل في الفعالية")</span>
+      <h1>@Bi(ev.TitleEn, ev.TitleAr)</h1>
+      <p class="hero-lead">@LongDate(ev.DateStart) · @Bi(ev.City.NameEn, ev.City.NameAr)</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:16px">
+    <div class="container">
+      <div class="detail-grid">
+
+        @* The action is the minimal API, not this page: rate limiting is per endpoint, and a Razor
+           Page is one endpoint for its GET and its POST alike. asp-antiforgery is explicit because
+           the tag helper leaves the token out of a form that sets its own action. *@
+        <form class="card" method="post" action="/api/events/@ev.Slug/register" asp-antiforgery="true">
+          <span class="eyebrow">@Bi("Your details", "بياناتك")</span>
+          <input type="hidden" name="culture" value="@culture">
+
+          @if (Model.Invalid)
+          {
+            <p class="err" role="alert">@Bi("Please check the highlighted fields and try again.", "فضلاً تحقق من الحقول وحاول مرة أخرى.")</p>
+          }
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="fullName">@Bi("Full name", "الاسم الكامل")</label>
+              <input class="input" id="fullName" name="fullName" autocomplete="name" required maxlength="128">
+            </div>
+            <div class="field">
+              <label for="email">@Bi("Email", "البريد الإلكتروني")</label>
+              <input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="256">
+            </div>
+            <div class="field">
+              <label for="phone">@Bi("Phone (optional)", "الجوال (اختياري)")</label>
+              <input class="input" id="phone" name="phone" type="tel" autocomplete="tel" maxlength="32">
+            </div>
+            <div class="field">
+              <label for="category">@Bi("Category", "الفئة")</label>
+              <select class="input" id="category" name="category" required>
+                @foreach (var category in ev.CategoryList)
+                {
+                  <option value="@category">@category</option>
+                }
+              </select>
+            </div>
+            <div class="field" style="grid-column:1/-1">
+              <label for="club">@Bi("Club (optional)", "النادي (اختياري)")</label>
+              <input class="input" id="club" name="club" maxlength="128">
+            </div>
+          </div>
+
+          <hr class="tri" style="margin-block:20px">
+
+          <span class="eyebrow">@Bi("Declaration", "الإقرار")</span>
+          <div class="field">
+            <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.9rem;color:var(--muted)">
+              <input type="checkbox" id="declaration" name="declaration" value="on" required style="margin-top:3px">
+              <span>@Bi("I declare that I am medically fit to train and race, and I accept the STF Competition Rules and Anti-Doping Policy.", "أقر بأنني لائق طبياً للتدريب والمنافسة، وأوافق على قوانين المنافسات وسياسة مكافحة المنشطات.")</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary" type="submit" style="margin-top:10px">@Bi("Submit entry", "إرسال التسجيل")</button>
+        </form>
+
+        <aside>
+          @if (ev.Capacity is not null)
+          {
+            <div class="card">
+              <span class="eyebrow">@Bi("Places", "الأماكن")</span>
+              <p class="muted" style="font-size:.88rem;margin:0">@Bi("Places are limited; late entries go on the waiting list.", "الأماكن محدودة؛ الطلبات المتأخرة تُدرج في قائمة الانتظار.")</p>
+            </div>
+          }
+          <div class="card" style="@(ev.Capacity is not null ? "margin-top:18px" : null)">
+            <span class="eyebrow">@Bi("Privacy", "الخصوصية")</span>
+            <p class="muted" style="font-size:.88rem;margin:0">@Bi("Your details are used only to manage this entry.", "تُستخدم بياناتك لإدارة هذا التسجيل فقط.")</p>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>

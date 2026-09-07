@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Triathlon.Web.Infrastructure;
 using Triathlon.Web.Services;
@@ -83,6 +84,11 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // TestServer gives every request the same (absent) remote address, which would put every
+        // form post in one rate-limiting bucket and make the tests interfere with each other.
+        builder.ConfigureServices(services => services.AddTransient<IStartupFilter, TestClientIp>());
+
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {

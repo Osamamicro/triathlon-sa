@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Triathlon.Web.Areas.Dashboard;
 using Triathlon.Web.Areas.Dashboard.Account;
+using Triathlon.Web.Api;
 using Triathlon.Web.Areas.Public;
 using Triathlon.Web.Data;
 using Triathlon.Web.Data.Seed;
@@ -151,6 +152,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapPublicRoot();
 app.MapRazorPages();
+app.MapPublicApi();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapAdditionalIdentityEndpoints();
