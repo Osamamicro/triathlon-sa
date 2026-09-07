@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Triathlon.Web.Areas.Public;
 using Triathlon.Web.Infrastructure;
 using Triathlon.Web.Services;
@@ -42,6 +44,8 @@ public static class PublicApi
             string slug,
             [FromForm] GuestEntryForm form,
             EventsService events,
+            ITempDataDictionaryFactory tempDataFactory,
+            HttpContext httpContext,
             CancellationToken ct) =>
         {
             // Every redirect below is built from a culture this method chose, never from the posted
@@ -55,8 +59,54 @@ public static class PublicApi
             form.Phone = NullIfBlank(form.Phone);
             form.Club = NullIfBlank(form.Club);
 
-            if (!Validator.TryValidateObject(form, new ValidationContext(form), null, validateAllProperties: true))
+            // Loaded before validation so a posted category can be checked against the event's own
+            // list — a crafted POST must not be able to write an arbitrary 64-char category string.
+            var ev = await events.BySlugAsync(slug, ct);
+
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(form, new ValidationContext(form), results, validateAllProperties: true);
+
+            if (ev is not null && ev.CategoryList.Count > 0 && !ev.CategoryList.Contains(form.Category, StringComparer.Ordinal))
             {
+                isValid = false;
+                results.Add(new ValidationResult("Category is not offered for this event.", [nameof(GuestEntryForm.Category)]));
+            }
+
+            if (!isValid)
+            {
+                // The event might not exist at all (a stale or crafted slug); there is no form to
+                // hand a round trip back to, so this falls through to the same redirect and the
+                // page itself renders the branded 404.
+                if (ev is not null)
+                {
+                    var invalidFields = results
+                        .SelectMany(r => r.MemberNames)
+                        .Select(ToFieldName)
+                        .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                    // Empty string, not null, for the optional fields: TryRead hands this back out as
+                    // a non-nullable IReadOnlyDictionary<string, string>, and an absent value there
+                    // reads the same as "not typed" either way.
+                    var posted = new Dictionary<string, string?>
+                    {
+                        [nameof(GuestEntryForm.FullName)] = form.FullName,
+                        [nameof(GuestEntryForm.Email)] = form.Email,
+                        [nameof(GuestEntryForm.Phone)] = form.Phone ?? "",
+                        [nameof(GuestEntryForm.Category)] = form.Category,
+                        [nameof(GuestEntryForm.Club)] = form.Club ?? "",
+                        [nameof(GuestEntryForm.Declaration)] = form.Declaration,
+                    }.ToDictionary(kv => ToFieldName(kv.Key), kv => kv.Value);
+
+                    // A minimal API delegate never runs through MVC's result filters, which is what
+                    // saves TempData for a Razor Page automatically — so this endpoint saves it by
+                    // hand. Save() writes the cookie onto HttpContext.Response synchronously, which
+                    // happens here, before the IResult below sets the redirect's status line and
+                    // Location header, so both land on the same 302 response.
+                    var tempData = tempDataFactory.GetTempData(httpContext);
+                    FormRoundTrip.Store(tempData, posted, invalidFields);
+                    tempData.Save();
+                }
+
                 return Results.Redirect(PublicCulture.Url(culture, path + "/register") + "?invalid=1");
             }
 
@@ -83,4 +133,12 @@ public static class PublicApi
     }
 
     private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// <see cref="ValidationResult.MemberNames"/> carries the C# property name ("FullName"); the
+    /// form field, the TempData round trip and the "field invalid" CSS hook all key off the
+    /// lower-camel-case name the HTML input uses instead ("fullName").
+    /// </summary>
+    private static string ToFieldName(string memberName) =>
+        memberName.Length == 0 ? memberName : char.ToLowerInvariant(memberName[0]) + memberName[1..];
 }

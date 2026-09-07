@@ -94,9 +94,9 @@
             {
               <a class="btn btn-primary" href="@PublicCulture.Url(culture, "events/" + ev.Slug + "/register")">@Bi("Register now", "سجّل الآن")</a>
             }
-            else if (Model.Status == EventStatus.Open && ev.RegistrationMode == RegistrationMode.External && ev.ExternalRegistrationUrl is { } external)
+            else if (Model.Status == EventStatus.Open && ev.RegistrationMode == RegistrationMode.External && IsSafeExternalUrl(ev.ExternalRegistrationUrl))
             {
-              <a class="btn btn-primary" href="@external" rel="noopener">@Bi("Register now", "سجّل الآن")</a>
+              <a class="btn btn-primary" href="@ev.ExternalRegistrationUrl" target="_blank" rel="noopener">@Bi("Register now", "سجّل الآن")</a>
             }
             else
             {

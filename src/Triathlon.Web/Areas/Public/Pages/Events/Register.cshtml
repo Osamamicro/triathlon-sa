@@ -27,45 +27,74 @@
 
           @if (Model.Invalid)
           {
-            <p class="err" role="alert">@Bi("Please check the highlighted fields and try again.", "فضلاً تحقق من الحقول وحاول مرة أخرى.")</p>
+            <p class="form-error" role="alert">@Bi("Please check the highlighted fields and try again.", "فضلاً تحقق من الحقول وحاول مرة أخرى.")</p>
           }
 
           <div class="form-grid">
-            <div class="field">
+            <div class="@Model.FieldClass("fullName")">
               <label for="fullName">@Bi("Full name", "الاسم الكامل")</label>
-              <input class="input" id="fullName" name="fullName" autocomplete="name" required maxlength="128">
+              <input class="input" id="fullName" name="fullName" autocomplete="name" required maxlength="128" value="@Model.Value("fullName")">
+              @if (Model.InvalidFields.Contains("fullName"))
+              {
+                <span class="err">@Bi("Please enter your name.", "فضلاً أدخل اسمك.")</span>
+              }
             </div>
-            <div class="field">
+            <div class="@Model.FieldClass("email")">
               <label for="email">@Bi("Email", "البريد الإلكتروني")</label>
-              <input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="256">
+              <input class="input" id="email" name="email" type="email" autocomplete="email" required maxlength="256" value="@Model.Value("email")">
+              @if (Model.InvalidFields.Contains("email"))
+              {
+                <span class="err">@Bi("Please enter a valid email.", "فضلاً أدخل بريداً صحيحاً.")</span>
+              }
             </div>
-            <div class="field">
+            <div class="@Model.FieldClass("phone")">
               <label for="phone">@Bi("Phone (optional)", "الجوال (اختياري)")</label>
-              <input class="input" id="phone" name="phone" type="tel" autocomplete="tel" maxlength="32">
+              <input class="input" id="phone" name="phone" type="tel" autocomplete="tel" maxlength="32" value="@Model.Value("phone")">
+              @if (Model.InvalidFields.Contains("phone"))
+              {
+                <span class="err">@Bi("Please enter a valid phone number.", "فضلاً أدخل رقم جوال صحيح.")</span>
+              }
             </div>
-            <div class="field">
+            <div class="@Model.FieldClass("category")">
               <label for="category">@Bi("Category", "الفئة")</label>
-              <select class="input" id="category" name="category" required>
-                @foreach (var category in ev.CategoryList)
-                {
-                  <option value="@category">@category</option>
-                }
-              </select>
+              @if (ev.CategoryList.Count > 0)
+              {
+                <select class="input" id="category" name="category" required>
+                  @foreach (var category in ev.CategoryList)
+                  {
+                    <option value="@category" selected="@(Model.Value("category") == category)">@category</option>
+                  }
+                </select>
+              }
+              else
+              {
+                @* No categories configured yet: a free-text field keeps the form usable instead of
+                   a required <select> with no options, which a visitor could never satisfy. *@
+                <input class="input" id="category" name="category" required maxlength="64" value="@Model.Value("category")">
+              }
+              @if (Model.InvalidFields.Contains("category"))
+              {
+                <span class="err">@Bi("Please choose a category.", "فضلاً اختر الفئة.")</span>
+              }
             </div>
-            <div class="field" style="grid-column:1/-1">
+            <div class="@Model.FieldClass("club")" style="grid-column:1/-1">
               <label for="club">@Bi("Club (optional)", "النادي (اختياري)")</label>
-              <input class="input" id="club" name="club" maxlength="128">
+              <input class="input" id="club" name="club" maxlength="128" value="@Model.Value("club")">
             </div>
           </div>
 
           <hr class="tri" style="margin-block:20px">
 
           <span class="eyebrow">@Bi("Declaration", "الإقرار")</span>
-          <div class="field">
+          <div class="@Model.FieldClass("declaration")">
             <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:.9rem;color:var(--muted)">
               <input type="checkbox" id="declaration" name="declaration" value="on" required style="margin-top:3px">
               <span>@Bi("I declare that I am medically fit to train and race, and I accept the STF Competition Rules and Anti-Doping Policy.", "أقر بأنني لائق طبياً للتدريب والمنافسة، وأوافق على قوانين المنافسات وسياسة مكافحة المنشطات.")</span>
             </label>
+            @if (Model.InvalidFields.Contains("declaration"))
+            {
+              <span class="err">@Bi("The declaration is required to enter.", "الإقرار مطلوب لإتمام التسجيل.")</span>
+            }
           </div>
 
           <button class="btn btn-primary" type="submit" style="margin-top:10px">@Bi("Submit entry", "إرسال التسجيل")</button>

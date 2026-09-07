@@ -6,7 +6,7 @@
     function of the Riyadh date the page was rendered on, and every card on a page shares it.
 *@
 @{
-    var today = (DateOnly)ViewData["today"]!;
+    var today = ViewData["today"] as DateOnly? ?? throw new InvalidOperationException("_EventCard needs ViewData[\"today\"]");
     var status = Model.StatusOn(today);
     var past = status == EventStatus.Completed;
     var cardClass = past ? "card event-card reveal past" : "card event-card reveal";

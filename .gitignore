@@ -1,6 +1,9 @@
 # Browser automation output
 .playwright-cli/
 
+# Local cache for the "impeccable" design-review tool hook; regenerates on the next scan.
+.impeccable/
+
 # Commercial / client-confidential material — repo is public (GitHub Pages). Keep local only.
 docs/proposal/
 /Saudi_Triathlon_Website_Proposal.pdf

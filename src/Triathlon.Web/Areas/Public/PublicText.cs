@@ -73,4 +73,15 @@ public static class PublicText
         Digits(date.ToString("MMMM yyyy", IsArabic ? Arabic : English));
 
     public static string Time(TimeOnly time) => Digits(time.ToString("HH:mm", CultureInfo.InvariantCulture));
+
+    /// <summary>
+    /// Whether a value edited through the dashboard is safe to render into an <c>href</c>: an
+    /// absolute <c>http</c>/<c>https</c> URL. Blocks <c>javascript:</c>, <c>data:</c> and malformed
+    /// values, and a relative path (which would resolve against the current page rather than go
+    /// where the editor intended). Callers fall back to a disabled placeholder when this is false.
+    /// </summary>
+    public static bool IsSafeExternalUrl(string? url) =>
+        !string.IsNullOrWhiteSpace(url)
+        && Uri.TryCreate(url, UriKind.Absolute, out var parsed)
+        && (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps);
 }

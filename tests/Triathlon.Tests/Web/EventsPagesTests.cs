@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.DependencyInjection;
 using Triathlon.Web.Services;
 
@@ -132,6 +133,63 @@ public sealed class EventsPagesTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task Rejected_entry_keeps_what_the_visitor_typed_and_flags_the_failing_fields()
+    {
+        using var client = app.CreateClient();
+        client.DefaultRequestHeaders.Add(TestClientIp.Header, TestClientIp.Unique());
+
+        using var response = await Forms.PostFormAsync(client, "/en/events/riyadh-sprint-2026/register",
+            "/api/events/riyadh-sprint-2026/register", new()
+            {
+                ["culture"] = "en", ["fullName"] = "Round Trip Guest", ["email"] = "not-an-email",
+                ["category"] = "Age Group", ["club"] = "",
+                // "declaration" is omitted: an unchecked box is simply absent from a browser post.
+            });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Contains("value=\"Round Trip Guest\"", html, StringComparison.Ordinal);
+        Assert.Contains("field invalid", FieldWrapper(html, "id=\"email\""), StringComparison.Ordinal);
+        Assert.Contains("field invalid", FieldWrapper(html, "name=\"declaration\""), StringComparison.Ordinal);
+        Assert.DoesNotContain("invalid", FieldWrapper(html, "id=\"fullName\""), StringComparison.Ordinal);
+    }
+
+    /// <summary>The nearest enclosing `&lt;div class="field...\"&gt;` before the element identified by <paramref name="marker"/>.</summary>
+    private static string FieldWrapper(string html, string marker)
+    {
+        var markerIndex = html.IndexOf(marker, StringComparison.Ordinal);
+        Assert.True(markerIndex >= 0, $"'{marker}' not found in the response body.");
+
+        var divIndex = html.LastIndexOf("<div class=\"field", markerIndex, StringComparison.Ordinal);
+        Assert.True(divIndex >= 0, $"No enclosing field wrapper found before '{marker}'.");
+
+        return html[divIndex..html.IndexOf('>', divIndex)];
+    }
+
+    [Fact]
+    public async Task Category_not_offered_by_the_event_is_rejected()
+    {
+        // A crafted POST (or a stale option from a form the event changed under) must not be able
+        // to write an arbitrary category string onto a registration.
+        using var client = app.CreateClient();
+        client.DefaultRequestHeaders.Add(TestClientIp.Header, TestClientIp.Unique());
+
+        using var response = await Forms.PostFormAsync(client, "/en/events/riyadh-sprint-2026/register",
+            "/api/events/riyadh-sprint-2026/register", new()
+            {
+                ["culture"] = "en", ["fullName"] = "Category Guest", ["email"] = "guest@example.test",
+                ["category"] = "Not A Real Category", ["club"] = "", ["declaration"] = "on",
+            });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.EndsWith("/en/events/riyadh-sprint-2026/register?invalid=1",
+            response.RequestMessage!.RequestUri!.PathAndQuery, StringComparison.Ordinal);
+        Assert.Contains("field invalid",
+            FieldWrapper(await response.Content.ReadAsStringAsync(), "id=\"category\""), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Post_without_antiforgery_token_is_refused()
     {
         using var client = app.CreateClient();
@@ -167,6 +225,29 @@ public sealed class EventsPagesTests(WebAppFixture app)
 
         Assert.Equal(HttpStatusCode.TooManyRequests, last!.StatusCode);
         last.Dispose();
+    }
+
+    [Fact]
+    public async Task Detail_page_is_cached_and_dropped_by_its_own_event_tag()
+    {
+        using var client = app.CreateClient();
+
+        using var first = await client.GetAsync("/en/events/riyadh-sprint-2026");
+        using var second = await client.GetAsync("/en/events/riyadh-sprint-2026");
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.True(second.Headers.Contains("Age"), "The second GET of the event page was not served from the output cache.");
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var store = scope.ServiceProvider.GetRequiredService<IOutputCacheStore>();
+            await store.EvictAsync(CancellationToken.None, CacheTags.Event("riyadh-sprint-2026"));
+        }
+
+        using var afterEviction = await client.GetAsync("/en/events/riyadh-sprint-2026");
+
+        Assert.Equal(HttpStatusCode.OK, afterEviction.StatusCode);
+        Assert.False(afterEviction.Headers.Contains("Age"), "The event page was still cached after its own tag was evicted.");
     }
 
     [Fact]

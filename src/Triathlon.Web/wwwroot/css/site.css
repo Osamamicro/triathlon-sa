@@ -672,6 +672,7 @@ select.input{appearance:none}
 .field.invalid .input{border-color:var(--danger)}
 .field .err{display:none;font-size:.78rem;color:var(--danger)}
 .field.invalid .err{display:block}
+.form-error{color:var(--danger);font-size:.9rem;margin-bottom:14px}
 
 /* demo license card */
 .license-card{
@@ -681,6 +682,9 @@ select.input{appearance:none}
 }
 .license-card::before{content:"";position:absolute;inset-inline:0;top:0;height:4px;background:var(--tri-gradient)}
 .license-num{font-family:var(--mono);font-size:1.5rem;letter-spacing:.14em;color:var(--bike)}
+
+.back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-family:var(--mono);font-size:.8rem;margin-bottom:14px;transition:color .15s}
+.back-link:hover{color:var(--ink)}
 
 /* RTL: flip directional arrows */
 html[dir="rtl"] .cta-arrow{display:inline-block;transform:scaleX(-1)}
