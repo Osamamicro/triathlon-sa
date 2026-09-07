@@ -34,7 +34,7 @@ public sealed class ContentPagesTests(WebAppFixture app)
         Assert.Contains(first, html, StringComparison.Ordinal);
         Assert.Contains(second, html, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"en\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("<script>", html, StringComparison.Ordinal);
+        Assert.False(Markup.HasInlineScript(html));
     }
 
     [Fact]

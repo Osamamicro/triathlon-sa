@@ -14,7 +14,7 @@ public sealed class StatisticsPageTests(WebAppFixture app)
         Assert.Contains(tile, html, StringComparison.Ordinal);
         Assert.Contains(region, html, StringComparison.Ordinal);
         Assert.Contains("class=\"bar-fill\" data-w=\"100\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("<script>", html, StringComparison.Ordinal);
+        Assert.False(Markup.HasInlineScript(html));
     }
 
     [Fact]

@@ -17,5 +17,8 @@ public sealed class IndexModel(NewsService news) : PageModel
         Posts = await news.AllAsync(ct);
 
         ViewData["Title"] = PublicText.Bi("News", "الأخبار");
+        ViewData["MetaDescription"] = PublicText.Bi(
+            "The latest news from the Saudi Triathlon Federation: event recaps, calendar announcements and federation updates.",
+            "أحدث أخبار الاتحاد السعودي للترايثلون: ملخصات الفعاليات، إعلانات التقويم، ومستجدات الاتحاد.");
     }
 }

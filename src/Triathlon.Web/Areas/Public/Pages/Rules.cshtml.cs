@@ -30,6 +30,9 @@ public sealed class RulesModel(DocumentsService documents, ContentService conten
         Trailing = (await content.PageAsync("rules", ct))?.Blocks ?? [];
 
         ViewData["Title"] = PublicText.Bi("Rules & Regulations", "اللوائح والأنظمة");
+        ViewData["MetaDescription"] = PublicText.Bi(
+            "The Federation's competition rules and technical regulations for athletes, organizers, officials and coaches, plus a race-day quick reference.",
+            "قوانين المنافسات واللوائح الفنية للاتحاد الموجهة للرياضيين والمنظمين والحكام والمدربين، مع مرجع سريع ليوم السباق.");
 
         // The page's own tag is built from a slug, so it goes on the cache entry here: an
         // [OutputCache] tag has to be a compile-time constant.

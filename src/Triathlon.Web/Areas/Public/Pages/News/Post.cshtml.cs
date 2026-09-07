@@ -27,6 +27,11 @@ public sealed class PostModel(NewsService news) : PageModel
 
         Post = found;
         ViewData["Title"] = PublicText.Bi(found.TitleEn, found.TitleAr);
+        ViewData["MetaDescription"] = PublicText.Bi(found.SummaryEn, found.SummaryAr);
+        if (found.HeroImagePath is { } hero)
+        {
+            ViewData["OgImage"] = hero;
+        }
 
         return Page();
     }

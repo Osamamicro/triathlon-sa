@@ -30,5 +30,8 @@ public sealed class IndexModel(ContentService content, DocumentsService document
         Recent = (await documents.QueryAsync(null, null, ct)).Take(RecentDocuments).ToList();
 
         ViewData["Title"] = PublicText.Bi("Governance & Transparency", "الحوكمة والشفافية");
+        ViewData["MetaDescription"] = PublicText.Bi(
+            "How the Saudi Triathlon Federation is governed: the board, its committees, and the newest bylaws, financial statements and meeting minutes it has published.",
+            "كيف يُدار الاتحاد السعودي للترايثلون: مجلس الإدارة ولجانه، وأحدث اللوائح والقوائم المالية ومحاضر الاجتماعات المنشورة.");
     }
 }

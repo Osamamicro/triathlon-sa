@@ -182,6 +182,7 @@ app.MapStaticAssets();
 app.MapPublicRoot();
 app.MapRazorPages();
 app.MapPublicApi();
+app.MapSeoEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapAdditionalIdentityEndpoints();

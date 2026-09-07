@@ -27,7 +27,7 @@ public sealed class TimelineTests(WebAppFixture app)
         Assert.Contains("class=\"marker m-competition\"", html, StringComparison.Ordinal);
         Assert.Contains(marker, html, StringComparison.Ordinal);
         Assert.Contains("js/timeline.js", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("<script>", html, StringComparison.Ordinal);
+        Assert.False(Markup.HasInlineScript(html));
     }
 
     [Fact]

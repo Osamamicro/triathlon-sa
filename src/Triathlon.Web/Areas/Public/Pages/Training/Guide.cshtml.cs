@@ -29,6 +29,7 @@ public sealed class GuideModel(DocumentsService documents) : PageModel
         Guide = found;
 
         ViewData["Title"] = PublicText.Bi(found.TitleEn, found.TitleAr);
+        ViewData["MetaDescription"] = PublicText.Bi(found.SummaryEn, found.SummaryAr);
 
         return Page();
     }

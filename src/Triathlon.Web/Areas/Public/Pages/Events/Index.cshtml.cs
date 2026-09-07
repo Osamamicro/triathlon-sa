@@ -46,6 +46,9 @@ public sealed class IndexModel(EventsService events) : PageModel
         Past = await events.PastAsync(Type, CityKey, ct);
 
         ViewData["Title"] = PublicText.Bi("Events & Calendar", "الفعاليات والتقويم");
+        ViewData["MetaDescription"] = PublicText.Bi(
+            "The national race calendar: every upcoming triathlon, duathlon and aquathlon in Saudi Arabia, filterable by discipline and city, plus the archive of past events.",
+            "تقويم السباقات الوطني: جميع فعاليات الترايثلون والدواثلون والأكواثلون القادمة في المملكة، قابلة للتصفية حسب النوع والمدينة، بالإضافة إلى أرشيف الفعاليات السابقة.");
         ViewData["today"] = Today;
     }
 

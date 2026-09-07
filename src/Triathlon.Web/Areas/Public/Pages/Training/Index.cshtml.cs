@@ -30,6 +30,9 @@ public sealed class IndexModel(DocumentsService documents, ContentService conten
         Trailing = (await content.PageAsync("training", ct))?.Blocks ?? [];
 
         ViewData["Title"] = PublicText.Bi("Training Guide", "دليل التدريب");
+        ViewData["MetaDescription"] = PublicText.Bi(
+            "Structured training guides for every stage of a triathlete's progress, from a first brick session to race-week preparation, written by the Federation.",
+            "أدلة تدريبية منظمة لكل مرحلة من تطور الرياضي في الترايثلون، من أول تمرين مركب حتى التحضير لأسبوع السباق، من إعداد الاتحاد.");
 
         // The page's own tag is built from a slug, so it goes on the cache entry here: an
         // [OutputCache] tag has to be a compile-time constant.

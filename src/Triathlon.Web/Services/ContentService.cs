@@ -39,4 +39,15 @@ public sealed class ContentService(AppDbContext db)
             .Where(c => c.IsActive)
             .OrderBy(c => c.SortOrder)
             .ToListAsync(ct);
+
+    /// <summary>
+    /// Every published CMS page's slug, for the sitemap. The caller excludes the slugs that already
+    /// have a dedicated entry of their own (<c>home</c>, <c>join</c>, <c>rules</c>, <c>training</c>,
+    /// <c>contact</c>) so a page is never listed twice.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> PublishedPageSlugsAsync(CancellationToken ct) =>
+        await db.Pages.AsNoTracking()
+            .Where(p => p.IsPublished)
+            .Select(p => p.Slug)
+            .ToListAsync(ct);
 }

@@ -68,6 +68,6 @@ public sealed class PublicShellTests(WebAppFixture app)
         var html = await client.GetStringAsync("/en");
 
         // CSP is script-src 'self': an inline script would be blocked silently in the browser.
-        Assert.DoesNotContain("<script>", html, StringComparison.Ordinal);
+        Assert.False(Markup.HasInlineScript(html));
     }
 }
