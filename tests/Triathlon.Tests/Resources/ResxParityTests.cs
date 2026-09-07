@@ -62,13 +62,13 @@ public sealed class ResxParityTests
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "Triathlon.sln")))
+            if (File.Exists(Path.Combine(directory.FullName, "Triathlon.slnx")))
             {
                 return directory.FullName;
             }
         }
 
         throw new InvalidOperationException(
-            $"Could not find Triathlon.sln above '{AppContext.BaseDirectory}'.");
+            $"Could not find Triathlon.slnx above '{AppContext.BaseDirectory}'.");
     }
 }
