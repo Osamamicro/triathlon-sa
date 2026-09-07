@@ -99,6 +99,18 @@
     font-weight: 400;
 }
 
+.field-inline input[type="checkbox"] {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    margin: 0;
+    accent-color: var(--stf-green);
+}
+
+.field-inline input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--stf-green);
+    outline-offset: 1px;
+}
+
 .field-error {
     display: block;
     margin-top: 0.25rem;

@@ -80,7 +80,7 @@
             <li><span class="k">@Bi("Venue", "الموقع")</span><span class="v">@Bi(ev.VenueEn, ev.VenueAr)</span></li>
             @if (ev.CategoryList.Count > 0)
             {
-              <li><span class="k">@Bi("Categories", "الفئات")</span><span class="v mono">@string.Join(" · ", ev.CategoryList)</span></li>
+              <li><span class="k">@Bi("Categories", "الفئات")</span><span class="v mono">@string.Join(" · ", ev.CategoryList.Select(c => { var label = EventCategories.Label(c); return Bi(label.En, label.Ar); }))</span></li>
             }
           </ul>
           <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">

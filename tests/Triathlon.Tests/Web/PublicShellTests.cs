@@ -65,6 +65,29 @@ public sealed class PublicShellTests(WebAppFixture app)
         Assert.Contains("<h2>Compete</h2>", footer, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("/en/governance/documents")]
+    [InlineData("/en/events/timeline")]
+    [InlineData("/en/register")]
+    [InlineData("/en")]
+    [InlineData("/en/events/riyadh-sprint-2026")]
+    [InlineData("/ar/governance")]
+    public async Task Heading_levels_never_skip(string path)
+    {
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync(path);
+
+        var levels = Markup.HeadingLevels(html);
+        Assert.NotEmpty(levels);
+        Assert.Equal(1, levels[0]);
+
+        for (var i = 1; i < levels.Count; i++)
+        {
+            Assert.True(levels[i] <= levels[i - 1] + 1,
+                $"{path}: heading level {levels[i]} follows {levels[i - 1]} — skips a level. Full sequence: {string.Join(", ", levels)}");
+        }
+    }
+
     [Fact]
     public async Task No_inline_scripts_on_the_home_page()
     {

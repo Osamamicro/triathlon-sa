@@ -115,8 +115,8 @@ public sealed class CrmService(AppDbContext db, IEmailSender email, TimeProvider
         var arabic = athlete.PreferredCulture == "ar";
 
         var subject = arabic
-            ? "الاتحاد السعودي للترايثلون — استلمنا طلب تسجيلك"
-            : "Saudi Triathlon Federation — we received your registration";
+            ? "الاتحاد السعودي للترايثلون: استلمنا طلب تسجيلك"
+            : "Saudi Triathlon Federation: we received your registration";
 
         var greeting = arabic ? "مرحباً {0}،" : "Dear {0},";
 
