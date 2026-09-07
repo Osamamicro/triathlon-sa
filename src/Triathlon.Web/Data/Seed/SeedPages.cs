@@ -162,7 +162,7 @@ public static class SeedPages
                 [
                     new BlockItem(
                         TitleEn: "Pick a club near you", TitleAr: "اختر نادياً قريباً منك",
-                        BodyEn: "Affiliated clubs across the Kingdom run coached sessions for every level — see the list below.",
+                        BodyEn: "Affiliated clubs across the Kingdom run coached sessions for every level; see the list below.",
                         BodyAr: "الأندية المنتسبة في مختلف مناطق المملكة تقدم حصصاً بإشراف مدربين لجميع المستويات، انظر القائمة أدناه."),
                     new BlockItem(
                         TitleEn: "Register with the federation", TitleAr: "سجّل لدى الاتحاد",
