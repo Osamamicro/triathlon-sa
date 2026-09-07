@@ -69,28 +69,7 @@
         </div>
         <a class="btn btn-ghost btn-sm" href="@PublicCulture.Url(culture, "statistics")">@Bi("All statistics", "جميع الإحصائيات")</a>
       </div>
-      <div class="stat-band">
-        <div class="stat reveal">
-          <div class="stat-value mono" data-count="1284">0<span class="plus">+</span></div>
-          <div class="stat-label">@Bi("Registered athletes", "رياضي مسجل")</div>
-          <div class="stat-note mono">@Bi("+31% VS 2025", "‎+31% مقارنة بـ2025")</div>
-        </div>
-        <div class="stat reveal" style="--stat-c:var(--swim)">
-          <div class="stat-value mono" data-count="42">0</div>
-          <div class="stat-label">@Bi("Elite athletes", "رياضيو النخبة")</div>
-          <div class="stat-note mono">@Bi("NATIONAL SQUAD POOL", "قاعدة المنتخب الوطني")</div>
-        </div>
-        <div class="stat reveal" style="--stat-c:var(--bike)">
-          <div class="stat-value mono" data-count="24">0</div>
-          <div class="stat-label">@Bi("Tournaments held", "بطولة أقيمت")</div>
-          <div class="stat-note mono">@Bi("ACROSS 9 REGIONS", "في 9 مناطق")</div>
-        </div>
-        <div class="stat reveal" style="--stat-c:var(--run)">
-          <div class="stat-value mono" data-count="18650">0<span class="plus">+</span></div>
-          <div class="stat-label">@Bi("Race participations", "مشاركة في السباقات")</div>
-          <div class="stat-note mono">@Bi("SINCE 2023", "منذ 2023")</div>
-        </div>
-      </div>
+      <partial name="_StatBand" model="Model.HomeKpis" />
     </div>
   </section>
 

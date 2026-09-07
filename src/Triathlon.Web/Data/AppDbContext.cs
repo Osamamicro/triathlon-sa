@@ -7,6 +7,7 @@ using Triathlon.Web.Domain.Crm;
 using Triathlon.Web.Domain.Documents;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
+using Triathlon.Web.Domain.Stats;
 
 namespace Triathlon.Web.Data;
 
@@ -43,6 +44,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Athlete> Athletes => Set<Athlete>();
+
+    public DbSet<Kpi> Kpis => Set<Kpi>();
+    public DbSet<RegionStat> RegionStats => Set<RegionStat>();
+    public DbSet<GrowthPoint> GrowthPoints => Set<GrowthPoint>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

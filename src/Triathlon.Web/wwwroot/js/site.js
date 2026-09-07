@@ -98,6 +98,22 @@
       counters.forEach(animateCounter);
     }
 
+    /* ---------------- statistics bars ---------------- */
+    /* server-rendered .bar-fill spans carry their target width in data-w; this only sets the
+       CSS width once the bar scrolls into view so the site.css transition animates it */
+    function setBarWidth(el) { el.style.width = el.dataset.w + "%"; }
+    const fills = document.querySelectorAll(".bar-fill");
+    if (reduced || !("IntersectionObserver" in window)) {
+      fills.forEach(setBarWidth);
+    } else {
+      const io3 = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { setBarWidth(en.target); io3.unobserve(en.target); }
+        });
+      }, { threshold: 0.4 });
+      fills.forEach(el => io3.observe(el));
+    }
+
     /* <select data-autosubmit> inside a GET form submits on change; no-JS visitors use
        the noscript button beside it */
     document.addEventListener("change", ev => {

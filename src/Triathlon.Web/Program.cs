@@ -72,6 +72,7 @@ builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<DocumentsService>();
 builder.Services.AddScoped<ContentService>();
 builder.Services.AddScoped<NewsService>();
+builder.Services.AddScoped<StatsService>();
 builder.Services.AddAppMedia(builder.Configuration);
 builder.Services.AddAppEmail(builder.Configuration);
 builder.Services.AddAppJobs(builder.Configuration);

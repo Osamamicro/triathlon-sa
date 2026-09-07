@@ -1,0 +1,36 @@
+@using Triathlon.Web.Domain.Stats
+@model IReadOnlyList<Kpi>
+@*
+    One row of KPI tiles — the home page's four-tile band (no ViewData) and the statistics page's
+    ten-tile band ("wide" in ViewData). A tile's colour comes from the seeded Kpi.Color; when there
+    is none and the band is "wide" the view cycles swim/bike/run by position, exactly as the
+    prototype's stats.html does for its ten tiles. The home band's four seeded KPIs each carry their
+    own colour already, so they never fall into the cycle.
+*@
+@{
+    var wide = ViewData["wide"] as bool? ?? false;
+    string[] cycle = ["swim", "bike", "run"];
+}
+<div class="stat-band@(wide ? " wide" : "")">
+@for (var i = 0; i < Model.Count; i++)
+{
+    var k = Model[i];
+    var accent = AccentVar(k.Color) ?? (k.Color is null && wide ? AccentVar(cycle[i % 3]) : null);
+    var style = accent is null ? null : $"--stat-c:{accent}";
+    <div class="stat reveal" style="@style">
+      @if (k.Suffix is null)
+      {
+        <div class="stat-value mono" data-count="@k.Value">@Number(0)@if (k.ShowPlus) {<span class="plus">+</span>}</div>
+      }
+      else
+      {
+        <div class="stat-value mono" data-count="@k.Value" data-suffix="@k.Suffix">@Number(0)@if (k.ShowPlus) {<span class="plus">+</span>}</div>
+      }
+      <div class="stat-label">@Bi(k.LabelEn, k.LabelAr)</div>
+      @if (k.NoteEn is not null)
+      {
+        <div class="stat-note mono">@Bi(k.NoteEn, k.NoteAr ?? k.NoteEn)</div>
+      }
+    </div>
+}
+</div>

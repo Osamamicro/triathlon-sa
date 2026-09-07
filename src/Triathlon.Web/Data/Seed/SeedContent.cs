@@ -18,6 +18,6 @@ public static class SeedContent
         await SeedPages.RunAsync(db, ct);
         await SeedClubs.RunAsync(db, ct);
         await SeedNews.RunAsync(db, ct);
-        // Later tasks append: SeedStats.
+        await SeedStats.RunAsync(db, ct);
     }
 }

@@ -1,0 +1,82 @@
+@page
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@model StatisticsModel
+@*
+    Port of the prototype's stats.html: the hero, the ten-tile "wide" stat band, the two bar charts
+    (athletes by region, registered athletes by year) and the closing CTA. Every figure comes from
+    Model.Overview, seeded by SeedStats and editable from the Week 4 dashboard.
+*@
+@{
+    var culture = PublicCulture.Of(ViewContext);
+    var regions = Model.Overview.Regions;
+    var growth = Model.Overview.Growth;
+    var maxRegion = regions.Count == 0 ? 1 : regions.Max(r => r.Athletes);
+    var maxGrowth = growth.Count == 0 ? 1 : growth.Max(g => g.Athletes);
+    string[] cycle = ["swim", "bike", "run"];
+}
+
+<section class="page-hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="container">
+    <span class="eyebrow">@Bi("Key indicators", "المؤشرات الرئيسية")</span>
+    <h1>@Bi("Federation Statistics", "إحصائيات الاتحاد")</h1>
+    <p class="hero-lead">@Bi("The state of Saudi triathlon in numbers. Figures are managed from the federation dashboard and update here the moment they are published.", "واقع الترايثلون السعودي بالأرقام. تُدار هذه الأرقام من لوحة تحكم الاتحاد وتُحدَّث هنا فور نشرها.")</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:20px">
+  <div class="container">
+    <partial name="_StatBand" model="Model.Overview.Kpis" view-data='new ViewDataDictionary(ViewData) { ["wide"] = true }' />
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid grid-2">
+      <div class="card chart-card reveal">
+        <span class="eyebrow">@Bi("Distribution", "التوزيع")</span>
+        <h3>@Bi("Athletes by region", "الرياضيون حسب المنطقة")</h3>
+        <div>
+          @for (var i = 0; i < regions.Count; i++)
+          {
+            var r = regions[i];
+            var w = (int)Math.Round(r.Athletes / (double)maxRegion * 100);
+            <div class="bar-row">
+              <span class="bar-label">@Bi(r.NameEn, r.NameAr)</span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w" style="--bar-c:@AccentVar(cycle[i % 3])"></span></span>
+              <span class="bar-val mono">@Number(r.Athletes)</span>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="card chart-card reveal">
+        <span class="eyebrow">@Bi("Growth", "النمو")</span>
+        <h3>@Bi("Registered athletes by year", "الرياضيون المسجلون حسب السنة")</h3>
+        <div>
+          @foreach (var g in growth)
+          {
+            var w = (int)Math.Round(g.Athletes / (double)maxGrowth * 100);
+            <div class="bar-row">
+              <span class="bar-label mono">@Number(g.Year)</span>
+              <span class="bar-track"><span class="bar-fill" data-w="@w" style="--bar-c:@AccentVar("bike")"></span></span>
+              <span class="bar-val mono">@Number(g.Athletes)</span>
+            </div>
+          }
+        </div>
+        <p class="muted" style="font-size:.84rem;margin:16px 0 0">@Bi("4× growth since the 2023 relaunch of the national series.", "نمو بأربعة أضعاف منذ إعادة إطلاق السلسلة الوطنية في 2023.")</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="cta-banner reveal">
+      <div>
+        <h2>@Bi("Numbers that update themselves", "أرقام تُحدَّث ذاتياً")</h2>
+        <p>@Bi("Every figure on this page reads from a single data source — the dashboard updates it without touching the site's code.", "كل رقم في هذه الصفحة يُقرأ من مصدر بيانات واحد — تُحدّثه لوحة التحكم دون المساس بشيفرة الموقع.")</p>
+      </div>
+      <a class="btn btn-ghost" href="@PublicCulture.Url(culture, "governance")">@Bi("Transparency reports", "تقارير الشفافية")</a>
+    </div>
+  </div>
+</section>
