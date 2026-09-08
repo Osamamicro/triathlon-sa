@@ -60,8 +60,15 @@ public sealed partial class EventsService
 
     private static string[] EventTags(string slug) => [CacheTags.Events, CacheTags.Event(slug), CacheTags.Home];
 
+    /// <summary>
+    /// Two passes on purpose: every check runs first, against nothing but locals, before a single
+    /// property is assigned or a single child row is added — a refused save must leave the scoped
+    /// <see cref="AppDbContext"/> exactly as clean as it found it, since the same context serves the
+    /// next save in a Blazor circuit.
+    /// </summary>
     private async Task ApplyAsync(Event ev, EventInput input, CancellationToken ct)
     {
+        // ---- pass 1: validate only — no property assignment, no db.*.Add, below this point ----
         if (!Slugs.IsValid(input.Slug)) throw new ContentValidationException("Slug", "Validation_SlugFormat");
         if (await db.Events.IgnoreQueryFilters().AnyAsync(e => e.Slug == input.Slug && e.Id != ev.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
@@ -71,26 +78,52 @@ public sealed partial class EventsService
         if (input.RegistrationMode == RegistrationMode.External && !PublicText.IsSafeExternalUrl(input.ExternalRegistrationUrl))
             throw new ContentValidationException("ExternalRegistrationUrl", "Validation_ExternalUrl");
 
+        var season = Required(input.Season, "Season");
+        var titleEn = Required(input.TitleEn, "TitleEn"); var titleAr = Required(input.TitleAr, "TitleAr");
+        var venueEn = Required(input.VenueEn, "VenueEn"); var venueAr = Required(input.VenueAr, "VenueAr");
+        var descriptionEn = Required(input.DescriptionEn, "DescriptionEn"); var descriptionAr = Required(input.DescriptionAr, "DescriptionAr");
+        var heroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
+        var resultsFilePath = guard.FilePath(input.ResultsFilePath, "ResultsFilePath");
+
+        var galleryIds = new HashSet<Guid>();
+        var galleryPaths = new List<string>(input.Gallery.Count);
+        foreach (var image in input.Gallery)
+        {
+            if (image.Id is { } gid && !galleryIds.Add(gid))
+                throw new ContentValidationException("Gallery", "Validation_DuplicateRow");
+            galleryPaths.Add(guard.FilePath(image.Path, "Gallery") ?? throw new ContentValidationException("Gallery", "Validation_GalleryFile"));
+        }
+
+        var resultIds = new HashSet<Guid>();
+        var validatedResults = new List<(string AthleteEn, string AthleteAr, string Time)>(input.Results.Count);
+        foreach (var result in input.Results)
+        {
+            if (result.Id is { } rid && !resultIds.Add(rid))
+                throw new ContentValidationException("Results", "Validation_DuplicateRow");
+            validatedResults.Add((Required(result.AthleteEn, "Results"), Required(result.AthleteAr, "Results"), Required(result.Time, "Results")));
+        }
+
+        // ---- pass 2: every check above passed — assign and upsert children ----
         ev.Slug = input.Slug;
         ev.Type = input.Type;
         ev.IsPublished = input.IsPublished;
-        ev.Season = Required(input.Season, "Season");
+        ev.Season = season;
         ev.DateStart = input.DateStart; ev.DateEnd = input.DateEnd; ev.StartTime = input.StartTime;
         ev.CityId = input.CityId;
-        ev.TitleEn = Required(input.TitleEn, "TitleEn"); ev.TitleAr = Required(input.TitleAr, "TitleAr");
-        ev.VenueEn = Required(input.VenueEn, "VenueEn"); ev.VenueAr = Required(input.VenueAr, "VenueAr");
-        ev.DescriptionEn = Required(input.DescriptionEn, "DescriptionEn"); ev.DescriptionAr = Required(input.DescriptionAr, "DescriptionAr");
+        ev.TitleEn = titleEn; ev.TitleAr = titleAr;
+        ev.VenueEn = venueEn; ev.VenueAr = venueAr;
+        ev.DescriptionEn = descriptionEn; ev.DescriptionAr = descriptionAr;
         ev.SwimDistance = Blank(input.SwimDistance); ev.BikeDistance = Blank(input.BikeDistance); ev.RunDistance = Blank(input.RunDistance);
         ev.Categories = string.Join(',', input.Categories.Select(c => c.Trim()).Where(c => c.Length > 0));
         ev.RegistrationMode = input.RegistrationMode;
         ev.RegistrationOpen = input.RegistrationOpen;
         ev.ExternalRegistrationUrl = input.RegistrationMode == RegistrationMode.External ? input.ExternalRegistrationUrl!.Trim() : null;
         ev.Capacity = input.Capacity;
-        ev.HeroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
-        ev.ResultsFilePath = guard.FilePath(input.ResultsFilePath, "ResultsFilePath");
+        ev.HeroImagePath = heroImagePath;
+        ev.ResultsFilePath = resultsFilePath;
 
         var keepImages = new HashSet<Guid>();
-        foreach (var (image, index) in input.Gallery.Select((g, i) => (g, i)))
+        foreach (var ((image, path), index) in input.Gallery.Zip(galleryPaths).Select((g, i) => (g, i)))
         {
             var row = image.Id is { } gid ? ev.Gallery.FirstOrDefault(g => g.Id == gid) : null;
             // db.EventGalleryImages.Add, not ev.Gallery.Add: the row's Id is already a real,
@@ -100,23 +133,23 @@ public sealed partial class EventsService
             // of Added, which sends an UPDATE for a row that was never inserted (see ContentService.Apply).
             if (row is null) { row = new EventGalleryImage { EventId = ev.Id, Path = "" }; db.EventGalleryImages.Add(row); }
             keepImages.Add(row.Id);
-            row.Path = guard.FilePath(image.Path, "Gallery") ?? throw new ContentValidationException("Gallery", "Validation_GalleryFile");
+            row.Path = path;
             row.AltEn = Blank(image.AltEn); row.AltAr = Blank(image.AltAr);
             row.SortOrder = index + 1;
         }
         db.EventGalleryImages.RemoveRange(ev.Gallery.Where(g => !keepImages.Contains(g.Id)).ToList());
 
         var keepResults = new HashSet<Guid>();
-        foreach (var result in input.Results)
+        foreach (var (result, validated) in input.Results.Zip(validatedResults))
         {
             var row = result.Id is { } rid ? ev.Results.FirstOrDefault(r => r.Id == rid) : null;
             // Same reasoning as the gallery loop above: add through the DbSet, not the navigation.
             if (row is null) { row = new EventResult { EventId = ev.Id, AthleteEn = "", AthleteAr = "", Time = "" }; db.EventResults.Add(row); }
             keepResults.Add(row.Id);
             row.Position = result.Position;
-            row.AthleteEn = Required(result.AthleteEn, "Results"); row.AthleteAr = Required(result.AthleteAr, "Results");
+            row.AthleteEn = validated.AthleteEn; row.AthleteAr = validated.AthleteAr;
             row.ClubEn = Blank(result.ClubEn); row.ClubAr = Blank(result.ClubAr);
-            row.Time = Required(result.Time, "Results");
+            row.Time = validated.Time;
         }
         db.EventResults.RemoveRange(ev.Results.Where(r => !keepResults.Contains(r.Id)).ToList());
     }

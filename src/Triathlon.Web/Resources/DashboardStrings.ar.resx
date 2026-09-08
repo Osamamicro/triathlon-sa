@@ -194,4 +194,8 @@
     <value>لا تزال لهذه المدينة فعاليات؛ انقلها أولاً.</value>
     <comment>Shown when a city delete is refused because an event still references it.</comment>
   </data>
+  <data name="Validation_DuplicateRow" xml:space="preserve">
+    <value>تم إرسال الصف نفسه مرتين.</value>
+    <comment>Shown when a posted list of child rows (gallery, results, blocks, navigation) carries the same id twice.</comment>
+  </data>
 </root>

@@ -133,4 +133,106 @@ public sealed class EventsWriteTests(WebAppFixture app)
         await events.DeleteCityAsync(city.Id, CancellationToken.None);
         Assert.DoesNotContain(await events.CitiesAsync(CancellationToken.None), c => c.Id == city.Id);
     }
+
+    [Fact]
+    public async Task Delete_stamps_the_event_and_every_child_with_the_exact_same_instant()
+    {
+        var slug = "del-" + Guid.NewGuid().ToString("N")[..8];
+        Guid id;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            id = (await events.CreateAsync(Input(slug, await RiyadhAsync(scope.ServiceProvider)), CancellationToken.None)).Id;
+            await events.DeleteAsync(id, CancellationToken.None);
+        }
+
+        await using var scope2 = app.Services.CreateAsyncScope();
+        var db = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
+        var ev = await db.Events.IgnoreQueryFilters().SingleAsync(e => e.Id == id);
+        var gallery = await db.EventGalleryImages.IgnoreQueryFilters().Where(g => g.EventId == id).ToListAsync();
+        var results = await db.EventResults.IgnoreQueryFilters().Where(r => r.EventId == id).ToListAsync();
+
+        Assert.NotNull(ev.DeletedAt);
+        Assert.NotEmpty(gallery);
+        Assert.NotEmpty(results);
+        Assert.All(gallery, g => Assert.Equal(ev.DeletedAt, g.DeletedAt));
+        Assert.All(results, r => Assert.Equal(ev.DeletedAt, r.DeletedAt));
+    }
+
+    [Fact]
+    public async Task A_refused_update_leaves_the_gallery_and_title_untouched_and_the_scope_clean_for_the_next_save()
+    {
+        var slugA = "clean-a-" + Guid.NewGuid().ToString("N")[..8];
+        var slugB = "clean-b-" + Guid.NewGuid().ToString("N")[..8];
+        Guid idA, idB, city;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            city = await RiyadhAsync(scope.ServiceProvider);
+            idA = (await events.CreateAsync(Input(slugA, city), CancellationToken.None)).Id;
+            idB = (await events.CreateAsync(Input(slugB, city, published: false), CancellationToken.None)).Id;
+        }
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            var badInput = Input(slugA, city) with
+            {
+                TitleAr = "   ",
+                Gallery = [new GalleryImageInput(null, "/media/2026/09/b.webp", "New", "جديد")],
+            };
+            await Assert.ThrowsAsync<ContentValidationException>(() => events.UpdateAsync(idA, badInput, CancellationToken.None));
+            // Same scope, a different event: if the refused update above had left a half-applied Event
+            // or an orphan Added EventGalleryImage tracked, this save would flush that too.
+            await events.SetPublishedAsync(idB, true, CancellationToken.None);
+        }
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var ev = await db.Events.SingleAsync(e => e.Id == idA);
+            Assert.Equal("سباق الاختبار", ev.TitleAr);
+            Assert.Single(await db.EventGalleryImages.Where(g => g.EventId == idA).ToListAsync());
+
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            await events.DeleteAsync(idA, CancellationToken.None);
+            await events.DeleteAsync(idB, CancellationToken.None);
+        }
+    }
+
+    [Fact]
+    public async Task Duplicate_ids_in_a_posted_gallery_or_results_list_are_refused()
+    {
+        var slug = "dup-" + Guid.NewGuid().ToString("N")[..8];
+        Guid id, city, galleryId, resultId;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            city = await RiyadhAsync(scope.ServiceProvider);
+            id = (await events.CreateAsync(Input(slug, city), CancellationToken.None)).Id;
+            var loaded = await events.ForEditAsync(id, CancellationToken.None);
+            galleryId = loaded!.Gallery.Single().Id;
+            resultId = loaded.Results.Single().Id;
+        }
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            var dupGallery = Input(slug, city) with
+            {
+                Gallery = [new GalleryImageInput(galleryId, "/media/2026/09/a.webp", null, null), new GalleryImageInput(galleryId, "/media/2026/09/c.webp", null, null)],
+            };
+            var galleryEx = await Assert.ThrowsAsync<ContentValidationException>(() => events.UpdateAsync(id, dupGallery, CancellationToken.None));
+            Assert.Equal("Validation_DuplicateRow", galleryEx.Key);
+
+            var dupResults = Input(slug, city) with
+            {
+                Results = [new EventResultInput(resultId, 1, "A", "أ", null, null, "1:00:00"), new EventResultInput(resultId, 2, "B", "ب", null, null, "1:01:00")],
+            };
+            var resultsEx = await Assert.ThrowsAsync<ContentValidationException>(() => events.UpdateAsync(id, dupResults, CancellationToken.None));
+            Assert.Equal("Validation_DuplicateRow", resultsEx.Key);
+
+            await events.DeleteAsync(id, CancellationToken.None);
+        }
+    }
 }

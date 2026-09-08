@@ -194,4 +194,8 @@
     <value>This city still has events; move them first.</value>
     <comment>Shown when a city delete is refused because an event still references it.</comment>
   </data>
+  <data name="Validation_DuplicateRow" xml:space="preserve">
+    <value>The same row was submitted twice.</value>
+    <comment>Shown when a posted list of child rows (gallery, results, blocks, navigation) carries the same id twice.</comment>
+  </data>
 </root>

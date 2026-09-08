@@ -135,6 +135,13 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         page.MetaDescriptionAr = Blank(input.MetaDescriptionAr);
         page.IsPublished = input.IsPublished;
 
+        var seenBlockIds = new HashSet<Guid>();
+        foreach (var blockInput in input.Blocks)
+        {
+            if (blockInput.Id is { } dupId && !seenBlockIds.Add(dupId))
+                throw new ContentValidationException("Blocks", "Validation_DuplicateRow");
+        }
+
         var keep = new HashSet<Guid>();
         foreach (var (blockInput, index) in input.Blocks.Select((b, i) => (b, i)))
         {
@@ -213,15 +220,26 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         ArgumentNullException.ThrowIfNull(items);
         var existing = await db.NavItems.Where(n => n.Location == location).ToListAsync(ct);
         var before = existing.OrderBy(n => n.SortOrder).Select(Audit.Snapshot).ToList();
-        var keep = new HashSet<Guid>();
-        var saved = new List<NavItem>();
 
-        foreach (var (input, index) in items.Select((i, n) => (i, n)))
+        // Every item validated into a prepared (input, href) list before the upsert loop below
+        // mutates or adds a single row — a refused save must not leave a half-applied reorder behind.
+        var seenIds = new HashSet<Guid>();
+        var prepared = new List<(NavItemInput Input, string Href)>(items.Count);
+        foreach (var input in items)
         {
+            if (input.Id is { } dupId && !seenIds.Add(dupId))
+                throw new ContentValidationException("Navigation", "Validation_DuplicateRow");
             if (string.IsNullOrWhiteSpace(input.LabelEn) || string.IsNullOrWhiteSpace(input.LabelAr))
                 throw new ContentValidationException("Label", "Validation_LabelBothLanguages");
             var href = SafeHref(input.Href) ?? (input.Href.Trim().Length == 0 ? "" : throw new ContentValidationException("Href", "Validation_Href", input.Href));
+            prepared.Add((input, href));
+        }
 
+        var keep = new HashSet<Guid>();
+        var saved = new List<NavItem>();
+
+        foreach (var ((input, href), index) in prepared.Select((p, n) => (p, n)))
+        {
             var row = input.Id is { } id ? existing.FirstOrDefault(n => n.Id == id) : null;
             if (row is null)
             {

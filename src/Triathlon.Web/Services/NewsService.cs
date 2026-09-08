@@ -46,6 +46,12 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         if (await db.NewsPosts.IgnoreQueryFilters().AnyAsync(p => p.Slug == input.Slug && p.Id != input.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
 
+        // Validated into locals before anything is touched: a refused save must not leave a half-set
+        // post or an unaudited Added row behind in the scope's DbContext for the next save to flush.
+        var bodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_BodyEmpty");
+        var bodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_BodyEmpty");
+        var heroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
+
         var post = input.Id is { } id ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) : null;
         var before = post is null ? null : Audit.Snapshot(post);
         if (post is null)
@@ -57,9 +63,9 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         post.Slug = input.Slug;
         post.TitleEn = input.TitleEn.Trim(); post.TitleAr = input.TitleAr.Trim();
         post.SummaryEn = input.SummaryEn.Trim(); post.SummaryAr = input.SummaryAr.Trim();
-        post.BodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_BodyEmpty");
-        post.BodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_BodyEmpty");
-        post.HeroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
+        post.BodyEn = bodyEn;
+        post.BodyAr = bodyAr;
+        post.HeroImagePath = heroImagePath;
         post.PublishedOn = input.PublishedOn;
         post.IsPublished = input.IsPublished;
         await commit.ApplyAsync("NewsPost", post.Id, before is null ? "create" : "update", before, Audit.Snapshot(post), [CacheTags.News], ct);

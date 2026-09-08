@@ -122,17 +122,25 @@ public sealed partial class EventsService(AppDbContext db, TimeProvider clock, C
         var ev = await db.Events.Include(e => e.Gallery).Include(e => e.Results).SingleOrDefaultAsync(e => e.Id == id, ct);
         if (ev is null) return;
         var before = Audit.Snapshot(ev);
-        db.EventGalleryImages.RemoveRange(ev.Gallery);
-        db.EventResults.RemoveRange(ev.Results);
+        // Every row — the event and each child — gets the exact same DeletedAt instant, assigned once
+        // here rather than left for StampInterceptor to fill in per-row at save time. ADR 0001's
+        // restore only re-attaches a child whose DeletedAt falls within one second of the parent's; a
+        // slow save could otherwise let the interceptor stamp the gallery/results a moment later than
+        // the event and silently strand them outside that window on restore.
+        var now = clock.GetUtcNow();
+        foreach (var image in ev.Gallery) image.DeletedAt = now;
+        foreach (var result in ev.Results) result.DeletedAt = now;
         // Set DeletedAt directly rather than db.Events.Remove(ev): a registration for this event that
         // is already tracked in this scope (e.g. one just created by RegisterAsync) gets fixed up into
         // ev.Registrations by EF regardless of whether this query loaded it, and Remove()'s in-memory
         // cascade check throws the moment it sees that tracked, required-relationship child — even
         // though the "delete" is only ever a DeletedAt update, never a real row DELETE (StampInterceptor
         // rewrites every hard delete that way). Mutating the column ourselves takes the same UPDATE
-        // path without ever putting the event into EntityState.Deleted, so that check never runs.
-        // Registrations are never touched either way — see docs/adr/0001-soft-delete-cascade.md.
-        ev.DeletedAt = clock.GetUtcNow();
+        // path without ever putting the event into EntityState.Deleted, so that check never runs. The
+        // gallery/results rows above take the same Modified path (StampInterceptor's Modified branch
+        // still fills in UpdatedAt/UpdatedBy for all three). Registrations are never touched either way
+        // — see docs/adr/0001-soft-delete-cascade.md.
+        ev.DeletedAt = now;
         await commit.ApplyAsync("Event", ev.Id, "delete", before, null, EventTags(ev.Slug), ct);
     }
 }
