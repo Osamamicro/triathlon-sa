@@ -25,7 +25,7 @@
     {
       "label": "postgres (docker)",
       "type": "shell",
-      "command": "docker start stf-pg || docker run -d --name stf-pg -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=triathlon postgres:17-alpine",
+      "command": "docker start stf-pg || docker run -d --name stf-pg -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=triathlon postgres:17-alpine",
       "problemMatcher": []
     }
   ]
