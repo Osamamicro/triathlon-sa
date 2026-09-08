@@ -1,0 +1,142 @@
+@page "/dashboard/navigation"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Content
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Navigation"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Navigation"]</MudText>
+
+<MudTabs Elevation="0" Rounded="true">
+    <MudTabPanel Text="@L["Header"]">
+        @LocationPanel(NavLocation.Header)
+    </MudTabPanel>
+    <MudTabPanel Text="@L["FooterCompete"]">
+        @LocationPanel(NavLocation.FooterCompete)
+    </MudTabPanel>
+    <MudTabPanel Text="@L["FooterInvolved"]">
+        @LocationPanel(NavLocation.FooterInvolved)
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private sealed class NavItemRow
+    {
+        public Guid? Id { get; set; }
+        public string? LabelEn { get; set; }
+        public string? LabelAr { get; set; }
+        public string Href { get; set; } = "";
+        public bool IsPublished { get; set; } = true;
+
+        public static NavItemRow From(NavItem n) => new() { Id = n.Id, LabelEn = n.LabelEn, LabelAr = n.LabelAr, Href = n.Href, IsPublished = n.IsPublished };
+
+        public NavItemInput ToInput() => new(Id, LabelEn ?? "", LabelAr ?? "", Href, IsPublished);
+    }
+
+    private readonly Dictionary<NavLocation, List<NavItemRow>> items = new()
+    {
+        [NavLocation.Header] = [],
+        [NavLocation.FooterCompete] = [],
+        [NavLocation.FooterInvolved] = [],
+    };
+
+    private readonly Dictionary<NavLocation, bool> loading = new()
+    {
+        [NavLocation.Header] = true,
+        [NavLocation.FooterCompete] = true,
+        [NavLocation.FooterInvolved] = true,
+    };
+
+    private readonly Dictionary<NavLocation, bool> dirty = new();
+    private readonly Dictionary<NavLocation, bool> saving = new();
+    private readonly Dictionary<NavLocation, Dictionary<string, string>> fieldErrors = new()
+    {
+        [NavLocation.Header] = new(StringComparer.Ordinal),
+        [NavLocation.FooterCompete] = new(StringComparer.Ordinal),
+        [NavLocation.FooterInvolved] = new(StringComparer.Ordinal),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var location in items.Keys)
+        {
+            await LoadAsync(location);
+        }
+    }
+
+    private async Task LoadAsync(NavLocation location)
+    {
+        loading[location] = true;
+        var rows = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().NavigationForEditAsync(location, CancellationToken.None));
+        items[location] = [.. rows.Select(NavItemRow.From)];
+        loading[location] = false;
+        dirty[location] = false;
+    }
+
+    private void AddLink(NavLocation location)
+    {
+        items[location].Add(new NavItemRow());
+        dirty[location] = true;
+    }
+
+    private async Task SaveAsync(NavLocation location)
+    {
+        saving[location] = true;
+        fieldErrors[location].Clear();
+        try
+        {
+            var input = items[location].Select(r => r.ToInput()).ToList();
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().SaveNavigationAsync(location, input, CancellationToken.None));
+            await LoadAsync(location);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, fieldErrors[location]);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving[location] = false;
+        }
+    }
+
+    private RenderFragment LocationPanel(NavLocation location) => @<div class="mt-4">
+        @if (loading[location])
+        {
+            <MudProgressCircular Indeterminate="true" Class="ma-4" />
+        }
+        else
+        {
+            @foreach (var message in fieldErrors[location].Values)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
+            }
+
+            <ReorderList TItem="NavItemRow" Items="@items[location]" OnChanged="@(() => dirty[location] = true)">
+                <ItemTemplate Context="row">
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <BilingualField Label="@L["Label"]" Name="Label" En="@row.LabelEn" EnChanged="@(v => { row.LabelEn = v; dirty[location] = true; })"
+                                             Ar="@row.LabelAr" ArChanged="@(v => { row.LabelAr = v; dirty[location] = true; })" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="@L["Href"]" Value="@row.Href" ValueChanged="@(v => { row.Href = v ?? ""; dirty[location] = true; })" />
+                        </MudItem>
+                        <MudItem xs="12" md="2" Class="d-flex align-center">
+                            <MudSwitch T="bool" Label="@L["Published"]" Value="@row.IsPublished" ValueChanged="@(v => { row.IsPublished = v; dirty[location] = true; })" Color="Color.Primary" />
+                        </MudItem>
+                    </MudGrid>
+                </ItemTemplate>
+            </ReorderList>
+
+            <MudStack Row="true" Spacing="3" Class="mt-3">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => AddLink(location))">@L["AddLink"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!dirty.GetValueOrDefault(location) || saving[location])"
+                           OnClick="@(() => SaveAsync(location))">@L["Save"]</MudButton>
+            </MudStack>
+        }
+    </div>;
+}

@@ -1,0 +1,90 @@
+@page "/dashboard/settings"
+@attribute [Authorize(Policy = Policies.Admin)]
+@using Triathlon.Web.Domain.Content
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Settings"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Settings"]</MudText>
+
+@if (loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else
+{
+    @if (banner is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">@banner</MudAlert>
+    }
+
+    @foreach (var row in rows)
+    {
+        <MudPaper Class="pa-3 mb-3" Outlined="true" @key="row.Key">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">@row.Key</MudText>
+            <BilingualField Label="@L[$"Setting_{row.Key}"]" Name="@row.Key" Required="false"
+                             En="@row.ValueEn" EnChanged="@(v => { row.ValueEn = v; dirty = true; })"
+                             Ar="@row.ValueAr" ArChanged="@(v => { row.ValueAr = v; dirty = true; })" />
+            @if (fieldErrors.TryGetValue(row.Key, out var message))
+            {
+                <MudText Color="Color.Error" Typo="Typo.caption">@message</MudText>
+            }
+        </MudPaper>
+    }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!dirty || saving)" OnClick="SaveAsync" Class="mt-2">@L["Save"]</MudButton>
+}
+
+@code {
+    private sealed class SettingRow
+    {
+        public string Key { get; set; } = "";
+        public string? ValueEn { get; set; }
+        public string? ValueAr { get; set; }
+    }
+
+    private bool loading = true;
+    private List<SettingRow> rows = [];
+    private bool dirty;
+    private bool saving;
+    private string? banner;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        var settings = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().SettingsAsync(CancellationToken.None));
+        rows = [.. SettingKeys.All.Select(key => new SettingRow
+        {
+            Key = key,
+            ValueEn = settings.TryGetValue(key, out var s) ? s.ValueEn : null,
+            ValueAr = settings.TryGetValue(key, out var s2) ? s2.ValueAr : null,
+        })];
+        loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        banner = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = rows.Select(r => new SiteSettingInput(r.Key, r.ValueEn ?? "", r.ValueAr ?? "")).ToList();
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().SaveSettingsAsync(input, CancellationToken.None));
+            dirty = false;
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out banner, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

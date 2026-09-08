@@ -1,0 +1,62 @@
+@page "/dashboard/pages"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Page = Triathlon.Web.Domain.Content.Page
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Pages"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Pages"]</MudText>
+
+<EntityTable TItem="Page" Items="@pages" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/pages/new" Search="@(page => $"{page.Slug} {page.TitleEn} {page.TitleAr}")"
+             EditHref="@(page => $"dashboard/pages/{page.Id}")" IsPublished="@(page => page.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoPages"]">
+    <Headers>
+        <MudTh>@L["Slug"]</MudTh>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+    </Headers>
+    <Columns Context="row">
+        <MudTd DataLabel="@L["Slug"]">@row.Slug</MudTd>
+        <MudTd DataLabel="Title (EN)">@row.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@row.TitleAr</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<Page> pages = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        pages = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().PagesAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(Page page)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().RestorePageAsync(page.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

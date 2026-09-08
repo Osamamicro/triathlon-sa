@@ -874,4 +874,256 @@
     <value>اكتب اسم الملف لحذف هذا الرفع. أي مكان يستخدم مساره حالياً سيستمر بالعمل.</value>
     <comment>ConfirmDialog body on the media library screen's Delete action.</comment>
   </data>
+  <data name="Blocks" xml:space="preserve">
+    <value>الأقسام</value>
+    <comment>Heading above a page's block list.</comment>
+  </data>
+  <data name="AddBlock" xml:space="preserve">
+    <value>إضافة قسم</value>
+    <comment>Button that appends a new block to a page.</comment>
+  </data>
+  <data name="Block" xml:space="preserve">
+    <value>قسم</value>
+    <comment>Label for a block's type selector.</comment>
+  </data>
+  <data name="Variant" xml:space="preserve">
+    <value>النمط</value>
+    <comment>Free-text variant field a block's partial understands, e.g. grid-4 or pathway.</comment>
+  </data>
+  <data name="Anchor" xml:space="preserve">
+    <value>الرابط الداخلي</value>
+    <comment>The block's id attribute, so a link such as join#clubs lands on it.</comment>
+  </data>
+  <data name="Eyebrow" xml:space="preserve">
+    <value>العنوان الفرعي العلوي</value>
+    <comment>Small label above a block or item's title.</comment>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>العناصر</value>
+    <comment>Heading above a block's repeating item list.</comment>
+  </data>
+  <data name="AddItem" xml:space="preserve">
+    <value>إضافة عنصر</value>
+    <comment>Button that appends a new item to a block.</comment>
+  </data>
+  <data name="Cells" xml:space="preserve">
+    <value>الخلايا</value>
+    <comment>Table block row's pipe-separated cell list field label.</comment>
+  </data>
+  <data name="CellsHint" xml:space="preserve">
+    <value>افصل الخلايا بالرمز |. الصف الأول هو صف العناوين.</value>
+    <comment>Hint under a table block's cell fields.</comment>
+  </data>
+  <data name="Href" xml:space="preserve">
+    <value>الرابط</value>
+    <comment>URL or path field label for a block item, a call to action, or a navigation link.</comment>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>اللون</value>
+    <comment>Discipline colour selector for a block item: swim, bike, run, or none.</comment>
+  </data>
+  <data name="Cta" xml:space="preserve">
+    <value>دعوة لاتخاذ إجراء</value>
+    <comment>Heading above a block's primary call-to-action fields.</comment>
+  </data>
+  <data name="SecondaryCta" xml:space="preserve">
+    <value>دعوة ثانوية لاتخاذ إجراء</value>
+    <comment>Heading above a block's secondary call-to-action fields.</comment>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>التسمية</value>
+    <comment>Generic text label field, e.g. a call to action or a navigation link's text.</comment>
+  </data>
+  <data name="HtmlAllowedHint" xml:space="preserve">
+    <value>يُسمح هنا بعدد محدود من وسوم HTML ويُنقّى المحتوى عند الحفظ.</value>
+    <comment>Hint under a block title field that accepts HTML, e.g. the home hero.</comment>
+  </data>
+  <data name="NewPost" xml:space="preserve">
+    <value>مقالة جديدة</value>
+    <comment>News edit screen's title while creating a post.</comment>
+  </data>
+  <data name="PublishedOn" xml:space="preserve">
+    <value>تاريخ النشر</value>
+    <comment>News post's publish date field label.</comment>
+  </data>
+  <data name="ScheduleHint" xml:space="preserve">
+    <value>التاريخ المستقبلي يجدول المقالة؛ تظهر فور حلول ذلك التاريخ.</value>
+    <comment>Hint under a news post's PublishedOn field.</comment>
+  </data>
+  <data name="Committees" xml:space="preserve">
+    <value>اللجان</value>
+    <comment>Governance screen's heading.</comment>
+  </data>
+  <data name="NewCommittee" xml:space="preserve">
+    <value>لجنة جديدة</value>
+    <comment>Governance edit screen's title while creating a committee.</comment>
+  </data>
+  <data name="Kind" xml:space="preserve">
+    <value>النوع</value>
+    <comment>Committee card's eyebrow field label, e.g. Board or Technical.</comment>
+  </data>
+  <data name="Header" xml:space="preserve">
+    <value>الترويسة</value>
+    <comment>Navigation tab: the site header's links.</comment>
+  </data>
+  <data name="FooterCompete" xml:space="preserve">
+    <value>التذييل — المنافسة</value>
+    <comment>Navigation tab: the footer's first link column.</comment>
+  </data>
+  <data name="FooterInvolved" xml:space="preserve">
+    <value>التذييل — شارك</value>
+    <comment>Navigation tab: the footer's second link column.</comment>
+  </data>
+  <data name="AddLink" xml:space="preserve">
+    <value>إضافة رابط</value>
+    <comment>Button that appends a new link to a navigation location's list.</comment>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>حفظ</value>
+    <comment>Generic save button, e.g. one per navigation tab or statistics list.</comment>
+  </data>
+  <data name="Kpis" xml:space="preserve">
+    <value>المؤشرات</value>
+    <comment>Statistics screen's KPI table heading.</comment>
+  </data>
+  <data name="Regions" xml:space="preserve">
+    <value>المناطق</value>
+    <comment>Statistics screen's region list heading.</comment>
+  </data>
+  <data name="Growth" xml:space="preserve">
+    <value>النمو</value>
+    <comment>Statistics screen's growth series heading.</comment>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>القيمة</value>
+    <comment>A KPI's numeric value, or a region/growth row's athlete count field label.</comment>
+  </data>
+  <data name="Suffix" xml:space="preserve">
+    <value>اللاحقة</value>
+    <comment>Unit appended after a KPI's animated counter settles, e.g. "%".</comment>
+  </data>
+  <data name="ShowPlus" xml:space="preserve">
+    <value>إظهار +</value>
+    <comment>Whether a trailing "+" renders after a KPI's number.</comment>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>ملاحظة</value>
+    <comment>A KPI's small caption field label.</comment>
+  </data>
+  <data name="ShowOnHome" xml:space="preserve">
+    <value>إظهار في الصفحة الرئيسية</value>
+    <comment>Whether a KPI appears in the home page's four-tile band.</comment>
+  </data>
+  <data name="HomeOrder" xml:space="preserve">
+    <value>ترتيب الصفحة الرئيسية</value>
+    <comment>A KPI's position (1-4) within the home band.</comment>
+  </data>
+  <data name="HomeOrderHint" xml:space="preserve">
+    <value>لا يمكن لأكثر من مؤشر واحد شغل الموضع نفسه في الصفحة الرئيسية. ألغِ تفعيل «إظهار في الصفحة الرئيسية» للمؤشر الحالي واحفظه أولاً، ثم انقل هذا المؤشر إليه.</value>
+    <comment>Helper text under a KPI's HomeOrder field.</comment>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>المصدر</value>
+    <comment>A KPI's data source selector: Manual or Computed.</comment>
+  </data>
+  <data name="Manual" xml:space="preserve">
+    <value>يدوي</value>
+    <comment>KPI source option: a value an editor enters by hand.</comment>
+  </data>
+  <data name="Computed" xml:space="preserve">
+    <value>محسوب</value>
+    <comment>KPI source option: a value the nightly job fills in.</comment>
+  </data>
+  <data name="ComputedHint" xml:space="preserve">
+    <value>مخصص لمهمة حساب المؤشرات الليلية؛ أي تعديل يدوي لقيمة مؤشر محسوب يُستبدل في التشغيل التالي.</value>
+    <comment>Hint under a KPI's Source field when it is set to Computed.</comment>
+  </data>
+  <data name="AddRegion" xml:space="preserve">
+    <value>إضافة منطقة</value>
+    <comment>Button that appends a new row to the statistics region list.</comment>
+  </data>
+  <data name="AddYear" xml:space="preserve">
+    <value>إضافة سنة</value>
+    <comment>Button that appends a new row to the statistics growth series.</comment>
+  </data>
+  <data name="Setting_contact.email" xml:space="preserve">
+    <value>البريد الإلكتروني للتواصل</value>
+    <comment>Settings screen's label for the contact.email site setting.</comment>
+  </data>
+  <data name="Setting_contact.website" xml:space="preserve">
+    <value>الموقع الإلكتروني</value>
+    <comment>Settings screen's label for the contact.website site setting.</comment>
+  </data>
+  <data name="Setting_contact.x" xml:space="preserve">
+    <value>إكس (تويتر)</value>
+    <comment>Settings screen's label for the contact.x site setting.</comment>
+  </data>
+  <data name="Setting_footer.blurb" xml:space="preserve">
+    <value>نبذة التذييل</value>
+    <comment>Settings screen's label for the footer.blurb site setting.</comment>
+  </data>
+  <data name="Hero" xml:space="preserve">
+    <value>البطل</value>
+    <comment>Block type name: the page's opening banner section.</comment>
+  </data>
+  <data name="RichText" xml:space="preserve">
+    <value>نص منسق</value>
+    <comment>Block type name: a free-form HTML section.</comment>
+  </data>
+  <data name="Steps" xml:space="preserve">
+    <value>خطوات</value>
+    <comment>Block type name: a numbered list of steps.</comment>
+  </data>
+  <data name="Cards" xml:space="preserve">
+    <value>بطاقات</value>
+    <comment>Block type name: a grid of cards.</comment>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>جدول</value>
+    <comment>Block type name: a data table.</comment>
+  </data>
+  <data name="Faq" xml:space="preserve">
+    <value>الأسئلة الشائعة</value>
+    <comment>Block type name: a list of questions and answers.</comment>
+  </data>
+  <data name="Clubs" xml:space="preserve">
+    <value>الأندية</value>
+    <comment>Block type name: the affiliated-clubs listing.</comment>
+  </data>
+  <data name="NoPages" xml:space="preserve">
+    <value>لا توجد صفحات بعد.</value>
+    <comment>Pages list screen's empty state.</comment>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>لا توجد مقالات بعد.</value>
+    <comment>News list screen's empty state.</comment>
+  </data>
+  <data name="NoCommittees" xml:space="preserve">
+    <value>لا توجد لجان بعد.</value>
+    <comment>Governance list screen's empty state.</comment>
+  </data>
+  <data name="MetaDescription" xml:space="preserve">
+    <value>الوصف التعريفي</value>
+    <comment>Page's search-engine meta description field label.</comment>
+  </data>
+  <data name="NewPage" xml:space="preserve">
+    <value>صفحة جديدة</value>
+    <comment>Pages edit screen's title while creating a page.</comment>
+  </data>
+  <data name="CompanionSlugsHint" xml:space="preserve">
+    <value>تعرض صفحات الرئيسية واللوائح والتدريب هذه الأقسام نفسها إلى جانب تصميمها المخصص.</value>
+    <comment>Hint under a page's slug field listing the companion slugs a dedicated public page also renders.</comment>
+  </data>
+  <data name="DeletePageConfirm" xml:space="preserve">
+    <value>اكتب المعرّف (slug) لحذف هذه الصفحة. سيتم حذف أقسامها معها.</value>
+    <comment>ConfirmDialog body on the pages edit screen's Delete action.</comment>
+  </data>
+  <data name="DeletePostConfirm" xml:space="preserve">
+    <value>اكتب المعرّف (slug) لحذف هذه المقالة.</value>
+    <comment>ConfirmDialog body on the news edit screen's Delete action.</comment>
+  </data>
+  <data name="DeleteCommitteeConfirm" xml:space="preserve">
+    <value>اكتب الاسم لحذف هذه اللجنة.</value>
+    <comment>ConfirmDialog body on the governance edit screen's Delete action.</comment>
+  </data>
 </root>

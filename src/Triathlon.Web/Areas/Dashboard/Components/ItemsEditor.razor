@@ -1,0 +1,153 @@
+@* The repeating-item editor inside one page block: Steps/Cards/Faq items (eyebrow, title, body,
+   href, discipline colour) or Table rows (two pipe-separated cell lists, first row is the header).
+   BlockItem is an immutable positional record, so this keeps its own mutable row per item — each
+   with a stable identity for @@key — and only converts back to BlockItem when it pushes a change
+   up. Items is the same List<BlockItem> instance the caller (a page's own block row) owns; this
+   mutates it in place (never replaces the list reference) so a plain field, no two-way binding
+   callback carrying data, is enough to keep the caller's copy current. *@
+@using Triathlon.Web.Domain.Content
+@inject IStringLocalizer<DashboardStrings> L
+
+@if (ShowsItems)
+{
+    <MudStack Spacing="3" Class="@Class">
+        @foreach (var row in rows)
+        {
+            <MudPaper @key="row" Class="pa-3" Outlined="true">
+                <MudGrid>
+                    @if (Type == BlockType.Table)
+                    {
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">@L["CellsHint"]</MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="@($"{L["Cells"]} (EN)")" Value="@row.CellsEnText"
+                                          ValueChanged="@(v => { row.CellsEnText = v; PushAsync(); })" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField T="string" Label="@($"{L["Cells"]} (AR)")" Value="@row.CellsArText"
+                                          ValueChanged="@(v => { row.CellsArText = v; PushAsync(); })" dir="rtl" lang="ar" />
+                        </MudItem>
+                    }
+                    else
+                    {
+                        <MudItem xs="12">
+                            <BilingualField Label="@L["Eyebrow"]" Required="false" En="@row.EyebrowEn" EnChanged="@(v => { row.EyebrowEn = v; PushAsync(); })"
+                                             Ar="@row.EyebrowAr" ArChanged="@(v => { row.EyebrowAr = v; PushAsync(); })" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <BilingualField Label="@L["Title"]" Required="false" En="@row.TitleEn" EnChanged="@(v => { row.TitleEn = v; PushAsync(); })"
+                                             Ar="@row.TitleAr" ArChanged="@(v => { row.TitleAr = v; PushAsync(); })" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            @if (Type is BlockType.Cards or BlockType.Faq)
+                            {
+                                <BilingualRichText Label="@L["Body"]" Required="false" En="@row.BodyEn" EnChanged="@(v => { row.BodyEn = v; PushAsync(); })"
+                                                    Ar="@row.BodyAr" ArChanged="@(v => { row.BodyAr = v; PushAsync(); })" />
+                            }
+                            else
+                            {
+                                <BilingualField Label="@L["Body"]" Required="false" Lines="3" En="@row.BodyEn" EnChanged="@(v => { row.BodyEn = v; PushAsync(); })"
+                                                 Ar="@row.BodyAr" ArChanged="@(v => { row.BodyAr = v; PushAsync(); })" />
+                            }
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudTextField T="string" Label="@L["Href"]" Value="@row.Href" ValueChanged="@(v => { row.Href = v; PushAsync(); })" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" Label="@L["Color"]" Value="@(row.Color ?? "")" ValueChanged="@(v => { row.Color = string.IsNullOrEmpty(v) ? null : v; PushAsync(); })">
+                                <MudSelectItem Value="@("")">@L["None"]</MudSelectItem>
+                                <MudSelectItem Value="@("swim")">@L["Swim"]</MudSelectItem>
+                                <MudSelectItem Value="@("bike")">@L["Bike"]</MudSelectItem>
+                                <MudSelectItem Value="@("run")">@L["Run"]</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                    }
+                </MudGrid>
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           Class="mt-2" OnClick="@(() => RemoveAsync(row))">@L["Remove"]</MudButton>
+            </MudPaper>
+        }
+    </MudStack>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Class="mt-2" OnClick="AddAsync">@L["AddItem"]</MudButton>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public List<BlockItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public BlockType Type { get; set; }
+
+    /// <summary>Raised after any add/edit/remove, so the caller can flag its own form dirty.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private static bool ShowsForType(BlockType type) => type is BlockType.Steps or BlockType.Cards or BlockType.Table or BlockType.Faq;
+
+    private bool ShowsItems => ShowsForType(Type);
+
+    private sealed class Row
+    {
+        public string? EyebrowEn, EyebrowAr, TitleEn, TitleAr, BodyEn, BodyAr, Href, Color;
+        public string? CellsEnText, CellsArText;
+
+        public static Row From(BlockItem item) => new()
+        {
+            EyebrowEn = item.EyebrowEn, EyebrowAr = item.EyebrowAr,
+            TitleEn = item.TitleEn, TitleAr = item.TitleAr,
+            BodyEn = item.BodyEn, BodyAr = item.BodyAr,
+            Href = item.Href, Color = item.Color,
+            CellsEnText = item.CellsEn is null ? null : string.Join(" | ", item.CellsEn),
+            CellsArText = item.CellsAr is null ? null : string.Join(" | ", item.CellsAr),
+        };
+
+        public BlockItem ToBlockItem() => new(
+            EyebrowEn, EyebrowAr, TitleEn, TitleAr, BodyEn, BodyAr, Href, Color,
+            CellsEnText is null ? null : Split(CellsEnText),
+            CellsArText is null ? null : Split(CellsArText));
+
+        private static string[] Split(string text) =>
+            text.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private List<Row> rows = [];
+    private List<BlockItem>? syncedRef;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Items, syncedRef))
+        {
+            rows = [.. Items.Select(Row.From)];
+            syncedRef = Items;
+        }
+    }
+
+    private void SyncToParent()
+    {
+        Items.Clear();
+        Items.AddRange(rows.Select(r => r.ToBlockItem()));
+        syncedRef = Items;
+    }
+
+    private Task PushAsync()
+    {
+        SyncToParent();
+        return OnChanged.InvokeAsync();
+    }
+
+    private Task AddAsync()
+    {
+        rows.Add(new Row());
+        return PushAsync();
+    }
+
+    private Task RemoveAsync(Row row)
+    {
+        rows.Remove(row);
+        return PushAsync();
+    }
+}

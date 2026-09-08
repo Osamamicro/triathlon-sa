@@ -1,0 +1,61 @@
+@* A generic reorderable, removable list — the one repeated-row shape that Navigation's per-location
+   tabs, the statistics Regions/Growth lists, and any future ordered list reach for. The caller
+   supplies the row template and owns the item type; this only supplies the up/down/remove chrome
+   and the move/remove mechanics, mutating the caller's own List<TItem> in place so the caller sees
+   every change without a two-way binding callback carrying data. *@
+@typeparam TItem
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudStack Spacing="3" Class="@Class">
+    @foreach (var (item, index) in Items.Select((it, i) => (it, i)))
+    {
+        <MudPaper @key="item" Class="pa-3" Outlined="true">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Wrap="Wrap.Wrap">
+                <div class="flex-grow-1">
+                    @ItemTemplate(item)
+                </div>
+                <MudStack Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
+                                   Disabled="@(index == 0)" OnClick="@(() => MoveAsync(index, -1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
+                                   Disabled="@(index == Items.Count - 1)" OnClick="@(() => MoveAsync(index, 1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
+                                   OnClick="@(() => RemoveAsync(index))" />
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<TItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+
+    /// <summary>Raised after a move or a remove, so the caller can flag its own form dirty.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private async Task MoveAsync(int index, int delta)
+    {
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= Items.Count)
+        {
+            return;
+        }
+
+        (Items[index], Items[newIndex]) = (Items[newIndex], Items[index]);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task RemoveAsync(int index)
+    {
+        Items.RemoveAt(index);
+        await OnChanged.InvokeAsync();
+    }
+}

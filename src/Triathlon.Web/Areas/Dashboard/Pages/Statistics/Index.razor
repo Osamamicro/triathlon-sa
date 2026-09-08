@@ -1,0 +1,312 @@
+@page "/dashboard/statistics"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Stats
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Statistics"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Statistics"]</MudText>
+
+@if (loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else
+{
+    <MudText Typo="Typo.h6" Class="mt-4">@L["Kpis"]</MudText>
+    <div class="stf-kpi-table-scroll">
+        <MudSimpleTable Dense="true" Class="mb-6">
+            <thead>
+                <tr>
+                    <th>@L["Label"] (EN)</th>
+                    <th>@L["Label"] (AR)</th>
+                    <th>@L["Value"]</th>
+                    <th>@L["Suffix"]</th>
+                    <th>@L["ShowPlus"]</th>
+                    <th>@L["Note"] (EN)</th>
+                    <th>@L["Note"] (AR)</th>
+                    <th>@L["Color"]</th>
+                    <th>@L["SortOrder"]</th>
+                    <th>@L["ShowOnHome"]</th>
+                    <th>@L["HomeOrder"]</th>
+                    <th>@L["Source"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in kpis)
+                {
+                    <tr @key="row.Id">
+                        <td><MudTextField T="string" Value="@row.LabelEn" ValueChanged="@(v => row.LabelEn = v)"
+                                          Error="@row.FieldErrors.ContainsKey("LabelEn")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelEn")" /></td>
+                        <td dir="rtl"><MudTextField T="string" Value="@row.LabelAr" ValueChanged="@(v => row.LabelAr = v)"
+                                          Error="@row.FieldErrors.ContainsKey("LabelAr")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelAr")" /></td>
+                        <td><MudNumericField T="long" Value="@row.Value" ValueChanged="@(v => row.Value = v)" /></td>
+                        <td><MudTextField T="string" Value="@row.Suffix" ValueChanged="@(v => row.Suffix = v)" /></td>
+                        <td><MudCheckBox T="bool" Value="@row.ShowPlus" ValueChanged="@(v => row.ShowPlus = v)" /></td>
+                        <td><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" /></td>
+                        <td dir="rtl"><MudTextField T="string" Value="@row.NoteAr" ValueChanged="@(v => row.NoteAr = v)" /></td>
+                        <td>
+                            <MudSelect T="string" Value="@(row.Color ?? "")" ValueChanged="@(v => row.Color = string.IsNullOrEmpty(v) ? null : v)">
+                                <MudSelectItem Value="@("")">@L["None"]</MudSelectItem>
+                                <MudSelectItem Value="@("swim")">@L["Swim"]</MudSelectItem>
+                                <MudSelectItem Value="@("bike")">@L["Bike"]</MudSelectItem>
+                                <MudSelectItem Value="@("run")">@L["Run"]</MudSelectItem>
+                            </MudSelect>
+                        </td>
+                        <td><MudNumericField T="int" Value="@row.SortOrder" ValueChanged="@(v => row.SortOrder = v)" /></td>
+                        <td><MudCheckBox T="bool" Value="@row.ShowOnHome" ValueChanged="@(v => row.ShowOnHome = v)" /></td>
+                        <td>
+                            <MudNumericField T="int" Value="@row.HomeOrder" ValueChanged="@(v => row.HomeOrder = v)" Min="0" Max="4"
+                                             Error="@row.FieldErrors.ContainsKey("HomeOrder")" ErrorText="@row.FieldErrors.GetValueOrDefault("HomeOrder")" />
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["HomeOrderHint"]</MudText>
+                        </td>
+                        <td>
+                            <MudSelect T="KpiSource" Value="@row.Source" ValueChanged="@(v => row.Source = v)">
+                                <MudSelectItem Value="KpiSource.Manual">@L["Manual"]</MudSelectItem>
+                                <MudSelectItem Value="KpiSource.Computed">@L["Computed"]</MudSelectItem>
+                            </MudSelect>
+                            @if (row.Source == KpiSource.Computed)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["ComputedHint"]</MudText>
+                            }
+                        </td>
+                        <td>
+                            @if (row.Error is { } rowError)
+                            {
+                                <MudText Color="Color.Error" Typo="Typo.caption" Class="d-block">@rowError</MudText>
+                            }
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@row.Saving"
+                                       OnClick="@(() => SaveKpiAsync(row))">@L["Save"]</MudButton>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </div>
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Regions"]</MudText>
+    @foreach (var message in regionErrors.Values)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
+    }
+    <ReorderList TItem="RegionRow" Items="@regions" OnChanged="@(() => regionsDirty = true)">
+        <ItemTemplate Context="row">
+            <MudGrid>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string" Label="@L["Key"]" Value="@row.Key" ValueChanged="@(v => { row.Key = v ?? ""; regionsDirty = true; })" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <BilingualField Label="@L["Name"]" Name="Name" En="@row.NameEn" EnChanged="@(v => { row.NameEn = v; regionsDirty = true; })"
+                                     Ar="@row.NameAr" ArChanged="@(v => { row.NameAr = v; regionsDirty = true; })" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudNumericField T="int" Label="@L["Value"]" Value="@row.Athletes" ValueChanged="@(v => { row.Athletes = v; regionsDirty = true; })" Min="0" />
+                </MudItem>
+            </MudGrid>
+        </ItemTemplate>
+    </ReorderList>
+    <MudStack Row="true" Spacing="3" Class="mt-3 mb-6">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddRegion">@L["AddRegion"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!regionsDirty || regionsSaving)" OnClick="SaveRegionsAsync">@L["Save"]</MudButton>
+    </MudStack>
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Growth"]</MudText>
+    @foreach (var message in growthErrors.Values)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
+    }
+    <ReorderList TItem="GrowthRow" Items="@growth" OnChanged="@(() => growthDirty = true)">
+        <ItemTemplate Context="row">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int" Label="@L["Year"]" Value="@row.Year" ValueChanged="@(v => { row.Year = v; growthDirty = true; })" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="int" Label="@L["Value"]" Value="@row.Athletes" ValueChanged="@(v => { row.Athletes = v; growthDirty = true; })" Min="0" />
+                </MudItem>
+            </MudGrid>
+        </ItemTemplate>
+    </ReorderList>
+    <MudStack Row="true" Spacing="3" Class="mt-3">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddYear">@L["AddYear"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!growthDirty || growthSaving)" OnClick="SaveGrowthAsync">@L["Save"]</MudButton>
+    </MudStack>
+}
+
+@code {
+    private sealed class KpiRow
+    {
+        public Guid Id { get; set; }
+        public string? LabelEn { get; set; }
+        public string? LabelAr { get; set; }
+        public long Value { get; set; }
+        public string? Suffix { get; set; }
+        public bool ShowPlus { get; set; }
+        public string? NoteEn { get; set; }
+        public string? NoteAr { get; set; }
+        public string? Color { get; set; }
+        public int SortOrder { get; set; }
+        public bool ShowOnHome { get; set; }
+        public int HomeOrder { get; set; }
+        public KpiSource Source { get; set; }
+        public bool Saving { get; set; }
+        public string? Error { get; set; }
+        public Dictionary<string, string> FieldErrors { get; } = new(StringComparer.Ordinal);
+
+        public static KpiRow From(Kpi k) => new()
+        {
+            Id = k.Id, LabelEn = k.LabelEn, LabelAr = k.LabelAr, Value = k.Value, Suffix = k.Suffix, ShowPlus = k.ShowPlus,
+            NoteEn = k.NoteEn, NoteAr = k.NoteAr, Color = k.Color, SortOrder = k.SortOrder,
+            ShowOnHome = k.ShowOnHome, HomeOrder = k.HomeOrder, Source = k.Source,
+        };
+
+        public KpiInput ToInput() => new(Id, LabelEn ?? "", LabelAr ?? "", Value, Suffix, ShowPlus, NoteEn, NoteAr, Color, SortOrder, ShowOnHome, HomeOrder, Source);
+    }
+
+    private sealed class RegionRow
+    {
+        public Guid? Id { get; set; }
+        public string Key { get; set; } = "";
+        public string? NameEn { get; set; }
+        public string? NameAr { get; set; }
+        public int Athletes { get; set; }
+
+        public static RegionRow From(RegionStat r) => new() { Id = r.Id, Key = r.Key, NameEn = r.NameEn, NameAr = r.NameAr, Athletes = r.Athletes };
+
+        public RegionInput ToInput(int sortOrder) => new(Id, Key, NameEn ?? "", NameAr ?? "", Athletes, sortOrder);
+    }
+
+    private sealed class GrowthRow
+    {
+        public Guid? Id { get; set; }
+        public int Year { get; set; } = DateTime.UtcNow.Year;
+        public int Athletes { get; set; }
+
+        public static GrowthRow From(GrowthPoint g) => new() { Id = g.Id, Year = g.Year, Athletes = g.Athletes };
+
+        public GrowthInput ToInput() => new(Id, Year, Athletes);
+    }
+
+    private bool loading = true;
+    private List<KpiRow> kpis = [];
+    private List<RegionRow> regions = [];
+    private List<GrowthRow> growth = [];
+
+    private bool regionsDirty;
+    private bool regionsSaving;
+    private readonly Dictionary<string, string> regionErrors = new(StringComparer.Ordinal);
+
+    private bool growthDirty;
+    private bool growthSaving;
+    private readonly Dictionary<string, string> growthErrors = new(StringComparer.Ordinal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        var (kpiRows, regionRows, growthRows) = await Scope.RunAsync(async sp =>
+        {
+            var stats = sp.GetRequiredService<StatsService>();
+            var k = await stats.KpisForEditAsync(CancellationToken.None);
+            var r = await stats.RegionsForEditAsync(CancellationToken.None);
+            var g = await stats.GrowthForEditAsync(CancellationToken.None);
+            return (k, r, g);
+        });
+        kpis = [.. kpiRows.Select(KpiRow.From)];
+        regions = [.. regionRows.Select(RegionRow.From)];
+        growth = [.. growthRows.OrderBy(g => g.Year).Select(GrowthRow.From)];
+        loading = false;
+    }
+
+    private async Task SaveKpiAsync(KpiRow row)
+    {
+        row.Saving = true;
+        row.Error = null;
+        row.FieldErrors.Clear();
+        try
+        {
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<StatsService>().SaveKpiAsync(row.ToInput(), CancellationToken.None));
+            var refreshed = KpiRow.From(saved);
+            var index = kpis.FindIndex(k => k.Id == row.Id);
+            if (index >= 0)
+            {
+                kpis[index] = refreshed;
+            }
+
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out var banner, row.FieldErrors);
+            row.Error = banner;
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            row.Saving = false;
+        }
+    }
+
+    private void AddRegion()
+    {
+        regions.Add(new RegionRow());
+        regionsDirty = true;
+    }
+
+    private async Task SaveRegionsAsync()
+    {
+        regionsSaving = true;
+        regionErrors.Clear();
+        try
+        {
+            var input = regions.Select((r, i) => r.ToInput(i + 1)).ToList();
+            await Scope.RunAsync(sp => sp.GetRequiredService<StatsService>().SaveRegionsAsync(input, CancellationToken.None));
+            var reloaded = await Scope.RunAsync(sp => sp.GetRequiredService<StatsService>().RegionsForEditAsync(CancellationToken.None));
+            regions = [.. reloaded.Select(RegionRow.From)];
+            regionsDirty = false;
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, regionErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            regionsSaving = false;
+        }
+    }
+
+    private void AddYear()
+    {
+        var nextYear = growth.Count > 0 ? growth.Max(g => g.Year) + 1 : DateTime.UtcNow.Year;
+        growth.Add(new GrowthRow { Year = nextYear });
+        growthDirty = true;
+    }
+
+    private async Task SaveGrowthAsync()
+    {
+        growthSaving = true;
+        growthErrors.Clear();
+        try
+        {
+            var input = growth.Select(g => g.ToInput()).ToList();
+            await Scope.RunAsync(sp => sp.GetRequiredService<StatsService>().SaveGrowthAsync(input, CancellationToken.None));
+            var reloaded = await Scope.RunAsync(sp => sp.GetRequiredService<StatsService>().GrowthForEditAsync(CancellationToken.None));
+            growth = [.. reloaded.OrderBy(g => g.Year).Select(GrowthRow.From)];
+            growthDirty = false;
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, growthErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            growthSaving = false;
+        }
+    }
+}

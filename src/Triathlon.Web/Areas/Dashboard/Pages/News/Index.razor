@@ -1,0 +1,64 @@
+@page "/dashboard/news"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Content
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["News"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["News"]</MudText>
+
+<EntityTable TItem="NewsPost" Items="@posts" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/news/new" Search="@(post => $"{post.Slug} {post.TitleEn} {post.TitleAr}")"
+             EditHref="@(post => $"dashboard/news/{post.Id}")" IsPublished="@(post => post.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoNews"]">
+    <Headers>
+        <MudTh>@L["Slug"]</MudTh>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+        <MudTh>@L["PublishedOn"]</MudTh>
+    </Headers>
+    <Columns Context="post">
+        <MudTd DataLabel="@L["Slug"]">@post.Slug</MudTd>
+        <MudTd DataLabel="Title (EN)">@post.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@post.TitleAr</MudTd>
+        <MudTd DataLabel="@L["PublishedOn"]">@post.PublishedOn.ToString("yyyy-MM-dd")</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<NewsPost> posts = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        posts = await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().AllForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(NewsPost post)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().RestoreAsync(post.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

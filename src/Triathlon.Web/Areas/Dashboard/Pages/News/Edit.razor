@@ -1,0 +1,195 @@
+@page "/dashboard/news/new"
+@page "/dashboard/news/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Content
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/news" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" PreviewUrl="@PreviewUrl" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="NewsPost" ActivityId="@Id">
+
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+    <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Reserved="false" Class="mt-1" />
+    <BilingualField Label="@L["Summary"]" Name="Summary" Lines="3" En="@model.SummaryEn" EnChanged="@(v => { model.SummaryEn = v; dirty = true; })"
+                     Ar="@model.SummaryAr" ArChanged="@(v => { model.SummaryAr = v; dirty = true; })" />
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Body"]</MudText>
+    <BilingualRichText Label="@L["Body"]" Name="Body" En="@model.BodyEn" EnChanged="@(v => { model.BodyEn = v; dirty = true; })"
+                        Ar="@model.BodyAr" ArChanged="@(v => { model.BodyAr = v; dirty = true; })" />
+
+    <MudStack Class="mt-4">
+        <MediaPicker Kind="FileKind.Image" Label="@L["HeroImage"]" Name="HeroImagePath" Path="@model.HeroImagePath" PathChanged="@(v => { model.HeroImagePath = v; dirty = true; })" />
+    </MudStack>
+
+    <MudDatePicker Label="@L["PublishedOn"]" Date="@model.PublishedOn.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnPublishedOnChanged" Class="mt-4" />
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["ScheduleHint"]</MudText>
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class Model
+    {
+        public string Slug { get; set; } = "";
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? SummaryEn { get; set; }
+        public string? SummaryAr { get; set; }
+        public string? BodyEn { get; set; }
+        public string? BodyAr { get; set; }
+        public string? HeroImagePath { get; set; }
+        public DateOnly PublishedOn { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        public bool IsPublished { get; set; }
+
+        public static Model From(NewsPost post) => new()
+        {
+            Slug = post.Slug, TitleEn = post.TitleEn, TitleAr = post.TitleAr,
+            SummaryEn = post.SummaryEn, SummaryAr = post.SummaryAr,
+            BodyEn = post.BodyEn, BodyAr = post.BodyAr,
+            HeroImagePath = post.HeroImagePath, PublishedOn = post.PublishedOn, IsPublished = post.IsPublished,
+        };
+
+        public NewsPostInput ToInput(Guid? id, bool published) => new(
+            id, Slug, TitleEn ?? "", TitleAr ?? "", SummaryEn ?? "", SummaryAr ?? "", BodyEn ?? "", BodyAr ?? "",
+            HeroImagePath, PublishedOn, published);
+    }
+
+    private Model model = new();
+    private NewsPost? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewPost"] : (loaded is null ? "" : loaded.TitleEn);
+    private string? PreviewUrl => loaded is { IsPublished: true } ? $"/{Culture}/news/{loaded.Slug}" : null;
+    private static string Culture => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar" : "en";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().ForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private void OnPublishedOnChanged(DateTime? value)
+    {
+        if (value is { } date)
+        {
+            model.PublishedOn = DateOnly.FromDateTime(date);
+            dirty = true;
+        }
+    }
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(Id, published);
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().SaveAsync(input, CancellationToken.None));
+            if (Id is null)
+            {
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+                Nav.NavigateTo($"dashboard/news/{saved.Id}");
+                return;
+            }
+
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().ForEditAsync(saved.Id, CancellationToken.None));
+            model = Model.From(loaded!);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = Model.From(loaded).ToInput(id, false);
+            await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().SaveAsync(input, CancellationToken.None));
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().ForEditAsync(id, CancellationToken.None));
+            model = Model.From(loaded!);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeletePostConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Slug))
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<NewsService>().DeleteAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/news");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

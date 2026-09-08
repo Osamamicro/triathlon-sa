@@ -1,0 +1,315 @@
+@page "/dashboard/pages/new"
+@page "/dashboard/pages/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Content
+@using Page = Triathlon.Web.Domain.Content.Page
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/pages" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="Page" ActivityId="@Id">
+
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+    <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Class="mt-1" />
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-4">@L["CompanionSlugsHint"]</MudText>
+    <BilingualField Label="@L["MetaDescription"]" Name="MetaDescription" Required="false" Lines="2"
+                     En="@model.MetaDescriptionEn" EnChanged="@(v => { model.MetaDescriptionEn = v; dirty = true; })"
+                     Ar="@model.MetaDescriptionAr" ArChanged="@(v => { model.MetaDescriptionAr = v; dirty = true; })" />
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Blocks"]</MudText>
+    @if (fieldErrors.TryGetValue("Blocks", out var blocksError))
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" Class="d-block mb-2">@blocksError</MudText>
+    }
+    <MudExpansionPanels Class="mt-2">
+        @foreach (var (block, index) in model.Blocks.Select((b, i) => (b, i)))
+        {
+            <MudExpansionPanel @key="block.Key">
+                <TitleContent>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="stf-block-panel-title">
+                        <MudText>@BlockHeader(block, index)</MudText>
+                        <MudStack Row="true" Spacing="1" @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
+                                           Disabled="@(index == 0)" OnClick="@(() => MoveBlock(index, -1))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
+                                           Disabled="@(index == model.Blocks.Count - 1)" OnClick="@(() => MoveBlock(index, 1))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
+                                           OnClick="@(() => RemoveBlock(index))" />
+                        </MudStack>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="BlockType" Label="@L["Block"]" Value="@block.Type" ValueChanged="@(v => { block.Type = v; dirty = true; })">
+                                @foreach (var type in Enum.GetValues<BlockType>())
+                                {
+                                    <MudSelectItem Value="@type">@L[type.ToString()]</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="@L["Variant"]" Value="@block.Variant" ValueChanged="@(v => { block.Variant = v; dirty = true; })" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField T="string" Label="@L["Anchor"]" Value="@block.Anchor" ValueChanged="@(v => { block.Anchor = v; dirty = true; })" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <BilingualField Label="@L["Eyebrow"]" Name="BlockEyebrow" Required="false" En="@block.EyebrowEn" EnChanged="@(v => { block.EyebrowEn = v; dirty = true; })"
+                                     Ar="@block.EyebrowAr" ArChanged="@(v => { block.EyebrowAr = v; dirty = true; })" />
+                    <BilingualField Label="@L["Title"]" Name="BlockTitle" Required="false" HelperText="@L["HtmlAllowedHint"]" En="@block.TitleEn" EnChanged="@(v => { block.TitleEn = v; dirty = true; })"
+                                     Ar="@block.TitleAr" ArChanged="@(v => { block.TitleAr = v; dirty = true; })" />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-1">@L["Body"]</MudText>
+                    <BilingualRichText @key="block.Key" Label="@L["Body"]" Name="Body" Required="false" En="@block.BodyEn" EnChanged="@(v => { block.BodyEn = v; dirty = true; })"
+                                        Ar="@block.BodyAr" ArChanged="@(v => { block.BodyAr = v; dirty = true; })" />
+
+                    @if (block.Type is BlockType.Steps or BlockType.Cards or BlockType.Table or BlockType.Faq)
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Items"]</MudText>
+                        <ItemsEditor Items="@block.Items" Type="@block.Type" OnChanged="@(() => dirty = true)" Class="mt-2" />
+                    }
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Cta"]</MudText>
+                    <BilingualField Label="@L["Label"]" Name="BlockCtaLabel" Required="false" En="@block.CtaLabelEn" EnChanged="@(v => { block.CtaLabelEn = v; dirty = true; })"
+                                     Ar="@block.CtaLabelAr" ArChanged="@(v => { block.CtaLabelAr = v; dirty = true; })" />
+                    <MudTextField T="string" Label="@L["Href"]" Value="@block.CtaHref" ValueChanged="@(v => { block.CtaHref = v; dirty = true; })" Class="mt-1" />
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["SecondaryCta"]</MudText>
+                    <BilingualField Label="@L["Label"]" Name="BlockSecondaryLabel" Required="false" En="@block.SecondaryLabelEn" EnChanged="@(v => { block.SecondaryLabelEn = v; dirty = true; })"
+                                     Ar="@block.SecondaryLabelAr" ArChanged="@(v => { block.SecondaryLabelAr = v; dirty = true; })" />
+                    <MudTextField T="string" Label="@L["Href"]" Value="@block.SecondaryHref" ValueChanged="@(v => { block.SecondaryHref = v; dirty = true; })" Class="mt-1" />
+                </ChildContent>
+            </MudExpansionPanel>
+        }
+    </MudExpansionPanels>
+
+    <MudMenu Class="mt-3" Label="@L["AddBlock"]" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add">
+        @foreach (var type in Enum.GetValues<BlockType>())
+        {
+            <MudMenuItem OnClick="@(() => AddBlock(type))">@L[type.ToString()]</MudMenuItem>
+        }
+    </MudMenu>
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class BlockRow
+    {
+        /// <summary>Stable identity for @@key, independent of ServerId (which is null for a new block).</summary>
+        public Guid Key { get; } = Guid.NewGuid();
+
+        public Guid? ServerId { get; set; }
+        public BlockType Type { get; set; } = BlockType.RichText;
+        public string? Variant { get; set; }
+        public string? Anchor { get; set; }
+        public string? EyebrowEn { get; set; }
+        public string? EyebrowAr { get; set; }
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? BodyEn { get; set; }
+        public string? BodyAr { get; set; }
+        public List<BlockItem> Items { get; set; } = [];
+        public string? CtaLabelEn { get; set; }
+        public string? CtaLabelAr { get; set; }
+        public string? CtaHref { get; set; }
+        public string? SecondaryLabelEn { get; set; }
+        public string? SecondaryLabelAr { get; set; }
+        public string? SecondaryHref { get; set; }
+
+        public static BlockRow From(PageBlock b) => new()
+        {
+            ServerId = b.Id, Type = b.Type, Variant = b.Variant, Anchor = b.Anchor,
+            EyebrowEn = b.EyebrowEn, EyebrowAr = b.EyebrowAr, TitleEn = b.TitleEn, TitleAr = b.TitleAr,
+            BodyEn = b.BodyEn, BodyAr = b.BodyAr, Items = [.. b.Items],
+            CtaLabelEn = b.CtaLabelEn, CtaLabelAr = b.CtaLabelAr, CtaHref = b.CtaHref,
+            SecondaryLabelEn = b.SecondaryLabelEn, SecondaryLabelAr = b.SecondaryLabelAr, SecondaryHref = b.SecondaryHref,
+        };
+
+        public BlockInput ToInput(int sortOrder) => new(
+            ServerId, sortOrder, Type, Variant, Anchor, EyebrowEn, EyebrowAr, TitleEn, TitleAr, BodyEn, BodyAr,
+            Items, CtaLabelEn, CtaLabelAr, CtaHref, SecondaryLabelEn, SecondaryLabelAr, SecondaryHref);
+    }
+
+    private sealed class Model
+    {
+        public string Slug { get; set; } = "";
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? MetaDescriptionEn { get; set; }
+        public string? MetaDescriptionAr { get; set; }
+        public bool IsPublished { get; set; }
+        public List<BlockRow> Blocks { get; set; } = [];
+
+        public static Model From(Page page) => new()
+        {
+            Slug = page.Slug, TitleEn = page.TitleEn, TitleAr = page.TitleAr,
+            MetaDescriptionEn = page.MetaDescriptionEn, MetaDescriptionAr = page.MetaDescriptionAr,
+            IsPublished = page.IsPublished,
+            Blocks = [.. page.Blocks.OrderBy(b => b.SortOrder).Select(BlockRow.From)],
+        };
+
+        public PageInput ToInput(bool published) => new(
+            Slug, TitleEn ?? "", TitleAr ?? "", MetaDescriptionEn, MetaDescriptionAr, published,
+            [.. Blocks.Select((b, i) => b.ToInput(i + 1))]);
+    }
+
+    private Model model = new();
+    private Page? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewPage"] : (loaded is null ? "" : loaded.TitleEn);
+
+    private string BlockHeader(BlockRow block, int index) => $"{index + 1}. {L[block.Type.ToString()]} — {block.TitleEn}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().PageForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private void AddBlock(BlockType type)
+    {
+        model.Blocks.Add(new BlockRow { Type = type });
+        dirty = true;
+    }
+
+    private void RemoveBlock(int index)
+    {
+        model.Blocks.RemoveAt(index);
+        dirty = true;
+    }
+
+    private void MoveBlock(int index, int delta)
+    {
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= model.Blocks.Count)
+        {
+            return;
+        }
+
+        (model.Blocks[index], model.Blocks[newIndex]) = (model.Blocks[newIndex], model.Blocks[index]);
+        dirty = true;
+    }
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(published);
+            if (Id is { } id)
+            {
+                await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().UpdatePageAsync(id, input, CancellationToken.None));
+                loaded = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().PageForEditAsync(id, CancellationToken.None));
+            }
+            else
+            {
+                var created = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().CreatePageAsync(input, CancellationToken.None));
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+                Nav.NavigateTo($"dashboard/pages/{created.Id}");
+                return;
+            }
+
+            model = Model.From(loaded!);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().SetPagePublishedAsync(id, false, CancellationToken.None));
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().PageForEditAsync(id, CancellationToken.None));
+            model = Model.From(loaded!);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeletePageConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Slug))
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().DeletePageAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/pages");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

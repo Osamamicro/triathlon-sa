@@ -874,4 +874,256 @@
     <value>Type the file name to delete this upload. Anything already using its path keeps working.</value>
     <comment>ConfirmDialog body on the media library screen's Delete action.</comment>
   </data>
+  <data name="Blocks" xml:space="preserve">
+    <value>Blocks</value>
+    <comment>Heading above a page's block list.</comment>
+  </data>
+  <data name="AddBlock" xml:space="preserve">
+    <value>Add block</value>
+    <comment>Button that appends a new block to a page.</comment>
+  </data>
+  <data name="Block" xml:space="preserve">
+    <value>Block</value>
+    <comment>Label for a block's type selector.</comment>
+  </data>
+  <data name="Variant" xml:space="preserve">
+    <value>Variant</value>
+    <comment>Free-text variant field a block's partial understands, e.g. grid-4 or pathway.</comment>
+  </data>
+  <data name="Anchor" xml:space="preserve">
+    <value>Anchor</value>
+    <comment>The block's id attribute, so a link such as join#clubs lands on it.</comment>
+  </data>
+  <data name="Eyebrow" xml:space="preserve">
+    <value>Eyebrow</value>
+    <comment>Small label above a block or item's title.</comment>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>Items</value>
+    <comment>Heading above a block's repeating item list.</comment>
+  </data>
+  <data name="AddItem" xml:space="preserve">
+    <value>Add item</value>
+    <comment>Button that appends a new item to a block.</comment>
+  </data>
+  <data name="Cells" xml:space="preserve">
+    <value>Cells</value>
+    <comment>Table block row's pipe-separated cell list field label.</comment>
+  </data>
+  <data name="CellsHint" xml:space="preserve">
+    <value>Separate cells with |. The first row is the header row.</value>
+    <comment>Hint under a table block's cell fields.</comment>
+  </data>
+  <data name="Href" xml:space="preserve">
+    <value>Link</value>
+    <comment>URL or path field label for a block item, a call to action, or a navigation link.</comment>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Colour</value>
+    <comment>Discipline colour selector for a block item: swim, bike, run, or none.</comment>
+  </data>
+  <data name="Cta" xml:space="preserve">
+    <value>Call to action</value>
+    <comment>Heading above a block's primary call-to-action fields.</comment>
+  </data>
+  <data name="SecondaryCta" xml:space="preserve">
+    <value>Secondary call to action</value>
+    <comment>Heading above a block's secondary call-to-action fields.</comment>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>Label</value>
+    <comment>Generic text label field, e.g. a call to action or a navigation link's text.</comment>
+  </data>
+  <data name="HtmlAllowedHint" xml:space="preserve">
+    <value>A small set of HTML tags is allowed here and sanitised on save.</value>
+    <comment>Hint under a block title field that accepts HTML, e.g. the home hero.</comment>
+  </data>
+  <data name="NewPost" xml:space="preserve">
+    <value>New post</value>
+    <comment>News edit screen's title while creating a post.</comment>
+  </data>
+  <data name="PublishedOn" xml:space="preserve">
+    <value>Published on</value>
+    <comment>News post's publish date field label.</comment>
+  </data>
+  <data name="ScheduleHint" xml:space="preserve">
+    <value>A date in the future schedules the post; it appears once that date arrives.</value>
+    <comment>Hint under a news post's PublishedOn field.</comment>
+  </data>
+  <data name="Committees" xml:space="preserve">
+    <value>Committees</value>
+    <comment>Governance screen's heading.</comment>
+  </data>
+  <data name="NewCommittee" xml:space="preserve">
+    <value>New committee</value>
+    <comment>Governance edit screen's title while creating a committee.</comment>
+  </data>
+  <data name="Kind" xml:space="preserve">
+    <value>Kind</value>
+    <comment>Committee card's eyebrow field label, e.g. Board or Technical.</comment>
+  </data>
+  <data name="Header" xml:space="preserve">
+    <value>Header</value>
+    <comment>Navigation tab: the site header's links.</comment>
+  </data>
+  <data name="FooterCompete" xml:space="preserve">
+    <value>Footer — Compete</value>
+    <comment>Navigation tab: the footer's first link column.</comment>
+  </data>
+  <data name="FooterInvolved" xml:space="preserve">
+    <value>Footer — Get involved</value>
+    <comment>Navigation tab: the footer's second link column.</comment>
+  </data>
+  <data name="AddLink" xml:space="preserve">
+    <value>Add link</value>
+    <comment>Button that appends a new link to a navigation location's list.</comment>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+    <comment>Generic save button, e.g. one per navigation tab or statistics list.</comment>
+  </data>
+  <data name="Kpis" xml:space="preserve">
+    <value>KPIs</value>
+    <comment>Statistics screen's KPI table heading.</comment>
+  </data>
+  <data name="Regions" xml:space="preserve">
+    <value>Regions</value>
+    <comment>Statistics screen's region list heading.</comment>
+  </data>
+  <data name="Growth" xml:space="preserve">
+    <value>Growth</value>
+    <comment>Statistics screen's growth series heading.</comment>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+    <comment>A KPI's numeric value, or a region/growth row's athlete count field label.</comment>
+  </data>
+  <data name="Suffix" xml:space="preserve">
+    <value>Suffix</value>
+    <comment>Unit appended after a KPI's animated counter settles, e.g. "%".</comment>
+  </data>
+  <data name="ShowPlus" xml:space="preserve">
+    <value>Show +</value>
+    <comment>Whether a trailing "+" renders after a KPI's number.</comment>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>Note</value>
+    <comment>A KPI's small caption field label.</comment>
+  </data>
+  <data name="ShowOnHome" xml:space="preserve">
+    <value>Show on home</value>
+    <comment>Whether a KPI appears in the home page's four-tile band.</comment>
+  </data>
+  <data name="HomeOrder" xml:space="preserve">
+    <value>Home order</value>
+    <comment>A KPI's position (1-4) within the home band.</comment>
+  </data>
+  <data name="HomeOrderHint" xml:space="preserve">
+    <value>Only one KPI can hold each home slot. Uncheck the current holder's Show on home and save it first, then move this one in.</value>
+    <comment>Helper text under a KPI's HomeOrder field.</comment>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Source</value>
+    <comment>A KPI's data source selector: Manual or Computed.</comment>
+  </data>
+  <data name="Manual" xml:space="preserve">
+    <value>Manual</value>
+    <comment>KPI source option: a value an editor enters by hand.</comment>
+  </data>
+  <data name="Computed" xml:space="preserve">
+    <value>Computed</value>
+    <comment>KPI source option: a value the nightly job fills in.</comment>
+  </data>
+  <data name="ComputedHint" xml:space="preserve">
+    <value>Reserved for the nightly computed-KPI job; a hand-edited value on a computed KPI is overwritten on its next run.</value>
+    <comment>Hint under a KPI's Source field when it is set to Computed.</comment>
+  </data>
+  <data name="AddRegion" xml:space="preserve">
+    <value>Add region</value>
+    <comment>Button that appends a new row to the statistics region list.</comment>
+  </data>
+  <data name="AddYear" xml:space="preserve">
+    <value>Add year</value>
+    <comment>Button that appends a new row to the statistics growth series.</comment>
+  </data>
+  <data name="Setting_contact.email" xml:space="preserve">
+    <value>Contact email</value>
+    <comment>Settings screen's label for the contact.email site setting.</comment>
+  </data>
+  <data name="Setting_contact.website" xml:space="preserve">
+    <value>Website</value>
+    <comment>Settings screen's label for the contact.website site setting.</comment>
+  </data>
+  <data name="Setting_contact.x" xml:space="preserve">
+    <value>X (Twitter)</value>
+    <comment>Settings screen's label for the contact.x site setting.</comment>
+  </data>
+  <data name="Setting_footer.blurb" xml:space="preserve">
+    <value>Footer blurb</value>
+    <comment>Settings screen's label for the footer.blurb site setting.</comment>
+  </data>
+  <data name="Hero" xml:space="preserve">
+    <value>Hero</value>
+    <comment>Block type name: the page's opening banner section.</comment>
+  </data>
+  <data name="RichText" xml:space="preserve">
+    <value>Rich text</value>
+    <comment>Block type name: a free-form HTML section.</comment>
+  </data>
+  <data name="Steps" xml:space="preserve">
+    <value>Steps</value>
+    <comment>Block type name: a numbered list of steps.</comment>
+  </data>
+  <data name="Cards" xml:space="preserve">
+    <value>Cards</value>
+    <comment>Block type name: a grid of cards.</comment>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+    <comment>Block type name: a data table.</comment>
+  </data>
+  <data name="Faq" xml:space="preserve">
+    <value>FAQ</value>
+    <comment>Block type name: a list of questions and answers.</comment>
+  </data>
+  <data name="Clubs" xml:space="preserve">
+    <value>Clubs</value>
+    <comment>Block type name: the affiliated-clubs listing.</comment>
+  </data>
+  <data name="NoPages" xml:space="preserve">
+    <value>No pages yet.</value>
+    <comment>Pages list screen's empty state.</comment>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>No posts yet.</value>
+    <comment>News list screen's empty state.</comment>
+  </data>
+  <data name="NoCommittees" xml:space="preserve">
+    <value>No committees yet.</value>
+    <comment>Governance list screen's empty state.</comment>
+  </data>
+  <data name="MetaDescription" xml:space="preserve">
+    <value>Meta description</value>
+    <comment>Page's search-engine meta description field label.</comment>
+  </data>
+  <data name="NewPage" xml:space="preserve">
+    <value>New page</value>
+    <comment>Pages edit screen's title while creating a page.</comment>
+  </data>
+  <data name="CompanionSlugsHint" xml:space="preserve">
+    <value>The home, rules and training pages render these same blocks alongside their own dedicated layout.</value>
+    <comment>Hint under a page's slug field listing the companion slugs a dedicated public page also renders.</comment>
+  </data>
+  <data name="DeletePageConfirm" xml:space="preserve">
+    <value>Type the slug to delete this page. Its blocks are deleted with it.</value>
+    <comment>ConfirmDialog body on the pages edit screen's Delete action.</comment>
+  </data>
+  <data name="DeletePostConfirm" xml:space="preserve">
+    <value>Type the slug to delete this post.</value>
+    <comment>ConfirmDialog body on the news edit screen's Delete action.</comment>
+  </data>
+  <data name="DeleteCommitteeConfirm" xml:space="preserve">
+    <value>Type the name to delete this committee.</value>
+    <comment>ConfirmDialog body on the governance edit screen's Delete action.</comment>
+  </data>
 </root>

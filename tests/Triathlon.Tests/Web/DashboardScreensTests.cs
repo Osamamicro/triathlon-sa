@@ -20,6 +20,11 @@ public sealed class DashboardScreensTests(WebAppFixture app)
     [InlineData("/dashboard/rules", "competition-rules-2026")]
     [InlineData("/dashboard/guides", "beginner-12-weeks")]
     [InlineData("/dashboard/media", "Upload")]
+    [InlineData("/dashboard/pages", "join")]
+    [InlineData("/dashboard/news", "kasc-sunset-aquathlon-recap")]
+    [InlineData("/dashboard/governance", "Board of Directors")]
+    [InlineData("/dashboard/navigation", "events/timeline")]
+    [InlineData("/dashboard/statistics", "athletes")]
     public async Task List_screens_prerender_seeded_rows(string path, string expected)
     {
         using var client = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: true);
@@ -61,5 +66,19 @@ public sealed class DashboardScreensTests(WebAppFixture app)
         using var users = await client.GetAsync("/dashboard/users");
         Assert.Equal(HttpStatusCode.Found, users.StatusCode);
         Assert.Contains("/dashboard/access-denied", users.Headers.Location!.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Settings_screen_is_admin_only()
+    {
+        using var adminClient = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: true);
+        var html = await adminClient.GetStringAsync("/dashboard/settings");
+        Assert.Contains("contact.email", html, StringComparison.Ordinal);
+
+        var (email, password) = await DashboardClient.CreateEditorAsync(app);
+        using var editorClient = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: false, email: email, password: password);
+        using var settings = await editorClient.GetAsync("/dashboard/settings");
+        Assert.Equal(HttpStatusCode.Found, settings.StatusCode);
+        Assert.Contains("/dashboard/access-denied", settings.Headers.Location!.ToString(), StringComparison.Ordinal);
     }
 }

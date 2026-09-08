@@ -1,0 +1,64 @@
+@page "/dashboard/governance"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Content
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Committees"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Committees"]</MudText>
+
+<EntityTable TItem="Committee" Items="@committees" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/governance/new" Search="@(c => $"{c.KindEn} {c.KindAr} {c.NameEn} {c.NameAr}")"
+             EditHref="@(c => $"dashboard/governance/{c.Id}")" IsPublished="@(c => c.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoCommittees"]">
+    <Headers>
+        <MudTh>@L["Kind"]</MudTh>
+        <MudTh>@L["Name"] (EN)</MudTh>
+        <MudTh>@L["Name"] (AR)</MudTh>
+        <MudTh>@L["SortOrder"]</MudTh>
+    </Headers>
+    <Columns Context="c">
+        <MudTd DataLabel="@L["Kind"]">@c.KindEn</MudTd>
+        <MudTd DataLabel="Name (EN)">@c.NameEn</MudTd>
+        <MudTd DataLabel="Name (AR)" dir="rtl">@c.NameAr</MudTd>
+        <MudTd DataLabel="@L["SortOrder"]">@c.SortOrder</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<Committee> committees = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        committees = await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().CommitteesForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(Committee committee)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<ContentService>().RestoreCommitteeAsync(committee.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}
