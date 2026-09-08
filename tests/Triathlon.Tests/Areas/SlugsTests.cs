@@ -37,5 +37,11 @@ public sealed class SlugsTests
         Assert.DoesNotContain("contact", PublicSite.ReservedSlugs);
         Assert.Contains("rules", PublicSite.CompanionPageSlugs);
         Assert.Contains("home", PublicSite.CompanionPageSlugs);
+        Assert.Contains("training", PublicSite.CompanionPageSlugs);
+
+        // governance and statistics stay reserved (they are still dedicated public routes above),
+        // but neither is a companion slug: no public page renders a CMS page's blocks under either.
+        Assert.DoesNotContain("governance", PublicSite.CompanionPageSlugs);
+        Assert.DoesNotContain("statistics", PublicSite.CompanionPageSlugs);
     }
 }

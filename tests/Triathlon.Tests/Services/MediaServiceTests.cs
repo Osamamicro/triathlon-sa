@@ -67,10 +67,27 @@ public sealed class MediaServiceTests(WebAppFixture app)
         await using var png = Fixtures.Png(400, 300);
         var asset = await media.UploadAsync(png, "list-test.png", FileKind.Image, null, null, CancellationToken.None);
 
-        var page = await media.ListAsync(FileKind.Image, 0, 10, CancellationToken.None);
+        var page = await media.ListAsync(FileKind.Image, false, 0, 10, CancellationToken.None);
 
         Assert.Equal(asset.Id, page.Items[0].Id);
         Assert.Equal(1, page.Page);
         Assert.Equal(10, page.PageSize);
+    }
+
+    [Fact]
+    public async Task DeletedOnly_lists_a_deleted_asset_and_excludes_it_from_the_live_listing()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var media = scope.ServiceProvider.GetRequiredService<MediaService>();
+        await using var png = Fixtures.Png(200, 200);
+        var asset = await media.UploadAsync(png, "trash-test.png", FileKind.Image, null, null, CancellationToken.None);
+
+        await media.DeleteAsync(asset.Id, CancellationToken.None);
+
+        var live = await media.ListAsync(FileKind.Image, false, 0, 50, CancellationToken.None);
+        Assert.DoesNotContain(live.Items, a => a.Id == asset.Id);
+
+        var trash = await media.ListAsync(FileKind.Image, true, 0, 50, CancellationToken.None);
+        Assert.Contains(trash.Items, a => a.Id == asset.Id);
     }
 }

@@ -11,7 +11,7 @@ public static class SeedClubs
 {
     public static async Task RunAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Clubs.AnyAsync(ct)) return;
+        if (await db.Clubs.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         Club C((string En, string Ar) name, (string En, string Ar) city, int sortOrder) => new()
         {

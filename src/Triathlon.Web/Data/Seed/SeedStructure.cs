@@ -44,7 +44,7 @@ public static class SeedStructure
 
         async Task SeedIfMissing(string key, string valueEn, string valueAr)
         {
-            if (await db.SiteSettings.AnyAsync(s => s.Key == key, ct)) return;
+            if (await db.SiteSettings.IgnoreQueryFilters().AnyAsync(s => s.Key == key, ct)) return;
             db.SiteSettings.Add(new SiteSetting { Key = key, ValueEn = valueEn, ValueAr = valueAr });
             added = true;
         }
@@ -77,7 +77,7 @@ public static class SeedStructure
 
         async Task SeedIfMissing(Kpi kpi)
         {
-            if (await db.Kpis.AnyAsync(k => k.Key == kpi.Key, ct)) return;
+            if (await db.Kpis.IgnoreQueryFilters().AnyAsync(k => k.Key == kpi.Key, ct)) return;
             db.Kpis.Add(kpi);
             added = true;
         }

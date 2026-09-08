@@ -12,7 +12,7 @@ public static class SeedEvents
 {
     public static async Task RunAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Cities.AnyAsync(ct)) return;
+        if (await db.Cities.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         var cities = new Dictionary<string, City>
         {

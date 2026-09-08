@@ -56,14 +56,15 @@ public sealed class MediaService(AppDbContext db, IFileStore store, ContentCommi
         return asset;
     }
 
-    public async Task<PagedResult<MediaAsset>> ListAsync(FileKind? kind, int skip, int take, CancellationToken ct)
+    public async Task<PagedResult<MediaAsset>> ListAsync(FileKind? kind, bool deletedOnly, int skip, int take, CancellationToken ct)
     {
         // Mirror PageQuery's clamp (Domain/Common/PagedResult.cs): a caller-supplied skip/take must
         // never turn into an unbounded or negative query.
         take = Math.Clamp(take, 1, 100);
         skip = Math.Max(skip, 0);
 
-        var q = db.MediaAssets.AsNoTracking().OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id).AsQueryable();
+        var q = (deletedOnly ? db.MediaAssets.IgnoreQueryFilters().Where(a => a.DeletedAt != null) : db.MediaAssets)
+            .AsNoTracking().OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id).AsQueryable();
         if (kind is { } value)
         {
             q = q.Where(a => a.Kind == value);

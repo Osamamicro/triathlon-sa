@@ -1,3 +1,4 @@
+using Triathlon.Web.Domain.Content;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Services;
 
@@ -26,5 +27,27 @@ public sealed class AuditTests
         Assert.False(snap.ContainsKey("CategoryList"));
         Assert.False(snap.ContainsKey("CreatedBy"));
         Assert.False(snap.ContainsKey("Id"));
+
+        // A child collection of audited entities contributes a count and a content hash instead of
+        // being dropped outright, so a change inside the children still moves the snapshot.
+        Assert.Equal(1, snap["GalleryCount"]);
+        Assert.IsType<string>(snap["GalleryHash"]);
+    }
+
+    [Fact]
+    public void Two_pages_differing_only_in_a_block_body_produce_different_BlocksHash()
+    {
+        Page Build(string body) => new()
+        {
+            Slug = "s", TitleEn = "T", TitleAr = "ت",
+            Blocks = { new PageBlock { SortOrder = 1, Type = BlockType.RichText, BodyEn = body, BodyAr = "نص" } },
+        };
+
+        var before = Audit.Snapshot(Build("<p>Before</p>"));
+        var after = Audit.Snapshot(Build("<p>After</p>"));
+
+        Assert.Equal(1, before["BlocksCount"]);
+        Assert.Equal(before["BlocksCount"], after["BlocksCount"]);
+        Assert.NotEqual(before["BlocksHash"], after["BlocksHash"]);
     }
 }

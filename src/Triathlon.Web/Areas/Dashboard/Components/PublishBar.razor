@@ -1,5 +1,6 @@
 @* Every content editor's bottom bar: status, preview, save/publish, delete. Sticky at the foot of
    the viewport (see .stf-publish-bar in dashboard.css) so it stays reachable on a long form. *@
+@using System.Globalization
 @inject IStringLocalizer<DashboardStrings> L
 
 <MudPaper Class="stf-publish-bar pa-3" Elevation="4" Square="true">
@@ -11,7 +12,7 @@
         @if (LastUpdatedAt is { } at)
         {
             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                @L["LastUpdated"]: @at.ToString("yyyy-MM-dd HH:mm")
+                @L["LastUpdated"]: @at.ToOffset(EventsService.RiyadhOffset).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
                 @if (!string.IsNullOrEmpty(LastUpdatedBy))
                 {
                     @($" — {LastUpdatedBy}")

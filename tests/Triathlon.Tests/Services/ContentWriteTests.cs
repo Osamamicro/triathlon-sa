@@ -31,31 +31,39 @@ public sealed class ContentWriteTests(WebAppFixture app)
             id = (await content.CreatePageAsync(NewPage(slug, "<p>Hello<script>alert(1)</script></p>"), CancellationToken.None)).Id;
         }
 
-        var first = await client.GetStringAsync("/en/" + slug);
-        Assert.Contains("<p>Hello</p>", first, StringComparison.Ordinal);
-        // Not a blanket "no <script> anywhere on the page" check: the layout itself carries the
-        // site's own theme/site scripts on every response. What must be gone is the editor's payload.
-        Assert.DoesNotContain("<script>alert", first, StringComparison.Ordinal);
-        Assert.True((await client.GetAsync("/en/" + slug)).Headers.Contains("Age"));
-
-        await using (var scope = app.Services.CreateAsyncScope())
+        try
         {
-            var content = scope.ServiceProvider.GetRequiredService<ContentService>();
-            var input = NewPage(slug, "<p>Changed</p>") with { TitleEn = "Renamed" };
-            await content.UpdatePageAsync(id, input, CancellationToken.None);
+            var first = await client.GetStringAsync("/en/" + slug);
+            Assert.Contains("<p>Hello</p>", first, StringComparison.Ordinal);
+            // Not a blanket "no <script> anywhere on the page" check: the layout itself carries the
+            // site's own theme/site scripts on every response. What must be gone is the editor's payload.
+            Assert.DoesNotContain("<script>alert", first, StringComparison.Ordinal);
+            Assert.True((await client.GetAsync("/en/" + slug)).Headers.Contains("Age"));
+
+            await using (var scope = app.Services.CreateAsyncScope())
+            {
+                var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+                var input = NewPage(slug, "<p>Changed</p>") with { TitleEn = "Renamed" };
+                await content.UpdatePageAsync(id, input, CancellationToken.None);
+            }
+
+            using var after = await client.GetAsync("/en/" + slug);
+            Assert.False(after.Headers.Contains("Age"), "page:{slug} was not evicted by the save");
+            Assert.Contains("<p>Changed</p>", await after.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+            await using (var scope = app.Services.CreateAsyncScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var log = await db.ActivityLogs.Where(l => l.Entity == "Page" && l.EntityId == id.ToString()).OrderBy(l => l.At).ToListAsync();
+                Assert.Equal(["create", "update"], log.Select(l => l.Action));
+                Assert.Contains("\"titleEn\":\"Test page\"", log[1].Diff, StringComparison.Ordinal);
+                Assert.Contains("\"titleEn\":\"Renamed\"", log[1].Diff, StringComparison.Ordinal);
+            }
         }
-
-        using var after = await client.GetAsync("/en/" + slug);
-        Assert.False(after.Headers.Contains("Age"), "page:{slug} was not evicted by the save");
-        Assert.Contains("<p>Changed</p>", await after.Content.ReadAsStringAsync(), StringComparison.Ordinal);
-
-        await using (var scope = app.Services.CreateAsyncScope())
+        finally
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var log = await db.ActivityLogs.Where(l => l.Entity == "Page" && l.EntityId == id.ToString()).OrderBy(l => l.At).ToListAsync();
-            Assert.Equal(["create", "update"], log.Select(l => l.Action));
-            Assert.Contains("\"titleEn\":\"Test page\"", log[1].Diff, StringComparison.Ordinal);
-            Assert.Contains("\"titleEn\":\"Renamed\"", log[1].Diff, StringComparison.Ordinal);
+            await using var scope = app.Services.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<ContentService>().DeletePageAsync(id, CancellationToken.None);
         }
     }
 
@@ -81,26 +89,34 @@ public sealed class ContentWriteTests(WebAppFixture app)
 
         var page = await content.CreatePageAsync(NewPage(slug), CancellationToken.None);
         var otherPage = await content.CreatePageAsync(NewPage(otherSlug), CancellationToken.None);
-        var existingBlockId = page.Blocks.Single().Id;
-
-        var duplicateBlocks = new BlockInput[]
+        try
         {
-            new(existingBlockId, 1, BlockType.RichText, null, null, null, null, "One", "واحد", "<p>One</p>", "<p>واحد</p>", [], null, null, null, null, null, null),
-            new(existingBlockId, 2, BlockType.RichText, null, null, null, null, "Two", "اثنان", "<p>Two</p>", "<p>اثنان</p>", [], null, null, null, null, null, null),
-        };
-        var badInput = NewPage(slug) with { TitleEn = "Should not stick", Blocks = duplicateBlocks };
+            var existingBlockId = page.Blocks.Single().Id;
 
-        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.UpdatePageAsync(page.Id, badInput, CancellationToken.None));
-        Assert.Equal("Blocks", ex.Field);
+            var duplicateBlocks = new BlockInput[]
+            {
+                new(existingBlockId, 1, BlockType.RichText, null, null, null, null, "One", "واحد", "<p>One</p>", "<p>واحد</p>", [], null, null, null, null, null, null),
+                new(existingBlockId, 2, BlockType.RichText, null, null, null, null, "Two", "اثنان", "<p>Two</p>", "<p>اثنان</p>", [], null, null, null, null, null, null),
+            };
+            var badInput = NewPage(slug) with { TitleEn = "Should not stick", Blocks = duplicateBlocks };
 
-        // A following, unrelated save on a different page must not flush the first page's
-        // half-applied assignment — the two-pass shape means nothing was ever assigned to it.
-        await content.SetPagePublishedAsync(otherPage.Id, false, CancellationToken.None);
+            var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.UpdatePageAsync(page.Id, badInput, CancellationToken.None));
+            Assert.Equal("Blocks", ex.Field);
 
-        await using var freshScope = app.Services.CreateAsyncScope();
-        var db = freshScope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var reread = await db.Pages.AsNoTracking().SingleAsync(p => p.Id == page.Id);
-        Assert.Equal("Test page", reread.TitleEn);
+            // A following, unrelated save on a different page must not flush the first page's
+            // half-applied assignment — the two-pass shape means nothing was ever assigned to it.
+            await content.SetPagePublishedAsync(otherPage.Id, false, CancellationToken.None);
+
+            await using var freshScope = app.Services.CreateAsyncScope();
+            var db = freshScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var reread = await db.Pages.AsNoTracking().SingleAsync(p => p.Id == page.Id);
+            Assert.Equal("Test page", reread.TitleEn);
+        }
+        finally
+        {
+            await content.DeletePageAsync(page.Id, CancellationToken.None);
+            await content.DeletePageAsync(otherPage.Id, CancellationToken.None);
+        }
     }
 
     [Fact]
@@ -251,5 +267,22 @@ public sealed class ContentWriteTests(WebAppFixture app)
             await using var scope = app.Services.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<NewsService>().DeleteAsync(id, CancellationToken.None);
         }
+    }
+
+    [Fact]
+    public async Task Saving_a_news_post_with_a_stale_id_is_refused_not_recreated()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var news = scope.ServiceProvider.GetRequiredService<NewsService>();
+        var slug = "news-" + Guid.NewGuid().ToString("N")[..8];
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => news.SaveAsync(
+            new NewsPostInput(Guid.NewGuid(), slug, "Ghost", "شبح", "s", "م", "<p>Body</p>", "<p>نص</p>", null, new DateOnly(2026, 9, 1), true),
+            CancellationToken.None));
+        Assert.Equal("Id", ex.Field);
+        Assert.Equal("Validation_NotFound", ex.Key);
+
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Null(await db.NewsPosts.SingleOrDefaultAsync(p => p.Slug == slug));
     }
 }

@@ -48,11 +48,13 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
 
         // Validated into locals before anything is touched: a refused save must not leave a half-set
         // post or an unaudited Added row behind in the scope's DbContext for the next save to flush.
-        var bodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_BodyEmpty");
-        var bodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_BodyEmpty");
+        var bodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_Required");
+        var bodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_Required");
         var heroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
 
-        var post = input.Id is { } id ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) : null;
+        var post = input.Id is { } id
+            ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
+            : null;
         var before = post is null ? null : Audit.Snapshot(post);
         if (post is null)
         {

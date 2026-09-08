@@ -53,6 +53,17 @@
     private bool enTouched;
     private bool arTouched;
 
+    private bool rendered;
+
+    /// <summary>
+    /// The value each side last reported (a visitor's edit, via <see cref="EditorBridge"/>) or was
+    /// last pushed (via <c>stfEditor.setHtml</c>). <see cref="OnParametersSetAsync"/> compares the
+    /// incoming <see cref="En"/>/<see cref="Ar"/> parameter against these to tell "the parent loaded
+    /// new content" from "the parent is just echoing the edit this component itself reported".
+    /// </summary>
+    private string? enLastSynced;
+    private string? arLastSynced;
+
     /// <summary>Whether both sides carry non-empty content, when this field is required.</summary>
     public bool IsValid => !Required || (!IsBlank(En) && !IsBlank(Ar));
 
@@ -66,6 +77,7 @@
         var enBridge = new EditorBridge(async html =>
         {
             En = html;
+            enLastSynced = html;
             enTouched = true;
             await EnChanged.InvokeAsync(html);
             StateHasChanged();
@@ -73,6 +85,7 @@
         var arBridge = new EditorBridge(async html =>
         {
             Ar = html;
+            arLastSynced = html;
             arTouched = true;
             await ArChanged.InvokeAsync(html);
             StateHasChanged();
@@ -81,8 +94,41 @@
         enBridgeRef = DotNetObjectReference.Create(enBridge);
         arBridgeRef = DotNetObjectReference.Create(arBridge);
 
+        enLastSynced = En;
+        arLastSynced = Ar;
+
         await JS.InvokeVoidAsync("stfEditor.create", enElementId, En ?? "", false, enBridgeRef);
         await JS.InvokeVoidAsync("stfEditor.create", arElementId, Ar ?? "", true, arBridgeRef);
+
+        rendered = true;
+    }
+
+    /// <summary>
+    /// Keeps a live Quill instance in sync with content the component didn't hear about from the
+    /// visitor typing — the page's own data finishing its load after the editor was already created,
+    /// or the parent resetting the form after a save. Runs only once the editor exists
+    /// (<see cref="rendered"/>), and only pushes a side whose value actually moved since it was last
+    /// reported or pushed, so an edit this component itself just reported up doesn't get echoed
+    /// straight back down into the editor it came from.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!rendered)
+        {
+            return;
+        }
+
+        if (!string.Equals(En, enLastSynced, StringComparison.Ordinal))
+        {
+            enLastSynced = En;
+            await JS.InvokeVoidAsync("stfEditor.setHtml", enElementId, En ?? "");
+        }
+
+        if (!string.Equals(Ar, arLastSynced, StringComparison.Ordinal))
+        {
+            arLastSynced = Ar;
+            await JS.InvokeVoidAsync("stfEditor.setHtml", arElementId, Ar ?? "");
+        }
     }
 
     /// <summary>A tag is not empty content — Quill's own placeholder markup is <c>&lt;p&gt;&lt;br&gt;&lt;/p&gt;</c>.</summary>

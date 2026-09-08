@@ -12,7 +12,7 @@ public static class SeedNews
 {
     public static async Task RunAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.NewsPosts.AnyAsync(ct)) return;
+        if (await db.NewsPosts.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         db.NewsPosts.AddRange(
             new NewsPost

@@ -42,12 +42,13 @@ public static class PublicSite
 
     /// <summary>
     /// Slugs a CMS page may carry even though the segment is reserved: a dedicated page renders
-    /// these pages' blocks after its own aggregate (rules, training, governance, statistics) or
-    /// as the home page's copy.
+    /// these pages' blocks after its own aggregate (rules, training) or as the home page's copy.
+    /// <c>governance</c> and <c>statistics</c> are deliberately absent — no public page renders
+    /// either slug's blocks, so a page saved under one of those slugs would be reserved for nothing.
     /// </summary>
     public static readonly IReadOnlySet<string> CompanionPageSlugs = new HashSet<string>(StringComparer.Ordinal)
     {
-        "home", "rules", "training", "governance", "statistics",
+        "home", "rules", "training",
     };
 
     /// <summary>

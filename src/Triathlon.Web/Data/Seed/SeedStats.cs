@@ -61,7 +61,7 @@ public static class SeedStats
 
     private static async Task RegionsAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.RegionStats.AnyAsync(ct)) return;
+        if (await db.RegionStats.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         RegionStat R(string key, (string En, string Ar) name, int athletes, int sortOrder) => new()
         {
@@ -81,7 +81,7 @@ public static class SeedStats
 
     private static async Task GrowthAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.GrowthPoints.AnyAsync(ct)) return;
+        if (await db.GrowthPoints.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         db.GrowthPoints.AddRange(
             new GrowthPoint { Year = 2023, Athletes = 310 },

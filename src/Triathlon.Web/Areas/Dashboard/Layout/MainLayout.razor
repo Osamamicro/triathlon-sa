@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<DashboardStrings> L
+@inject NavigationManager Nav
 
 <MudRTLProvider RightToLeft="@IsRtl">
 <MudThemeProvider Theme="@DashboardTheme.Theme" />
@@ -76,6 +77,6 @@
 @code {
     private bool drawerOpen = true;
     private static bool IsRtl => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
-    private string CultureLink => $"/dashboard/culture/{(IsRtl ? "en" : "ar")}?returnUrl={Uri.EscapeDataString("/dashboard")}";
+    private string CultureLink => $"/dashboard/culture/{(IsRtl ? "en" : "ar")}?returnUrl={Uri.EscapeDataString("/" + Nav.ToBaseRelativePath(Nav.Uri))}";
     private void ToggleDrawer() => drawerOpen = !drawerOpen;
 }

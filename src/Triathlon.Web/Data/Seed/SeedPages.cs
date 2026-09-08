@@ -25,7 +25,7 @@ public static class SeedPages
 
     internal static async Task NavigationAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.NavItems.AnyAsync(ct)) return;
+        if (await db.NavItems.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         // Each location gets its own counter, so FooterCompete and FooterInvolved both start at 1
         // rather than continuing the Header count.
@@ -75,7 +75,7 @@ public static class SeedPages
 
     internal static async Task CommitteesAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Committees.AnyAsync(ct)) return;
+        if (await db.Committees.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         var order = 0;
         Committee C((string En, string Ar) kind, (string En, string Ar) name, (string En, string Ar) description) => new()
@@ -112,7 +112,7 @@ public static class SeedPages
 
         async Task SeedIfMissing(string slug, Func<Page> factory)
         {
-            if (await db.Pages.AnyAsync(p => p.Slug == slug, ct)) return;
+            if (await db.Pages.IgnoreQueryFilters().AnyAsync(p => p.Slug == slug, ct)) return;
             db.Pages.Add(factory());
             added = true;
         }

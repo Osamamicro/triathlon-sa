@@ -87,7 +87,7 @@
         loading = true;
         try
         {
-            var result = await MediaService.ListAsync(Kind, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
+            var result = await MediaService.ListAsync(Kind, false, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
             items = [.. result.Items];
             total = result.Total;
         }

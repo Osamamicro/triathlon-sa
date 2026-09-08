@@ -12,7 +12,7 @@ public static class SeedDocuments
 {
     public static async Task RunAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Documents.AnyAsync(ct)) return;
+        if (await db.Documents.IgnoreQueryFilters().AnyAsync(ct)) return;
 
         Document D(string id, DocumentCategory category, int year, string sizeMb, (string En, string Ar) title, int sortOrder) => new()
         {

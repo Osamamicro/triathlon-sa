@@ -97,13 +97,18 @@ public sealed class StatsWriteTests(WebAppFixture app)
             var stats = scope.ServiceProvider.GetRequiredService<StatsService>();
             var regions = await stats.RegionsForEditAsync(CancellationToken.None);
             removed = regions[^1];
-
-            var withoutRemoved = regions.Where(r => r.Id != removed.Id).Select(ToInput).ToList();
-            await stats.SaveRegionsAsync(withoutRemoved, CancellationToken.None);
         }
 
         try
         {
+            await using (var removeScope = app.Services.CreateAsyncScope())
+            {
+                var removeStats = removeScope.ServiceProvider.GetRequiredService<StatsService>();
+                var regions = await removeStats.RegionsForEditAsync(CancellationToken.None);
+                var withoutRemoved = regions.Where(r => r.Id != removed.Id).Select(ToInput).ToList();
+                await removeStats.SaveRegionsAsync(withoutRemoved, CancellationToken.None);
+            }
+
             await using var scope = app.Services.CreateAsyncScope();
             var stats = scope.ServiceProvider.GetRequiredService<StatsService>();
             var remaining = await stats.RegionsForEditAsync(CancellationToken.None);
@@ -206,18 +211,26 @@ public sealed class StatsWriteTests(WebAppFixture app)
         db.Athletes.Add(athlete);
         await db.SaveChangesAsync(CancellationToken.None);
 
-        await crm.DeleteAthleteAsync(athlete.Id, CancellationToken.None);
+        try
+        {
+            await crm.DeleteAthleteAsync(athlete.Id, CancellationToken.None);
 
-        var deleted = await crm.AthletesForEditAsync(null, deletedOnly: true, CancellationToken.None);
-        Assert.Contains(deleted, a => a.Id == athlete.Id);
+            var deleted = await crm.AthletesForEditAsync(null, deletedOnly: true, CancellationToken.None);
+            Assert.Contains(deleted, a => a.Id == athlete.Id);
 
-        await crm.RestoreAthleteAsync(athlete.Id, CancellationToken.None);
+            await crm.RestoreAthleteAsync(athlete.Id, CancellationToken.None);
 
-        var stillDeleted = await crm.AthletesForEditAsync(null, deletedOnly: true, CancellationToken.None);
-        Assert.DoesNotContain(stillDeleted, a => a.Id == athlete.Id);
+            var stillDeleted = await crm.AthletesForEditAsync(null, deletedOnly: true, CancellationToken.None);
+            Assert.DoesNotContain(stillDeleted, a => a.Id == athlete.Id);
 
-        var live = await crm.AthletesForEditAsync(null, deletedOnly: false, CancellationToken.None);
-        Assert.Contains(live, a => a.Id == athlete.Id);
+            var live = await crm.AthletesForEditAsync(null, deletedOnly: false, CancellationToken.None);
+            Assert.Contains(live, a => a.Id == athlete.Id);
+        }
+        finally
+        {
+            // Leave it soft-deleted rather than a live row cluttering the shared test container.
+            await crm.DeleteAthleteAsync(athlete.Id, CancellationToken.None);
+        }
     }
 
     private static KpiInput ToInput(Kpi kpi) => new(
