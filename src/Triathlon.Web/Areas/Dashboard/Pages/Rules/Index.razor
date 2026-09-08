@@ -24,7 +24,7 @@
         <MudTd DataLabel="Title (EN)">@rule.TitleEn</MudTd>
         <MudTd DataLabel="Title (AR)" dir="rtl">@rule.TitleAr</MudTd>
         <MudTd DataLabel="@L["Slug"]">@rule.Slug</MudTd>
-        <MudTd DataLabel="@L["Audience"]">@rule.Audience</MudTd>
+        <MudTd DataLabel="@L["Audience"]">@AudienceLabel(rule.Audience)</MudTd>
         <MudTd DataLabel="@L["SortOrder"]">@rule.SortOrder</MudTd>
     </Columns>
 </EntityTable>
@@ -47,6 +47,16 @@
     {
         showDeleted = value;
         await LoadAsync();
+    }
+
+    private string AudienceLabel(RuleAudience audience)
+    {
+        var parts = new List<string>();
+        if (audience.HasFlag(RuleAudience.Athletes)) parts.Add(L["Athletes"]);
+        if (audience.HasFlag(RuleAudience.Organizers)) parts.Add(L["Organizers"]);
+        if (audience.HasFlag(RuleAudience.Officials)) parts.Add(L["Officials"]);
+        if (audience.HasFlag(RuleAudience.Coaches)) parts.Add(L["Coaches"]);
+        return parts.Count == 0 ? L["NoAudience"] : string.Join(", ", parts);
     }
 
     private async Task RestoreAsync(RuleOrGuide rule)

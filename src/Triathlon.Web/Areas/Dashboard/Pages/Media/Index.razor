@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Policies.Content)]
 @using Microsoft.JSInterop
 @using Triathlon.Web.Areas.Public
-@inject MediaService MediaService
+@inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
 @inject IDialogService Dialogs
@@ -106,9 +106,18 @@ else
         loading = true;
         try
         {
-            var result = await MediaService.ListAsync(filter, showDeleted, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
+            var result = await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().ListAsync(filter, showDeleted, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None));
             items = [.. result.Items];
             total = result.Total;
+
+            var clamped = Math.Max(1, Math.Min(pageNumber, pageCount));
+            if (clamped != pageNumber)
+            {
+                pageNumber = clamped;
+                result = await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().ListAsync(filter, showDeleted, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None));
+                items = [.. result.Items];
+                total = result.Total;
+            }
         }
         finally
         {
@@ -142,7 +151,9 @@ else
     {
         try
         {
-            await MediaService.UpdateAltAsync(asset.Id, altEn, altAr, CancellationToken.None);
+            await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().UpdateAltAsync(asset.Id, altEn, altAr, CancellationToken.None));
+            asset.AltEn = altEn;
+            asset.AltAr = altAr;
             Snackbar.Add(L["Saved"], Severity.Success);
         }
         catch (ContentValidationException ex)
@@ -167,7 +178,7 @@ else
 
         try
         {
-            await MediaService.DeleteAsync(asset.Id, CancellationToken.None);
+            await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().DeleteAsync(asset.Id, CancellationToken.None));
             Snackbar.Add(L["Saved"], Severity.Success);
             await LoadAsync();
         }
@@ -182,7 +193,7 @@ else
     {
         try
         {
-            await MediaService.RestoreAsync(asset.Id, CancellationToken.None);
+            await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().RestoreAsync(asset.Id, CancellationToken.None));
             Snackbar.Add(L["Saved"], Severity.Success);
             await LoadAsync();
         }

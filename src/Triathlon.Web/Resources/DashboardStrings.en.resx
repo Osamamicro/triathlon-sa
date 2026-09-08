@@ -782,6 +782,10 @@
     <value>Audience</value>
     <comment>Heading above a rule's audience checkboxes.</comment>
   </data>
+  <data name="NoAudience" xml:space="preserve">
+    <value>No audience set</value>
+    <comment>Rules list Audience column placeholder when no RuleAudience flag is set.</comment>
+  </data>
   <data name="Organizers" xml:space="preserve">
     <value>Organizers</value>
     <comment>RuleAudience.Organizers checkbox label.</comment>
