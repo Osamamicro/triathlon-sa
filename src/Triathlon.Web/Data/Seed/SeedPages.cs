@@ -22,6 +22,7 @@ public static class SeedPages
         await NavigationAsync(db, ct);
         await CommitteesAsync(db, ct);
         await ContentPagesAsync(db, ct);
+        await SettingsAsync(db, ct);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -127,6 +128,38 @@ public static class SeedPages
         await SeedIfMissing("rules", Rules);
         await SeedIfMissing("training", Training);
         await SeedIfMissing("home", Home);
+
+        if (added)
+        {
+            await db.SaveChangesAsync(ct);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Settings
+    // ---------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Guarded per key, like <see cref="ContentPagesAsync"/>: a database seeded by an earlier task
+    /// still picks up a setting added later. Task 3.1.F moves this into <c>SeedStructure</c>.
+    /// </summary>
+    private static async Task SettingsAsync(AppDbContext db, CancellationToken ct)
+    {
+        var added = false;
+
+        async Task SeedIfMissing(string key, string valueEn, string valueAr)
+        {
+            if (await db.SiteSettings.AnyAsync(s => s.Key == key, ct)) return;
+            db.SiteSettings.Add(new SiteSetting { Key = key, ValueEn = valueEn, ValueAr = valueAr });
+            added = true;
+        }
+
+        await SeedIfMissing(SettingKeys.ContactEmail, "info@triathlon.sa", "info@triathlon.sa");
+        await SeedIfMissing(SettingKeys.ContactWebsite, "https://triathlon.sa", "https://triathlon.sa");
+        await SeedIfMissing(SettingKeys.ContactX, "https://x.com/TriathlonKSA", "https://x.com/TriathlonKSA");
+        await SeedIfMissing(SettingKeys.FooterBlurb,
+            "The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.",
+            "الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.");
 
         if (added)
         {

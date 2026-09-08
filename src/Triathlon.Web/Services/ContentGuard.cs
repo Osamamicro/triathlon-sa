@@ -22,6 +22,14 @@ public sealed class ContentGuard
 
     private static readonly string[] AllowedSchemes = ["http", "https", "mailto", "tel"];
 
+    /// <summary>
+    /// Tags whose text content must never survive removal. <see cref="HtmlSanitizer.KeepChildNodes"/>
+    /// is on so an unwrapped <c>&lt;font&gt;</c> or similar keeps its visible text, but the same
+    /// behaviour would otherwise let a stripped <c>&lt;script&gt;</c>/<c>&lt;style&gt;</c> tag's raw
+    /// source leak into the page as plain text — the tag is gone, its payload is not.
+    /// </summary>
+    private static readonly string[] ContentRemovedTags = ["script", "style"];
+
     private readonly HtmlSanitizer _sanitizer;
     private readonly string _mediaPrefix;
 
@@ -41,6 +49,13 @@ public sealed class ContentGuard
         _sanitizer.AllowedAtRules.Clear();
         _sanitizer.AllowDataAttributes = false;
         _sanitizer.KeepChildNodes = true;
+        _sanitizer.RemovingTag += (_, e) =>
+        {
+            if (e.Reason == RemoveReason.NotAllowedTag && ContentRemovedTags.Contains(e.Tag.TagName, StringComparer.OrdinalIgnoreCase))
+            {
+                e.Tag.TextContent = "";
+            }
+        };
     }
 
     /// <summary>Editor HTML reduced to the allow-list; null when there is nothing left worth storing.</summary>

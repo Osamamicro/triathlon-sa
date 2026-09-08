@@ -130,4 +130,40 @@
     <value>'{0}' ليس ملفاً ضمن {1}/ أو {2}/.</value>
     <comment>Shown when a saved file path is not a site-relative /docs or media path.</comment>
   </data>
+  <data name="Validation_Required" xml:space="preserve">
+    <value>هذا الحقل مطلوب.</value>
+    <comment>Shown when a required dashboard field was left blank.</comment>
+  </data>
+  <data name="Validation_SlugFormat" xml:space="preserve">
+    <value>استخدم أحرفاً لاتينية صغيرة وأرقاماً وشرطات مفردة.</value>
+    <comment>Shown when a slug fails the site's slug format rule.</comment>
+  </data>
+  <data name="Validation_SlugReserved" xml:space="preserve">
+    <value>'{0}' محجوز لمسارات الموقع نفسه.</value>
+    <comment>Shown when a page slug collides with a reserved route segment.</comment>
+  </data>
+  <data name="Validation_SlugTaken" xml:space="preserve">
+    <value>'{0}' مستخدم بالفعل.</value>
+    <comment>Shown when a slug is already used by another page or post.</comment>
+  </data>
+  <data name="Validation_NotFound" xml:space="preserve">
+    <value>العنصر لم يعد موجوداً.</value>
+    <comment>Shown when a save targets an id that no longer exists.</comment>
+  </data>
+  <data name="Validation_LabelBothLanguages" xml:space="preserve">
+    <value>كل رابط يحتاج إلى تسمية بالإنجليزية وأخرى بالعربية.</value>
+    <comment>Shown when a navigation link is missing one of its two labels.</comment>
+  </data>
+  <data name="Validation_Href" xml:space="preserve">
+    <value>'{0}' ليس رابطاً يمكن للموقع عرضه.</value>
+    <comment>Shown when a navigation link's href is not a site path, fragment, mailto/tel, or absolute http(s) URL.</comment>
+  </data>
+  <data name="Validation_BodyEmpty" xml:space="preserve">
+    <value>النص فارغ.</value>
+    <comment>Shown when a news post's body sanitises down to nothing.</comment>
+  </data>
+  <data name="Validation_SettingKey" xml:space="preserve">
+    <value>'{0}' ليس إعداداً يقرأه الموقع.</value>
+    <comment>Shown when a settings save includes a key the layout does not read.</comment>
+  </data>
 </root>

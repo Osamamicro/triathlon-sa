@@ -9,6 +9,8 @@
     // here because it is the federation's own details rather than site navigation.
     var compete = await Content.NavigationAsync(NavLocation.FooterCompete, Context.RequestAborted);
     var involved = await Content.NavigationAsync(NavLocation.FooterInvolved, Context.RequestAborted);
+    var settings = await Content.SettingsAsync(Context.RequestAborted);
+    string Setting(string key) => settings.TryGetValue(key, out var s) ? Bi(s.ValueEn, s.ValueAr) : "";
 }
 <footer class="site-footer">
     <div class="footer-tri"></div>
@@ -20,7 +22,7 @@
                     <span class="brand-name">@Bi("Saudi Triathlon Federation", "الاتحاد السعودي للترايثلون")</span>
                 </div>
                 <p class="muted" style="font-size:.9rem;max-width:34ch">
-                    @Bi("The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.", "الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.")
+                    @Setting(SettingKeys.FooterBlurb)
                 </p>
             </div>
             <div>
@@ -44,9 +46,23 @@
             <div>
                 <h2>@Bi("Contact", "تواصل معنا")</h2>
                 <ul>
-                    <li><a href="https://triathlon.sa" rel="noopener">triathlon.sa</a></li>
-                    <li><a href="mailto:info@@triathlon.sa">info@@triathlon.sa</a></li>
-                    <li><a href="https://x.com/TriathlonKSA" rel="noopener">@@TriathlonKSA</a></li>
+                    @{
+                        var website = Setting(SettingKeys.ContactWebsite);
+                        var email = Setting(SettingKeys.ContactEmail);
+                        var x = Setting(SettingKeys.ContactX);
+                    }
+                    @if (website.Length > 0)
+                    {
+                        <li><a href="@website" rel="noopener">@website.Split("://").Last()</a></li>
+                    }
+                    @if (email.Length > 0)
+                    {
+                        <li><a href="mailto:@email">@email</a></li>
+                    }
+                    @if (x.Length > 0)
+                    {
+                        <li><a href="@x" rel="noopener">@("@" + x.Split('/').Last())</a></li>
+                    }
                 </ul>
             </div>
         </div>

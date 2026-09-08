@@ -41,6 +41,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<NavItem> NavItems => Set<NavItem>();
     public DbSet<Committee> Committees => Set<Committee>();
     public DbSet<NewsPost> NewsPosts => Set<NewsPost>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Athlete> Athletes => Set<Athlete>();

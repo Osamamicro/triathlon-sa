@@ -34,6 +34,11 @@ public sealed class ActivityLogger(
     private static readonly JsonSerializerOptions DiffOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        // Web defaults camel-case POCO property names but leave a Dictionary's own keys alone; a
+        // before/after snapshot from Audit.Snapshot is a Dictionary<string, object?> keyed by the
+        // entity's (Pascal-cased) reflection property names, so the policy needs saying twice for
+        // the diff to read like the rest of the API instead of mixing "titleEn" and "TitleEn".
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
     };
 
     public async Task LogAsync(

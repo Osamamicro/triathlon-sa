@@ -130,4 +130,40 @@
     <value>'{0}' is not a file under {1}/ or {2}/.</value>
     <comment>Shown when a saved file path is not a site-relative /docs or media path.</comment>
   </data>
+  <data name="Validation_Required" xml:space="preserve">
+    <value>This field is required.</value>
+    <comment>Shown when a required dashboard field was left blank.</comment>
+  </data>
+  <data name="Validation_SlugFormat" xml:space="preserve">
+    <value>Use lower-case letters, digits and single hyphens.</value>
+    <comment>Shown when a slug fails the site's slug format rule.</comment>
+  </data>
+  <data name="Validation_SlugReserved" xml:space="preserve">
+    <value>'{0}' is reserved by the site's own routes.</value>
+    <comment>Shown when a page slug collides with a reserved route segment.</comment>
+  </data>
+  <data name="Validation_SlugTaken" xml:space="preserve">
+    <value>'{0}' is already in use.</value>
+    <comment>Shown when a slug is already used by another page or post.</comment>
+  </data>
+  <data name="Validation_NotFound" xml:space="preserve">
+    <value>The item no longer exists.</value>
+    <comment>Shown when a save targets an id that no longer exists.</comment>
+  </data>
+  <data name="Validation_LabelBothLanguages" xml:space="preserve">
+    <value>Every link needs an English and an Arabic label.</value>
+    <comment>Shown when a navigation link is missing one of its two labels.</comment>
+  </data>
+  <data name="Validation_Href" xml:space="preserve">
+    <value>'{0}' is not a link the site can render.</value>
+    <comment>Shown when a navigation link's href is not a site path, fragment, mailto/tel, or absolute http(s) URL.</comment>
+  </data>
+  <data name="Validation_BodyEmpty" xml:space="preserve">
+    <value>The body is empty.</value>
+    <comment>Shown when a news post's body sanitises down to nothing.</comment>
+  </data>
+  <data name="Validation_SettingKey" xml:space="preserve">
+    <value>'{0}' is not a setting the site reads.</value>
+    <comment>Shown when a settings save includes a key the layout does not read.</comment>
+  </data>
 </root>
