@@ -133,6 +133,7 @@ public static partial class PublicText
         return href.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
                || href.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
                || href.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase)
+               || href.StartsWith("tel:", StringComparison.OrdinalIgnoreCase)
                || href.StartsWith('#')
             ? href
             : PublicCulture.Url(Culture, href);

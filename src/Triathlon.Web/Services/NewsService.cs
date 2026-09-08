@@ -33,8 +33,8 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
 
     // ------------------------------------------------------------------- write
 
-    public async Task<IReadOnlyList<NewsPost>> AllForEditAsync(bool includeDeleted, CancellationToken ct) =>
-        await (includeDeleted ? db.NewsPosts.IgnoreQueryFilters().Where(p => p.DeletedAt != null) : db.NewsPosts)
+    public async Task<IReadOnlyList<NewsPost>> AllForEditAsync(bool deletedOnly, CancellationToken ct) =>
+        await (deletedOnly ? db.NewsPosts.IgnoreQueryFilters().Where(p => p.DeletedAt != null) : db.NewsPosts)
             .AsNoTracking().OrderByDescending(p => p.PublishedOn).ThenByDescending(p => p.Id).ToListAsync(ct);
 
     public Task<NewsPost?> ForEditAsync(Guid id, CancellationToken ct) => db.NewsPosts.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, ct);
@@ -43,7 +43,7 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
     {
         ArgumentNullException.ThrowIfNull(input);
         if (!Slugs.IsValid(input.Slug)) throw new ContentValidationException("Slug", "Validation_SlugFormat");
-        if (await db.NewsPosts.AnyAsync(p => p.Slug == input.Slug && p.Id != input.Id, ct))
+        if (await db.NewsPosts.IgnoreQueryFilters().AnyAsync(p => p.Slug == input.Slug && p.Id != input.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
 
         var post = input.Id is { } id ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) : null;

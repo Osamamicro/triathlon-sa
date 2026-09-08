@@ -51,15 +51,15 @@
                         var email = Setting(SettingKeys.ContactEmail);
                         var x = Setting(SettingKeys.ContactX);
                     }
-                    @if (website.Length > 0)
+                    @if (PublicText.IsSafeExternalUrl(website))
                     {
                         <li><a href="@website" rel="noopener">@website.Split("://").Last()</a></li>
                     }
-                    @if (email.Length > 0)
+                    @if (email.Length > 0 && email.Contains('@'))
                     {
                         <li><a href="mailto:@email">@email</a></li>
                     }
-                    @if (x.Length > 0)
+                    @if (PublicText.IsSafeExternalUrl(x))
                     {
                         <li><a href="@x" rel="noopener">@("@" + x.Split('/').Last())</a></li>
                     }

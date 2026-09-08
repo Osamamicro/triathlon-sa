@@ -166,4 +166,8 @@
     <value>'{0}' is not a setting the site reads.</value>
     <comment>Shown when a settings save includes a key the layout does not read.</comment>
   </data>
+  <data name="Validation_Email" xml:space="preserve">
+    <value>Enter a valid email address.</value>
+    <comment>Shown when a contact email setting is not a plausible address.</comment>
+  </data>
 </root>

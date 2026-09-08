@@ -55,8 +55,8 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
 
     // ------------------------------------------------------------------ pages
 
-    public async Task<IReadOnlyList<Page>> PagesAsync(bool includeDeleted, CancellationToken ct) =>
-        await (includeDeleted ? db.Pages.IgnoreQueryFilters().Where(p => p.DeletedAt != null) : db.Pages)
+    public async Task<IReadOnlyList<Page>> PagesAsync(bool deletedOnly, CancellationToken ct) =>
+        await (deletedOnly ? db.Pages.IgnoreQueryFilters().Where(p => p.DeletedAt != null) : db.Pages)
             .AsNoTracking().OrderBy(p => p.Slug).ToListAsync(ct);
 
     public Task<Page?> PageForEditAsync(Guid id, CancellationToken ct) =>
@@ -122,7 +122,7 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
             throw new ContentValidationException("Slug", "Validation_SlugFormat");
         if (PublicSite.ReservedSlugs.Contains(slug) && !PublicSite.CompanionPageSlugs.Contains(slug))
             throw new ContentValidationException("Slug", "Validation_SlugReserved", slug);
-        if (await db.Pages.AnyAsync(p => p.Slug == slug && p.Id != existingId, ct))
+        if (await db.Pages.IgnoreQueryFilters().AnyAsync(p => p.Slug == slug && p.Id != existingId, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", slug);
     }
 
@@ -191,10 +191,16 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         if (value.StartsWith('#') || value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) || value.StartsWith("tel:", StringComparison.OrdinalIgnoreCase)) return value;
         if (value.Contains(':', StringComparison.Ordinal))
             return Uri.TryCreate(value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) ? value : null;
-        return value.Contains("//", StringComparison.Ordinal) ? null : value.TrimStart('/');
+        // "//host" is protocol-relative and "\\host" is browser-normalised to the same thing — both
+        // would leave the site, so a relative href carrying either is refused rather than stored.
+        return value.Contains("//", StringComparison.Ordinal) || value.Contains('\\') ? null : value.TrimStart('/');
     }
 
     private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>A plausible email address for a settings value: exactly one '@', no whitespace anywhere.</summary>
+    private static bool IsPlausibleEmail(string value) =>
+        !string.IsNullOrWhiteSpace(value) && !value.Any(char.IsWhiteSpace) && value.Count(c => c == '@') == 1;
 
     // ------------------------------------------------------------- navigation
 
@@ -208,6 +214,7 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         var existing = await db.NavItems.Where(n => n.Location == location).ToListAsync(ct);
         var before = existing.OrderBy(n => n.SortOrder).Select(Audit.Snapshot).ToList();
         var keep = new HashSet<Guid>();
+        var saved = new List<NavItem>();
 
         foreach (var (input, index) in items.Select((i, n) => (i, n)))
         {
@@ -228,23 +235,26 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
             row.Href = href;
             row.SortOrder = index + 1;
             row.IsPublished = input.IsPublished;
+            saved.Add(row);
         }
 
         db.NavItems.RemoveRange(existing.Where(n => !keep.Contains(n.Id)));
-        var after = items.Select((i, n) => new { i.LabelEn, i.LabelAr, i.Href, SortOrder = n + 1, i.IsPublished }).ToList();
+        var after = saved.OrderBy(n => n.SortOrder).Select(Audit.Snapshot).ToList();
         await commit.ApplyAsync("Navigation", Guid.Empty, "update:" + location, before, after, [CacheTags.Site], ct);
     }
 
     // ------------------------------------------------------------- committees
 
-    public async Task<IReadOnlyList<Committee>> CommitteesForEditAsync(bool includeDeleted, CancellationToken ct) =>
-        await (includeDeleted ? db.Committees.IgnoreQueryFilters().Where(c => c.DeletedAt != null) : db.Committees)
+    public async Task<IReadOnlyList<Committee>> CommitteesForEditAsync(bool deletedOnly, CancellationToken ct) =>
+        await (deletedOnly ? db.Committees.IgnoreQueryFilters().Where(c => c.DeletedAt != null) : db.Committees)
             .AsNoTracking().OrderBy(c => c.SortOrder).ToListAsync(ct);
 
     public async Task<Committee> SaveCommitteeAsync(CommitteeInput input, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var row = input.Id is { } id ? await db.Committees.SingleOrDefaultAsync(c => c.Id == id, ct) : null;
+        var row = input.Id is { } id
+            ? await db.Committees.SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
+            : null;
         var before = row is null ? null : Audit.Snapshot(row);
         if (row is null)
         {
@@ -278,14 +288,16 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
 
     // ------------------------------------------------------------------ clubs
 
-    public async Task<IReadOnlyList<Club>> ClubsForEditAsync(bool includeDeleted, CancellationToken ct) =>
-        await (includeDeleted ? db.Clubs.IgnoreQueryFilters().Where(c => c.DeletedAt != null) : db.Clubs)
+    public async Task<IReadOnlyList<Club>> ClubsForEditAsync(bool deletedOnly, CancellationToken ct) =>
+        await (deletedOnly ? db.Clubs.IgnoreQueryFilters().Where(c => c.DeletedAt != null) : db.Clubs)
             .AsNoTracking().OrderBy(c => c.SortOrder).ToListAsync(ct);
 
     public async Task<Club> SaveClubAsync(ClubInput input, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var row = input.Id is { } id ? await db.Clubs.SingleOrDefaultAsync(c => c.Id == id, ct) : null;
+        var row = input.Id is { } id
+            ? await db.Clubs.SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
+            : null;
         var before = row is null ? null : Audit.Snapshot(row);
         if (row is null)
         {
@@ -330,6 +342,18 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         {
             if (!SettingKeys.All.Contains(input.Key, StringComparer.Ordinal))
                 throw new ContentValidationException("Key", "Validation_SettingKey", input.Key);
+
+            if (input.Key is SettingKeys.ContactWebsite or SettingKeys.ContactX)
+            {
+                if (!PublicText.IsSafeExternalUrl(input.ValueEn) || !PublicText.IsSafeExternalUrl(input.ValueAr))
+                    throw new ContentValidationException(input.Key, "Validation_Href", input.ValueEn);
+            }
+            else if (input.Key == SettingKeys.ContactEmail)
+            {
+                if (!IsPlausibleEmail(input.ValueEn) || !IsPlausibleEmail(input.ValueAr))
+                    throw new ContentValidationException(input.Key, "Validation_Email", input.ValueEn);
+            }
+
             var row = rows.FirstOrDefault(s => s.Key == input.Key);
             if (row is null)
             {

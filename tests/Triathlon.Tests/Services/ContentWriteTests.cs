@@ -89,7 +89,7 @@ public sealed class ContentWriteTests(WebAppFixture app)
             Assert.Null(await db.Pages.SingleOrDefaultAsync(p => p.Id == id));
             Assert.Empty(await db.PageBlocks.Where(b => b.PageId == id).ToListAsync());
             Assert.NotNull((await db.PageBlocks.IgnoreQueryFilters().SingleAsync(b => b.PageId == id)).DeletedAt);
-            Assert.Single(await scope.ServiceProvider.GetRequiredService<ContentService>().PagesAsync(includeDeleted: true, CancellationToken.None), p => p.Id == id);
+            Assert.Single(await scope.ServiceProvider.GetRequiredService<ContentService>().PagesAsync(deletedOnly: true, CancellationToken.None), p => p.Id == id);
         }
 
         await using (var scope = app.Services.CreateAsyncScope())
@@ -105,6 +105,20 @@ public sealed class ContentWriteTests(WebAppFixture app)
             var actions = await db.ActivityLogs.Where(l => l.EntityId == id.ToString()).OrderBy(l => l.At).Select(l => l.Action).ToListAsync();
             Assert.Equal(["create", "delete", "restore"], actions);
         }
+    }
+
+    [Fact]
+    public async Task A_slug_held_by_a_soft_deleted_page_is_reported_as_taken()
+    {
+        var slug = "gone-" + Guid.NewGuid().ToString("N")[..8];
+        await using var scope = app.Services.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+
+        var id = (await content.CreatePageAsync(NewPage(slug), CancellationToken.None)).Id;
+        await content.DeletePageAsync(id, CancellationToken.None);
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.CreatePageAsync(NewPage(slug), CancellationToken.None));
+        Assert.Equal("Slug", ex.Field);
     }
 
     [Fact]
@@ -163,6 +177,17 @@ public sealed class ContentWriteTests(WebAppFixture app)
             await scope.ServiceProvider.GetRequiredService<ContentService>()
                 .SaveSettingsAsync([new SiteSettingInput("contact.email", "info@triathlon.sa", "info@triathlon.sa")], CancellationToken.None);
         }
+    }
+
+    [Fact]
+    public async Task An_unsafe_contact_website_is_refused()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.SaveSettingsAsync(
+            [new SiteSettingInput(SettingKeys.ContactWebsite, "javascript:alert(1)", "javascript:alert(1)")], CancellationToken.None));
+        Assert.Equal("contact.website", ex.Field);
     }
 
     [Fact]

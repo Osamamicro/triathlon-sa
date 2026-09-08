@@ -30,6 +30,13 @@ public sealed class ContentGuardTests
     }
 
     [Fact]
+    public void A_stripped_script_or_style_tag_takes_its_text_content_with_it()
+    {
+        Assert.Equal("<p>Hello</p>", Guard().Html("<p>Hello<script>alert(1)</script></p>"));
+        Assert.Equal("<p>Hello</p>", Guard().Html("<p>Hello<style>body{color:red}</style></p>"));
+    }
+
+    [Fact]
     public void Arabic_text_and_the_seeded_markup_shapes_pass_through_unchanged()
     {
         const string hero = "<span class=\"grad\">ترايثلون</span><br>السعودية";
