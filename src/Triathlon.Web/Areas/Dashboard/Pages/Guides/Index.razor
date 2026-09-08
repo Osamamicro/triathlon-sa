@@ -1,0 +1,66 @@
+@page "/dashboard/guides"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Guides"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Guides"]</MudText>
+
+<EntityTable TItem="TrainingGuide" Items="@guides" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/guides/new" Search="@(guide => $"{guide.TitleEn} {guide.TitleAr} {guide.Slug}")"
+             EditHref="@(guide => $"dashboard/guides/{guide.Id}")" IsPublished="@(guide => guide.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoGuides"]">
+    <Headers>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+        <MudTh>@L["Slug"]</MudTh>
+        <MudTh>@L["Level"]</MudTh>
+        <MudTh>@L["SortOrder"]</MudTh>
+    </Headers>
+    <Columns Context="guide">
+        <MudTd DataLabel="Title (EN)">@guide.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@guide.TitleAr</MudTd>
+        <MudTd DataLabel="@L["Slug"]">@guide.Slug</MudTd>
+        <MudTd DataLabel="@L["Level"]">@guide.LevelEn</MudTd>
+        <MudTd DataLabel="@L["SortOrder"]">@guide.SortOrder</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<TrainingGuide> guides = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        guides = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().GuidesForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(TrainingGuide guide)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().RestoreGuideAsync(guide.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,66 @@
+@page "/dashboard/rules"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Rules"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Rules"]</MudText>
+
+<EntityTable TItem="RuleOrGuide" Items="@rules" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/rules/new" Search="@(rule => $"{rule.TitleEn} {rule.TitleAr} {rule.Slug}")"
+             EditHref="@(rule => $"dashboard/rules/{rule.Id}")" IsPublished="@(rule => rule.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoRules"]">
+    <Headers>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+        <MudTh>@L["Slug"]</MudTh>
+        <MudTh>@L["Audience"]</MudTh>
+        <MudTh>@L["SortOrder"]</MudTh>
+    </Headers>
+    <Columns Context="rule">
+        <MudTd DataLabel="Title (EN)">@rule.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@rule.TitleAr</MudTd>
+        <MudTd DataLabel="@L["Slug"]">@rule.Slug</MudTd>
+        <MudTd DataLabel="@L["Audience"]">@rule.Audience</MudTd>
+        <MudTd DataLabel="@L["SortOrder"]">@rule.SortOrder</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<RuleOrGuide> rules = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        rules = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().RulesForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(RuleOrGuide rule)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().RestoreRuleAsync(rule.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

@@ -192,3 +192,13 @@ button.primary:hover {
     inset-inline-end: 1.5rem;
     z-index: 1101;
 }
+
+.stf-media-card {
+    block-size: 100%;
+}
+
+.stf-media-pdf-icon {
+    block-size: 120px;
+    background: var(--mud-palette-background-grey);
+    border-radius: 4px;
+}

@@ -1,0 +1,199 @@
+@page "/dashboard/documents/new"
+@page "/dashboard/documents/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Areas.Public
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/documents" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="Document" ActivityId="@Id">
+
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="6">
+            <MudSelect T="DocumentCategory" Label="@L["Category"]" Value="@model.Category" ValueChanged="@(v => { model.Category = v; dirty = true; })">
+                <MudSelectItem Value="DocumentCategory.Governance">@L["Governance"]</MudSelectItem>
+                <MudSelectItem Value="DocumentCategory.Finance">@L["Finance"]</MudSelectItem>
+                <MudSelectItem Value="DocumentCategory.Minutes">@L["Minutes"]</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudNumericField T="int" Label="@L["Year"]" Value="@model.Year" ValueChanged="@(v => { model.Year = v; dirty = true; })" />
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["File"]</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mt-1">
+        <FileUpload Kind="FileKind.Pdf" Accept=".pdf" Name="FilePath" OnUploaded="OnFileUploaded" />
+        @if (!string.IsNullOrEmpty(model.FilePath))
+        {
+            <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(model.FilePath) (@PublicText.FileSize(model.FileSize))</MudChip>
+        }
+    </MudStack>
+
+    <MudNumericField T="int" Label="@L["SortOrder"]" Value="@model.SortOrder" ValueChanged="@(v => { model.SortOrder = v; dirty = true; })" Class="mt-4" />
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class Model
+    {
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public DocumentCategory Category { get; set; } = DocumentCategory.Governance;
+        public int Year { get; set; } = DateTime.UtcNow.Year;
+        public string? FilePath { get; set; }
+        public long FileSize { get; set; }
+        public bool IsPublished { get; set; }
+        public int SortOrder { get; set; }
+
+        public static Model From(Document document) => new()
+        {
+            TitleEn = document.TitleEn, TitleAr = document.TitleAr, Category = document.Category, Year = document.Year,
+            FilePath = document.FilePath, FileSize = document.FileSize, IsPublished = document.IsPublished, SortOrder = document.SortOrder,
+        };
+
+        public DocumentInput ToInput(Guid? id, bool published) => new(
+            id, TitleEn ?? "", TitleAr ?? "", Category, Year, FilePath ?? "", FileSize, published, SortOrder);
+    }
+
+    private Model model = new();
+    private Document? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewDocument"] : (loaded is null ? "" : loaded.TitleEn);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().DocumentForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private void OnFileUploaded(MediaAsset asset)
+    {
+        model.FilePath = asset.Path;
+        model.FileSize = asset.Size;
+        dirty = true;
+    }
+
+    private static string FileName(string path) => path[(path.LastIndexOf('/') + 1)..];
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(Id, published);
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveDocumentAsync(input, CancellationToken.None));
+            if (Id is null)
+            {
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+                Nav.NavigateTo($"dashboard/documents/{saved.Id}");
+                return;
+            }
+
+            loaded = saved;
+            model = Model.From(loaded);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = Model.From(loaded).ToInput(id, false);
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveDocumentAsync(input, CancellationToken.None));
+            model = Model.From(loaded);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteDocumentConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.TitleEn))
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().DeleteDocumentAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/documents");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

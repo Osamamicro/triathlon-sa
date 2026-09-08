@@ -1,0 +1,195 @@
+@page "/dashboard/media"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Microsoft.JSInterop
+@using Triathlon.Web.Areas.Public
+@inject MediaService MediaService
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject IDialogService Dialogs
+@inject IJSRuntime JS
+
+<PageTitle>@L["Media"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Media"]</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-4" Wrap="Wrap.Wrap">
+    <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
+        <MudButton Variant="@(filter is null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetFilterAsync(null))">@L["All"]</MudButton>
+        <MudButton Variant="@(filter == FileKind.Image ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetFilterAsync(FileKind.Image))">@L["Images"]</MudButton>
+        <MudButton Variant="@(filter == FileKind.Pdf ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetFilterAsync(FileKind.Pdf))">@L["Pdfs"]</MudButton>
+    </MudButtonGroup>
+    <MudSwitch T="bool" Value="@showDeleted" ValueChanged="OnShowDeletedChangedAsync" Label="@L["ShowDeleted"]" Color="Color.Primary" />
+    <MudSpacer />
+    <FileUpload Kind="FileKind.Image" Accept="image/*" OnUploaded="OnUploadedAsync" />
+    <FileUpload Kind="FileKind.Pdf" Accept=".pdf" OnUploaded="OnUploadedAsync" />
+</MudStack>
+
+@if (loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else if (items.Count == 0)
+{
+    <MudText Color="Color.Secondary">@L["NoMedia"]</MudText>
+}
+else
+{
+    <MudGrid>
+        @foreach (var asset in items)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3" @key="asset.Id">
+                <MudPaper Class="pa-3 stf-media-card" Outlined="true">
+                    @if (asset.Kind == FileKind.Image)
+                    {
+                        <MudImage Src="@(asset.Variants.Count > 0 ? asset.Variants[0] : asset.Path)" Alt="@asset.OriginalFileName"
+                                  Fluid="true" ObjectFit="ObjectFit.Cover" Height="120" Class="rounded" />
+                    }
+                    else
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Class="stf-media-pdf-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Large" />
+                        </MudStack>
+                    }
+
+                    <MudText Typo="Typo.body2" Class="d-block text-truncate mt-2">@asset.OriginalFileName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">
+                        @PublicText.FileSize(asset.Size) &middot; @L["Uploaded"] @asset.CreatedAt.ToString("yyyy-MM-dd")
+                    </MudText>
+
+                    <MudTextField T="string" Label="@($"{L["Alt"]} (EN)")" Value="@asset.AltEn" ValueChanged="@(v => OnAltChangedAsync(asset, v, asset.AltAr))"
+                                  Margin="Margin.Dense" Class="mt-2" />
+                    <MudTextField T="string" Label="@($"{L["Alt"]} (AR)")" Value="@asset.AltAr" ValueChanged="@(v => OnAltChangedAsync(asset, asset.AltEn, v))"
+                                  Margin="Margin.Dense" dir="rtl" lang="ar" />
+
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-2">
+                        <MudTooltip Text="@L["CopyPath"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["CopyPath"]"
+                                           OnClick="@(() => CopyPathAsync(asset.Path))" />
+                        </MudTooltip>
+                        @if (showDeleted)
+                        {
+                            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => RestoreAsync(asset))">@L["Restore"]</MudButton>
+                        }
+                        else
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Delete"]"
+                                           OnClick="@(() => DeleteAsync(asset))" />
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    @if (pageCount > 1)
+    {
+        <MudPagination Count="@pageCount" Selected="@pageNumber" SelectedChanged="OnPageChangedAsync" Class="my-4" />
+    }
+}
+
+@code {
+    private const int PageSize = 24;
+
+    private List<MediaAsset> items = [];
+    private bool loading = true;
+    private bool showDeleted;
+    private FileKind? filter;
+    private int pageNumber = 1;
+    private int total;
+
+    private int pageCount => Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        try
+        {
+            var result = await MediaService.ListAsync(filter, showDeleted, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
+            items = [.. result.Items];
+            total = result.Total;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SetFilterAsync(FileKind? value)
+    {
+        filter = value;
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        pageNumber = 1;
+        await LoadAsync();
+    }
+
+    private async Task OnPageChangedAsync(int value)
+    {
+        pageNumber = value;
+        await LoadAsync();
+    }
+
+    private Task OnUploadedAsync(MediaAsset asset) => LoadAsync();
+
+    private async Task OnAltChangedAsync(MediaAsset asset, string? altEn, string? altAr)
+    {
+        try
+        {
+            await MediaService.UpdateAltAsync(asset.Id, altEn, altAr, CancellationToken.None);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+
+    private async Task CopyPathAsync(string path)
+    {
+        var copied = await JS.InvokeAsync<bool>("stfDashboard.copyText", path);
+        Snackbar.Add(copied ? L["Copied"] : L["ErrorSaving"], copied ? Severity.Success : Severity.Error);
+    }
+
+    private async Task DeleteAsync(MediaAsset asset)
+    {
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteMediaConfirm"], L["Delete"], danger: true, typeToConfirm: asset.OriginalFileName))
+        {
+            return;
+        }
+
+        try
+        {
+            await MediaService.DeleteAsync(asset.Id, CancellationToken.None);
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+
+    private async Task RestoreAsync(MediaAsset asset)
+    {
+        try
+        {
+            await MediaService.RestoreAsync(asset.Id, CancellationToken.None);
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

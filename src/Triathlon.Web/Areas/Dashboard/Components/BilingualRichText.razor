@@ -10,7 +10,11 @@
     <MudItem xs="12" md="6">
         <MudText Typo="Typo.caption" Class="d-block mb-1">@($"{Label} (EN)")</MudText>
         <div id="@enElementId" class="stf-rich-text"></div>
-        @if (Required && enTouched && IsBlank(En))
+        @if (EnServerError is { } enServerError)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error">@enServerError</MudText>
+        }
+        else if (Required && enTouched && IsBlank(En))
         {
             <MudText Typo="Typo.caption" Color="Color.Error">@L["Required"]</MudText>
         }
@@ -18,7 +22,11 @@
     <MudItem xs="12" md="6">
         <MudText Typo="Typo.caption" Class="d-block mb-1">@($"{Label} (AR)")</MudText>
         <div id="@arElementId" class="stf-rich-text" dir="rtl" lang="ar"></div>
-        @if (Required && arTouched && IsBlank(Ar))
+        @if (ArServerError is { } arServerError)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error">@arServerError</MudText>
+        }
+        else if (Required && arTouched && IsBlank(Ar))
         {
             <MudText Typo="Typo.caption" Color="Color.Error">@L["Required"]</MudText>
         }
@@ -43,6 +51,21 @@
 
     [Parameter]
     public bool Required { get; set; } = true;
+
+    /// <summary>
+    /// This field's name for a refused save's <see cref="FieldErrors"/> lookup — matched against
+    /// <c>Name + "En"</c> / <c>Name + "Ar"</c>, the same contract as <see cref="BilingualField"/>.
+    /// <c>null</c> disables server-error display.
+    /// </summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>Field name to localized message, cascaded from the enclosing <c>EditShell</c>.</summary>
+    [CascadingParameter(Name = "FieldErrors")]
+    public IReadOnlyDictionary<string, string>? FieldErrors { get; set; }
+
+    private string? EnServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name + "En");
+    private string? ArServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name + "Ar");
 
     private readonly string enElementId = "stf-rt-en-" + Guid.NewGuid().ToString("N");
     private readonly string arElementId = "stf-rt-ar-" + Guid.NewGuid().ToString("N");

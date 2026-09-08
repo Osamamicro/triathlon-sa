@@ -16,6 +16,10 @@ public sealed class DashboardScreensTests(WebAppFixture app)
     [Theory]
     [InlineData("/dashboard/events", "Riyadh Sprint Triathlon")]
     [InlineData("/dashboard/cities", "riyadh")]
+    [InlineData("/dashboard/documents", "Annual Report 2025")]
+    [InlineData("/dashboard/rules", "competition-rules-2026")]
+    [InlineData("/dashboard/guides", "beginner-12-weeks")]
+    [InlineData("/dashboard/media", "Upload")]
     public async Task List_screens_prerender_seeded_rows(string path, string expected)
     {
         using var client = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: true);

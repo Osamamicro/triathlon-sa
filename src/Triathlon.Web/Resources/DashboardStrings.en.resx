@@ -742,4 +742,132 @@
     <value>Some fields need attention. See the messages next to them.</value>
     <comment>EditShell's field-error banner, shown above the form when a refused save has one or more field-level errors.</comment>
   </data>
+  <data name="NewDocument" xml:space="preserve">
+    <value>New document</value>
+    <comment>"New" button on the documents list screen.</comment>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+    <comment>Document category field label (Governance / Finance / Minutes).</comment>
+  </data>
+  <data name="Year" xml:space="preserve">
+    <value>Year</value>
+    <comment>Document year field label.</comment>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>File</value>
+    <comment>Label above a document/rule/guide's uploaded PDF.</comment>
+  </data>
+  <data name="FileSize" xml:space="preserve">
+    <value>File size</value>
+    <comment>Label for an uploaded file's size.</comment>
+  </data>
+  <data name="Finance" xml:space="preserve">
+    <value>Finance</value>
+    <comment>DocumentCategory.Finance's display label.</comment>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>Minutes</value>
+    <comment>DocumentCategory.Minutes's display label.</comment>
+  </data>
+  <data name="NoDocuments" xml:space="preserve">
+    <value>No documents yet.</value>
+    <comment>Documents list screen's empty state.</comment>
+  </data>
+  <data name="NewRule" xml:space="preserve">
+    <value>New rule</value>
+    <comment>"New" button on the rules list screen.</comment>
+  </data>
+  <data name="Audience" xml:space="preserve">
+    <value>Audience</value>
+    <comment>Heading above a rule's audience checkboxes.</comment>
+  </data>
+  <data name="Organizers" xml:space="preserve">
+    <value>Organizers</value>
+    <comment>RuleAudience.Organizers checkbox label.</comment>
+  </data>
+  <data name="Officials" xml:space="preserve">
+    <value>Officials</value>
+    <comment>RuleAudience.Officials checkbox label.</comment>
+  </data>
+  <data name="Coaches" xml:space="preserve">
+    <value>Coaches</value>
+    <comment>RuleAudience.Coaches checkbox label.</comment>
+  </data>
+  <data name="UpdatedOn" xml:space="preserve">
+    <value>Updated on</value>
+    <comment>Rule's "last revised" date field label.</comment>
+  </data>
+  <data name="NoRules" xml:space="preserve">
+    <value>No rules yet.</value>
+    <comment>Rules list screen's empty state.</comment>
+  </data>
+  <data name="NewGuide" xml:space="preserve">
+    <value>New guide</value>
+    <comment>"New" button on the training guides list screen.</comment>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Summary</value>
+    <comment>Training guide summary field label.</comment>
+  </data>
+  <data name="Level" xml:space="preserve">
+    <value>Level</value>
+    <comment>Training guide level field label, e.g. "Beginner".</comment>
+  </data>
+  <data name="Chapters" xml:space="preserve">
+    <value>Chapters</value>
+    <comment>Heading above a training guide's chapter list.</comment>
+  </data>
+  <data name="AddChapter" xml:space="preserve">
+    <value>Add chapter</value>
+    <comment>Button that appends a new chapter to a training guide.</comment>
+  </data>
+  <data name="Body" xml:space="preserve">
+    <value>Body</value>
+    <comment>Training guide chapter's rich-text body field label.</comment>
+  </data>
+  <data name="NoGuides" xml:space="preserve">
+    <value>No guides yet.</value>
+    <comment>Guides list screen's empty state.</comment>
+  </data>
+  <data name="Images" xml:space="preserve">
+    <value>Images</value>
+    <comment>Media library filter: image uploads only.</comment>
+  </data>
+  <data name="Pdfs" xml:space="preserve">
+    <value>PDFs</value>
+    <comment>Media library filter: PDF uploads only.</comment>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+    <comment>Media library filter: every kind.</comment>
+  </data>
+  <data name="CopyPath" xml:space="preserve">
+    <value>Copy path</value>
+    <comment>Button that copies a media asset's public path to the clipboard.</comment>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Copied</value>
+    <comment>Toast shown after CopyPath succeeds.</comment>
+  </data>
+  <data name="Uploaded" xml:space="preserve">
+    <value>Uploaded</value>
+    <comment>Media card's "uploaded on" date label.</comment>
+  </data>
+  <data name="DeleteDocumentConfirm" xml:space="preserve">
+    <value>Type the title to delete this document.</value>
+    <comment>ConfirmDialog body on the documents edit screen's Delete action.</comment>
+  </data>
+  <data name="DeleteRuleConfirm" xml:space="preserve">
+    <value>Type the slug to delete this rule.</value>
+    <comment>ConfirmDialog body on the rules edit screen's Delete action.</comment>
+  </data>
+  <data name="DeleteGuideConfirm" xml:space="preserve">
+    <value>Type the slug to delete this guide. Its chapters are deleted with it.</value>
+    <comment>ConfirmDialog body on the training guides edit screen's Delete action.</comment>
+  </data>
+  <data name="DeleteMediaConfirm" xml:space="preserve">
+    <value>Type the file name to delete this upload. Anything already using its path keeps working.</value>
+    <comment>ConfirmDialog body on the media library screen's Delete action.</comment>
+  </data>
 </root>

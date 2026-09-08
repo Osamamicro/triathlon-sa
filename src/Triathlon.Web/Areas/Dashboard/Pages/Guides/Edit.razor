@@ -1,0 +1,276 @@
+@page "/dashboard/guides/new"
+@page "/dashboard/guides/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Areas.Public
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/guides" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="TrainingGuide" ActivityId="@Id">
+
+    @if (fieldErrors.TryGetValue("IsPublished", out var publishError))
+    {
+        <MudAlert Severity="Severity.Warning" Class="mt-4">@publishError</MudAlert>
+    }
+
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+    <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Reserved="false" Class="mt-1" />
+    <BilingualField Label="@L["Summary"]" Name="Summary" Lines="3" En="@model.SummaryEn" EnChanged="@(v => { model.SummaryEn = v; dirty = true; })"
+                     Ar="@model.SummaryAr" ArChanged="@(v => { model.SummaryAr = v; dirty = true; })" />
+    <BilingualField Label="@L["Level"]" Name="Level" En="@model.LevelEn" EnChanged="@(v => { model.LevelEn = v; dirty = true; })"
+                     Ar="@model.LevelAr" ArChanged="@(v => { model.LevelAr = v; dirty = true; })" />
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["File"]</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mt-1">
+        <FileUpload Kind="FileKind.Pdf" Accept=".pdf" Name="FilePath" OnUploaded="OnFileUploaded" />
+        @if (!string.IsNullOrEmpty(model.FilePath))
+        {
+            <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(model.FilePath) (@PublicText.FileSize(model.FileSize ?? 0))</MudChip>
+            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" OnClick="RemoveFile">@L["Remove"]</MudButton>
+        }
+    </MudStack>
+
+    <MudNumericField T="int" Label="@L["SortOrder"]" Value="@model.SortOrder" ValueChanged="@(v => { model.SortOrder = v; dirty = true; })" Class="mt-4" />
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Chapters"]</MudText>
+    @if (fieldErrors.TryGetValue("Chapters", out var chaptersError))
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" Class="d-block mb-2">@chaptersError</MudText>
+    }
+    @foreach (var (chapter, index) in model.Chapters.Select((c, i) => (c, i)))
+    {
+        <MudPaper @key="chapter" Class="pa-3 mb-3" Outlined="true">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                <MudText Typo="Typo.subtitle2">@L["Chapters"] #@(index + 1)</MudText>
+                <MudStack Row="true" Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
+                                   Disabled="@(index == 0)" OnClick="@(() => MoveChapter(index, -1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
+                                   Disabled="@(index == model.Chapters.Count - 1)" OnClick="@(() => MoveChapter(index, 1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
+                                   OnClick="@(() => RemoveChapter(index))" />
+                </MudStack>
+            </MudStack>
+            <BilingualField Label="@L["Title"]" En="@chapter.TitleEn" EnChanged="@(v => { chapter.TitleEn = v; dirty = true; })"
+                             Ar="@chapter.TitleAr" ArChanged="@(v => { chapter.TitleAr = v; dirty = true; })" />
+            <BilingualRichText @key="chapter" Label="@L["Body"]" Name="Body" En="@chapter.BodyEn" EnChanged="@(v => { chapter.BodyEn = v; dirty = true; })"
+                                Ar="@chapter.BodyAr" ArChanged="@(v => { chapter.BodyAr = v; dirty = true; })" />
+        </MudPaper>
+    }
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddChapter">@L["AddChapter"]</MudButton>
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class ChapterRow
+    {
+        public Guid? Id { get; set; }
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? BodyEn { get; set; }
+        public string? BodyAr { get; set; }
+    }
+
+    private sealed class Model
+    {
+        public string Slug { get; set; } = "";
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? SummaryEn { get; set; }
+        public string? SummaryAr { get; set; }
+        public string? LevelEn { get; set; }
+        public string? LevelAr { get; set; }
+        public string? FilePath { get; set; }
+        public long? FileSize { get; set; }
+        public bool IsPublished { get; set; }
+        public int SortOrder { get; set; }
+        public List<ChapterRow> Chapters { get; set; } = [];
+
+        public static Model From(TrainingGuide guide) => new()
+        {
+            Slug = guide.Slug, TitleEn = guide.TitleEn, TitleAr = guide.TitleAr,
+            SummaryEn = guide.SummaryEn, SummaryAr = guide.SummaryAr, LevelEn = guide.LevelEn, LevelAr = guide.LevelAr,
+            FilePath = guide.FilePath, FileSize = guide.FileSize, IsPublished = guide.IsPublished, SortOrder = guide.SortOrder,
+            Chapters = [.. guide.Chapters.OrderBy(c => c.SortOrder).Select(c => new ChapterRow
+            {
+                Id = c.Id, TitleEn = c.TitleEn, TitleAr = c.TitleAr, BodyEn = c.BodyEn, BodyAr = c.BodyAr,
+            })],
+        };
+
+        public GuideInput ToInput(Guid? id, bool published) => new(
+            id, Slug, TitleEn ?? "", TitleAr ?? "", SummaryEn ?? "", SummaryAr ?? "", LevelEn ?? "", LevelAr ?? "",
+            FilePath, FileSize, published, SortOrder,
+            [.. Chapters.Select(c => new ChapterInput(c.Id, c.TitleEn ?? "", c.TitleAr ?? "", c.BodyEn ?? "", c.BodyAr ?? ""))]);
+    }
+
+    private Model model = new();
+    private TrainingGuide? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewGuide"] : (loaded is null ? "" : loaded.TitleEn);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().GuideForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private void OnFileUploaded(MediaAsset asset)
+    {
+        model.FilePath = asset.Path;
+        model.FileSize = asset.Size;
+        dirty = true;
+    }
+
+    private void RemoveFile()
+    {
+        model.FilePath = null;
+        model.FileSize = null;
+        dirty = true;
+    }
+
+    private static string FileName(string path) => path[(path.LastIndexOf('/') + 1)..];
+
+    private void AddChapter()
+    {
+        model.Chapters.Add(new ChapterRow());
+        dirty = true;
+    }
+
+    private void RemoveChapter(int index)
+    {
+        model.Chapters.RemoveAt(index);
+        dirty = true;
+    }
+
+    private void MoveChapter(int index, int delta)
+    {
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= model.Chapters.Count)
+        {
+            return;
+        }
+
+        (model.Chapters[index], model.Chapters[newIndex]) = (model.Chapters[newIndex], model.Chapters[index]);
+        dirty = true;
+    }
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(Id, published);
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveGuideAsync(input, CancellationToken.None));
+            if (Id is null)
+            {
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+                Nav.NavigateTo($"dashboard/guides/{saved.Id}");
+                return;
+            }
+
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().GuideForEditAsync(saved.Id, CancellationToken.None));
+            model = Model.From(loaded!);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = Model.From(loaded).ToInput(id, false);
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveGuideAsync(input, CancellationToken.None));
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().GuideForEditAsync(id, CancellationToken.None));
+            model = Model.From(loaded!);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteGuideConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Slug))
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().DeleteGuideAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/guides");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

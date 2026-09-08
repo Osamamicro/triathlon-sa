@@ -14,6 +14,9 @@ public sealed partial class DocumentsService
         await (deletedOnly ? db.Documents.IgnoreQueryFilters().Where(d => d.DeletedAt != null) : db.Documents)
             .AsNoTracking().OrderByDescending(d => d.Year).ThenBy(d => d.SortOrder).ToListAsync(ct);
 
+    public Task<Document?> DocumentForEditAsync(Guid id, CancellationToken ct) =>
+        db.Documents.SingleOrDefaultAsync(d => d.Id == id, ct);
+
     public async Task<Document> SaveDocumentAsync(DocumentInput input, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -68,6 +71,9 @@ public sealed partial class DocumentsService
     public async Task<IReadOnlyList<RuleOrGuide>> RulesForEditAsync(bool deletedOnly, CancellationToken ct) =>
         await (deletedOnly ? db.Rules.IgnoreQueryFilters().Where(r => r.DeletedAt != null) : db.Rules)
             .AsNoTracking().OrderBy(r => r.SortOrder).ToListAsync(ct);
+
+    public Task<RuleOrGuide?> RuleForEditAsync(Guid id, CancellationToken ct) =>
+        db.Rules.SingleOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<RuleOrGuide> SaveRuleAsync(RuleInput input, CancellationToken ct)
     {

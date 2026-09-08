@@ -1,0 +1,227 @@
+@page "/dashboard/rules/new"
+@page "/dashboard/rules/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Areas.Public
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/rules" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="Rule" ActivityId="@Id">
+
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+    <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Reserved="false" Class="mt-1" />
+    <BilingualField Label="@L["Description"]" Name="Description" Lines="3" En="@model.DescriptionEn" EnChanged="@(v => { model.DescriptionEn = v; dirty = true; })"
+                     Ar="@model.DescriptionAr" ArChanged="@(v => { model.DescriptionAr = v; dirty = true; })" />
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Audience"]</MudText>
+    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
+        <MudCheckBox T="bool" Label="@L["Athletes"]" Value="@HasFlag(RuleAudience.Athletes)" ValueChanged="@(v => ToggleAudience(RuleAudience.Athletes, v))" Color="Color.Primary" />
+        <MudCheckBox T="bool" Label="@L["Organizers"]" Value="@HasFlag(RuleAudience.Organizers)" ValueChanged="@(v => ToggleAudience(RuleAudience.Organizers, v))" Color="Color.Primary" />
+        <MudCheckBox T="bool" Label="@L["Officials"]" Value="@HasFlag(RuleAudience.Officials)" ValueChanged="@(v => ToggleAudience(RuleAudience.Officials, v))" Color="Color.Primary" />
+        <MudCheckBox T="bool" Label="@L["Coaches"]" Value="@HasFlag(RuleAudience.Coaches)" ValueChanged="@(v => ToggleAudience(RuleAudience.Coaches, v))" Color="Color.Primary" />
+    </MudStack>
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["File"]</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mt-1">
+        <FileUpload Kind="FileKind.Pdf" Accept=".pdf" Name="FilePath" OnUploaded="OnFileUploaded" />
+        @if (!string.IsNullOrEmpty(model.FilePath))
+        {
+            <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(model.FilePath) (@PublicText.FileSize(model.FileSize))</MudChip>
+        }
+    </MudStack>
+
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="6">
+            <MudDatePicker Label="@L["UpdatedOn"]" Date="@model.UpdatedOn.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnUpdatedOnChanged" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudNumericField T="int" Label="@L["SortOrder"]" Value="@model.SortOrder" ValueChanged="@(v => { model.SortOrder = v; dirty = true; })" />
+        </MudItem>
+    </MudGrid>
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class Model
+    {
+        public string Slug { get; set; } = "";
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? DescriptionEn { get; set; }
+        public string? DescriptionAr { get; set; }
+        public RuleAudience Audience { get; set; }
+        public string? FilePath { get; set; }
+        public long FileSize { get; set; }
+        public DateOnly UpdatedOn { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        public bool IsPublished { get; set; }
+        public int SortOrder { get; set; }
+
+        public static Model From(RuleOrGuide rule) => new()
+        {
+            Slug = rule.Slug, TitleEn = rule.TitleEn, TitleAr = rule.TitleAr,
+            DescriptionEn = rule.DescriptionEn, DescriptionAr = rule.DescriptionAr, Audience = rule.Audience,
+            FilePath = rule.FilePath, FileSize = rule.FileSize, UpdatedOn = rule.UpdatedOn,
+            IsPublished = rule.IsPublished, SortOrder = rule.SortOrder,
+        };
+
+        public RuleInput ToInput(Guid? id, bool published) => new(
+            id, Slug, TitleEn ?? "", TitleAr ?? "", DescriptionEn ?? "", DescriptionAr ?? "",
+            Audience, FilePath ?? "", FileSize, UpdatedOn, published, SortOrder);
+    }
+
+    private Model model = new();
+    private RuleOrGuide? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewRule"] : (loaded is null ? "" : loaded.TitleEn);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().RuleForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private bool HasFlag(RuleAudience flag) => (model.Audience & flag) == flag;
+
+    private void ToggleAudience(RuleAudience flag, bool value)
+    {
+        model.Audience = value ? model.Audience | flag : model.Audience & ~flag;
+        dirty = true;
+    }
+
+    private void OnUpdatedOnChanged(DateTime? value)
+    {
+        if (value is { } date)
+        {
+            model.UpdatedOn = DateOnly.FromDateTime(date);
+            dirty = true;
+        }
+    }
+
+    private void OnFileUploaded(MediaAsset asset)
+    {
+        model.FilePath = asset.Path;
+        model.FileSize = asset.Size;
+        dirty = true;
+    }
+
+    private static string FileName(string path) => path[(path.LastIndexOf('/') + 1)..];
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(Id, published);
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveRuleAsync(input, CancellationToken.None));
+            if (Id is null)
+            {
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+                Nav.NavigateTo($"dashboard/rules/{saved.Id}");
+                return;
+            }
+
+            loaded = saved;
+            model = Model.From(loaded);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = Model.From(loaded).ToInput(id, false);
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().SaveRuleAsync(input, CancellationToken.None));
+            model = Model.From(loaded);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteRuleConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Slug))
+        {
+            return;
+        }
+
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().DeleteRuleAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/rules");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

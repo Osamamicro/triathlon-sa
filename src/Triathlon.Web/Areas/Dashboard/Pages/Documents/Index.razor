@@ -1,0 +1,74 @@
+@page "/dashboard/documents"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Documents
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Documents"]</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Documents"]</MudText>
+
+<EntityTable TItem="Document" Items="@documents" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/documents/new" Search="@(document => $"{document.TitleEn} {document.TitleAr}")"
+             EditHref="@(document => $"dashboard/documents/{document.Id}")" IsPublished="@(document => document.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoDocuments"]">
+    <Headers>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+        <MudTh>@L["Category"]</MudTh>
+        <MudTh>@L["Year"]</MudTh>
+        <MudTh>@L["SortOrder"]</MudTh>
+    </Headers>
+    <Columns Context="document">
+        <MudTd DataLabel="Title (EN)">@document.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@document.TitleAr</MudTd>
+        <MudTd DataLabel="@L["Category"]">@CategoryLabel(document.Category)</MudTd>
+        <MudTd DataLabel="@L["Year"]">@document.Year</MudTd>
+        <MudTd DataLabel="@L["SortOrder"]">@document.SortOrder</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<Document> documents = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        documents = await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().DocumentsForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private string CategoryLabel(DocumentCategory category) => category switch
+    {
+        DocumentCategory.Governance => L["Governance"],
+        DocumentCategory.Finance => L["Finance"],
+        DocumentCategory.Minutes => L["Minutes"],
+        _ => category.ToString(),
+    };
+
+    private async Task RestoreAsync(Document document)
+    {
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<DocumentsService>().RestoreDocumentAsync(document.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}
