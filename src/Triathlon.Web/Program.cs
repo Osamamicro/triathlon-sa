@@ -72,6 +72,7 @@ builder.Services.AddScoped<ContentGuard>();
 builder.Services.AddScoped<ContentCommit>();
 builder.Services.AddScoped<EventsService>();
 builder.Services.AddScoped<DocumentsService>();
+builder.Services.AddScoped<MediaService>();
 builder.Services.AddScoped<ContentService>();
 builder.Services.AddScoped<NewsService>();
 builder.Services.AddScoped<StatsService>();

@@ -7,6 +7,7 @@ using Triathlon.Web.Domain.Crm;
 using Triathlon.Web.Domain.Documents;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Domain.Identity;
+using Triathlon.Web.Domain.Media;
 using Triathlon.Web.Domain.Stats;
 
 namespace Triathlon.Web.Data;
@@ -35,6 +36,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<RuleOrGuide> Rules => Set<RuleOrGuide>();
     public DbSet<TrainingGuide> TrainingGuides => Set<TrainingGuide>();
     public DbSet<TrainingGuideChapter> TrainingGuideChapters => Set<TrainingGuideChapter>();
+
+    public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageBlock> PageBlocks => Set<PageBlock>();

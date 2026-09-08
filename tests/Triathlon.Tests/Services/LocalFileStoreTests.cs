@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
 using Triathlon.Web.Services;
 
 namespace Triathlon.Tests.Services;
@@ -32,7 +30,7 @@ public sealed class LocalFileStoreTests : IDisposable
     public async Task Image_is_stored_with_three_webp_variants()
     {
         var store = CreateStore();
-        await using var png = Png(2000, 1200);
+        await using var png = Fixtures.Png(2000, 1200);
 
         var stored = await store.SaveAsync(png, "hero photo.PNG", FileKind.Image);
 
@@ -60,7 +58,7 @@ public sealed class LocalFileStoreTests : IDisposable
     public async Task Image_narrower_than_every_variant_width_is_never_upscaled()
     {
         var store = CreateStore();
-        await using var png = Png(300, 200);
+        await using var png = Fixtures.Png(300, 200);
 
         var stored = await store.SaveAsync(png, "badge.png", FileKind.Image);
 
@@ -79,7 +77,7 @@ public sealed class LocalFileStoreTests : IDisposable
         // One dimension one pixel past ImageVariants.MaxSourceEdge (6000). The guard reads this
         // straight from the header via Image.IdentifyAsync — it must reject the upload without
         // ever asking the decoder to materialise the full frame.
-        await using var oversized = Png(6001, 1);
+        await using var oversized = Fixtures.Png(6001, 1);
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             store.SaveAsync(oversized, "panorama.png", FileKind.Image));
@@ -120,7 +118,7 @@ public sealed class LocalFileStoreTests : IDisposable
     public async Task Image_bytes_declared_as_a_pdf_are_rejected()
     {
         var store = CreateStore();
-        await using var png = Png(20, 20);
+        await using var png = Fixtures.Png(20, 20);
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             store.SaveAsync(png, "rules.pdf", FileKind.Pdf));
@@ -157,15 +155,6 @@ public sealed class LocalFileStoreTests : IDisposable
     /// <summary>Maps a returned public path such as "/media/2026/03/x.png" back onto the temp root.</summary>
     private string OnDisk(string publicPath) =>
         Path.Combine(_root, publicPath["/media/".Length..].Replace('/', Path.DirectorySeparatorChar));
-
-    private static MemoryStream Png(int width, int height)
-    {
-        using var image = new Image<Rgba32>(width, height);
-        var stream = new MemoryStream();
-        image.Save(stream, new PngEncoder());
-        stream.Position = 0;
-        return stream;
-    }
 
     /// <summary>A byte array that sniffs as a PDF and is exactly <paramref name="length"/> long.</summary>
     private static byte[] PdfBytes(int length)

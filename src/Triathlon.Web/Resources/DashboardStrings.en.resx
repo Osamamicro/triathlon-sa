@@ -198,4 +198,16 @@
     <value>The same row was submitted twice.</value>
     <comment>Shown when a posted list of child rows (gallery, results, blocks, navigation) carries the same id twice.</comment>
   </data>
+  <data name="Validation_GuideNeedsContent" xml:space="preserve">
+    <value>Add a PDF or at least one chapter before publishing.</value>
+    <comment>Shown when a training guide is published with neither a file nor a chapter.</comment>
+  </data>
+  <data name="Validation_FileSize" xml:space="preserve">
+    <value>The file size cannot be negative.</value>
+    <comment>Shown when a saved file's size is a negative number.</comment>
+  </data>
+  <data name="Validation_File" xml:space="preserve">
+    <value>The upload was refused: {0}</value>
+    <comment>Shown when the media store rejects an upload's bytes (wrong type, mismatched kind, or over the size limit).</comment>
+  </data>
 </root>

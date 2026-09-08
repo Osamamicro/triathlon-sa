@@ -10,8 +10,11 @@ public sealed record DocumentFacets(IReadOnlyDictionary<DocumentCategory, int> C
 /// <summary>Which download counter and file table <see cref="DocumentsService.RecordDownloadAsync"/> touches.</summary>
 public enum DownloadKind { Document, Rule, Guide }
 
-/// <summary>Queries and download bookkeeping for the documents library, rules and training guides.</summary>
-public sealed class DocumentsService(AppDbContext db)
+/// <summary>
+/// Queries and download bookkeeping for the documents library, rules and training guides. The write
+/// side (create/update/publish/delete/restore) lives in <c>DocumentsService.Write.cs</c>.
+/// </summary>
+public sealed partial class DocumentsService(AppDbContext db, TimeProvider clock, ContentGuard guard, ContentCommit commit)
 {
     private IQueryable<Document> PublishedDocuments() => db.Documents.AsNoTracking().Where(d => d.IsPublished);
 

@@ -162,7 +162,11 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
             // replacing the one registration here is enough; Hangfire's own scheduling does not
             // resolve this TimeProvider.
             services.RemoveAll<TimeProvider>();
-            services.AddSingleton<TimeProvider>(new FakeTimeProvider(FixedNow));
+            // AutoAdvanceAmount ticks the clock forward by 1ms on every read, so two ActivityLog
+            // rows written in the same request never land on the exact same At — a test that does
+            // OrderBy(l => l.At) would otherwise sort ties arbitrarily and flake. The drift this adds
+            // over a whole test run is milliseconds, invisible to every date-only assertion.
+            services.AddSingleton<TimeProvider>(new FakeTimeProvider(FixedNow) { AutoAdvanceAmount = TimeSpan.FromMilliseconds(1) });
         });
 
         var connectionString = _sqlServer is not null

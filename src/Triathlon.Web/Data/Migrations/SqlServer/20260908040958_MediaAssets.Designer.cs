@@ -2,48 +2,52 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Triathlon.Web.Data;
 
 #nullable disable
 
-namespace Triathlon.Web.Data.Migrations.Postgres
+namespace Triathlon.Web.Data.Migrations.SqlServer
 {
-    [DbContext(typeof(PostgresDbContext))]
-    partial class PostgresDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(SqlServerDbContext))]
+    [Migration("20260908040958_MediaAssets")]
+    partial class MediaAssets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex");
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
                 });
@@ -52,19 +56,19 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -77,19 +81,19 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -101,17 +105,17 @@ namespace Triathlon.Web.Data.Migrations.Postgres
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -123,10 +127,10 @@ namespace Triathlon.Web.Data.Migrations.Postgres
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -138,16 +142,16 @@ namespace Triathlon.Web.Data.Migrations.Postgres
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -158,58 +162,58 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DescriptionAr")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("DescriptionEn")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("KindAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("KindEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -222,48 +226,48 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Href")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("LabelAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("LabelEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -276,31 +280,31 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BodyAr")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BodyEn")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("HeroImagePath")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("PublishedOn")
                         .HasColumnType("date");
@@ -308,33 +312,33 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("SummaryAr")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("SummaryEn")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -350,48 +354,48 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("MetaDescriptionAr")
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("MetaDescriptionEn")
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -405,91 +409,91 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Anchor")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("BodyAr")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BodyEn")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CtaHref")
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("CtaLabelAr")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("CtaLabelEn")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("EyebrowAr")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("EyebrowEn")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ItemsJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("PageId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SecondaryHref")
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("SecondaryLabelAr")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("SecondaryLabelEn")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("TitleAr")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Variant")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
 
@@ -502,37 +506,37 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ValueAr")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("ValueEn")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.HasKey("Id");
 
@@ -546,67 +550,67 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("CityKey")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<Guid?>("ClubId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("ConsentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<Guid?>("InterestEventId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LicenceNumber")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("PreferredCulture")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -621,48 +625,48 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CityAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("CityEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -675,57 +679,57 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("Downloads")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -738,69 +742,69 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Audience")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DescriptionAr")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("DescriptionEn")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<int>("Downloads")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly>("UpdatedOn")
                         .HasColumnType("date");
@@ -819,73 +823,73 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("Downloads")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("FilePath")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<long?>("FileSize")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("LevelAr")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("LevelEn")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("SummaryAr")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("SummaryEn")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -901,46 +905,46 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BodyAr")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BodyEn")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<Guid>("TrainingGuideId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -953,52 +957,52 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<bool>("LabelAtEnd")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<int>("LabelDy")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("SvgX")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int>("SvgY")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1012,28 +1016,28 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BikeDistance")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<int?>("Capacity")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Categories")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<Guid>("CityId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly?>("DateEnd")
                         .HasColumnType("date");
@@ -1042,90 +1046,90 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DescriptionAr")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DescriptionEn")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExternalRegistrationUrl")
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("HeroImagePath")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("RegistrationMode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<bool>("RegistrationOpen")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("ResultsFilePath")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<string>("RunDistance")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Season")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time without time zone");
+                        .HasColumnType("time");
 
                     b.Property<string>("SwimDistance")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("TitleAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("TitleEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VenueAr")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("VenueEn")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
@@ -1145,41 +1149,41 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AltAr")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("AltEn")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1192,53 +1196,53 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Club")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1251,51 +1255,51 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AthleteAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("AthleteEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ClubAr")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ClubEn")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Position")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Time")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1308,33 +1312,33 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset>("At")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Diff")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Entity")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("EntityId")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("User")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
@@ -1348,57 +1352,57 @@ namespace Triathlon.Web.Data.Migrations.Postgres
             modelBuilder.Entity("Triathlon.Web.Domain.Identity.AppUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
@@ -1407,7 +1411,8 @@ namespace Triathlon.Web.Data.Migrations.Postgres
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -1416,57 +1421,57 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AltAr")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("AltEn")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<long>("Size")
                         .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VariantsJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1482,28 +1487,28 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Athletes")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -1517,70 +1522,70 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Color")
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("HomeOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("LabelAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("LabelEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("NoteAr")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("NoteEn")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<bool>("ShowOnHome")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("ShowPlus")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("Suffix")
                         .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("Value")
                         .HasColumnType("bigint");
@@ -1597,43 +1602,43 @@ namespace Triathlon.Web.Data.Migrations.Postgres
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Athletes")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
