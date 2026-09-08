@@ -1,0 +1,4 @@
+{
+  "dotnet.defaultSolution": "Triathlon.slnx",
+  "csharp.debug.console": "integratedTerminal"
+}

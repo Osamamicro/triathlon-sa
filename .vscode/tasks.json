@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Triathlon.Web/Triathlon.Web.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["test", "${workspaceFolder}/Triathlon.slnx"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "postgres (docker)",
+      "type": "shell",
+      "command": "docker start stf-pg || docker run -d --name stf-pg -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=triathlon postgres:17-alpine",
+      "problemMatcher": []
+    }
+  ]
+}
