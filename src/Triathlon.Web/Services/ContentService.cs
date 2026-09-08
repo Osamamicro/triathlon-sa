@@ -126,21 +126,30 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
             throw new ContentValidationException("Slug", "Validation_SlugTaken", slug);
     }
 
+    /// <summary>
+    /// Two passes on purpose: every check runs first, against nothing but locals, before a single
+    /// property is assigned or a single block row is added — a refused save must leave the scoped
+    /// <see cref="AppDbContext"/> exactly as clean as it found it, since the same context serves the
+    /// next save in a Blazor circuit (see ADR pattern in <c>EventsService.Write.cs</c> ApplyAsync).
+    /// </summary>
     private void Apply(Page page, PageInput input)
     {
-        page.Slug = input.Slug;
-        page.TitleEn = input.TitleEn.Trim();
-        page.TitleAr = input.TitleAr.Trim();
-        page.MetaDescriptionEn = Blank(input.MetaDescriptionEn);
-        page.MetaDescriptionAr = Blank(input.MetaDescriptionAr);
-        page.IsPublished = input.IsPublished;
-
+        // ---- pass 1: validate only — no property assignment, no db.*.Add, below this point ----
+        // guard.Html and SafeHref never throw, so the only check here is the duplicate-id scan.
         var seenBlockIds = new HashSet<Guid>();
         foreach (var blockInput in input.Blocks)
         {
             if (blockInput.Id is { } dupId && !seenBlockIds.Add(dupId))
                 throw new ContentValidationException("Blocks", "Validation_DuplicateRow");
         }
+
+        // ---- pass 2: every check above passed — assign and upsert blocks ----
+        page.Slug = input.Slug;
+        page.TitleEn = input.TitleEn.Trim();
+        page.TitleAr = input.TitleAr.Trim();
+        page.MetaDescriptionEn = Blank(input.MetaDescriptionEn);
+        page.MetaDescriptionAr = Blank(input.MetaDescriptionAr);
+        page.IsPublished = input.IsPublished;
 
         var keep = new HashSet<Guid>();
         foreach (var (blockInput, index) in input.Blocks.Select((b, i) => (b, i)))
@@ -356,6 +365,8 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
         ArgumentNullException.ThrowIfNull(inputs);
         var rows = await db.SiteSettings.ToListAsync(ct);
         var before = rows.ToDictionary(s => s.Key, s => new { s.ValueEn, s.ValueAr });
+
+        // ---- pass 1: validate every input — no row is mutated or added below this point ----
         foreach (var input in inputs)
         {
             if (!SettingKeys.All.Contains(input.Key, StringComparer.Ordinal))
@@ -371,7 +382,11 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
                 if (!IsPlausibleEmail(input.ValueEn) || !IsPlausibleEmail(input.ValueAr))
                     throw new ContentValidationException(input.Key, "Validation_Email", input.ValueEn);
             }
+        }
 
+        // ---- pass 2: every check above passed — assign and upsert rows ----
+        foreach (var input in inputs)
+        {
             var row = rows.FirstOrDefault(s => s.Key == input.Key);
             if (row is null)
             {

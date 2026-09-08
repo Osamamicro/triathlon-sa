@@ -72,6 +72,38 @@ public sealed class ContentWriteTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task A_duplicate_block_id_is_refused_before_any_row_is_touched()
+    {
+        var slug = "dup-" + Guid.NewGuid().ToString("N")[..8];
+        var otherSlug = "other-" + Guid.NewGuid().ToString("N")[..8];
+        await using var scope = app.Services.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+
+        var page = await content.CreatePageAsync(NewPage(slug), CancellationToken.None);
+        var otherPage = await content.CreatePageAsync(NewPage(otherSlug), CancellationToken.None);
+        var existingBlockId = page.Blocks.Single().Id;
+
+        var duplicateBlocks = new BlockInput[]
+        {
+            new(existingBlockId, 1, BlockType.RichText, null, null, null, null, "One", "واحد", "<p>One</p>", "<p>واحد</p>", [], null, null, null, null, null, null),
+            new(existingBlockId, 2, BlockType.RichText, null, null, null, null, "Two", "اثنان", "<p>Two</p>", "<p>اثنان</p>", [], null, null, null, null, null, null),
+        };
+        var badInput = NewPage(slug) with { TitleEn = "Should not stick", Blocks = duplicateBlocks };
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.UpdatePageAsync(page.Id, badInput, CancellationToken.None));
+        Assert.Equal("Blocks", ex.Field);
+
+        // A following, unrelated save on a different page must not flush the first page's
+        // half-applied assignment — the two-pass shape means nothing was ever assigned to it.
+        await content.SetPagePublishedAsync(otherPage.Id, false, CancellationToken.None);
+
+        await using var freshScope = app.Services.CreateAsyncScope();
+        var db = freshScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var reread = await db.Pages.AsNoTracking().SingleAsync(p => p.Id == page.Id);
+        Assert.Equal("Test page", reread.TitleEn);
+    }
+
+    [Fact]
     public async Task Deleting_a_page_soft_deletes_its_blocks_and_restore_brings_them_back()
     {
         var slug = "trash-" + Guid.NewGuid().ToString("N")[..8];
