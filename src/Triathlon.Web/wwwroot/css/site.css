@@ -452,6 +452,19 @@ a.card:hover,.card.hover:hover{transform:translateY(-2px);border-color:var(--lin
 @media (max-width:980px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:620px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
 
+/* An orphan in the last row of a three-column event grid stretches across the row and lays out
+   horizontally, so a lone card reads as featured rather than as two empty cells. */
+@media (min-width: 981px) {
+  .grid-3 > .event-card:last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+  .grid-3 > .event-card:last-child:nth-child(3n + 1) h3 { font-size: 1.5rem; flex: 1 1 auto; }
+  .grid-3 > .event-card:last-child:nth-child(3n + 1) .card-cta { margin-inline-start: auto; }
+}
+
 /* ---------- chips ----------
    Two families, told apart by treatment rather than by hue alone: which calendar an
    event belongs to is a tinted chip, whether you can enter it is an outline chip. */

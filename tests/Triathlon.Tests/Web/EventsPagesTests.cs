@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.DependencyInjection;
@@ -289,5 +290,20 @@ public sealed class EventsPagesTests(WebAppFixture app)
         Assert.Contains(next[2], html, StringComparison.Ordinal);
         Assert.DoesNotContain(next[3], html, StringComparison.Ordinal);
         Assert.DoesNotContain("data.js", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Stylesheet_carries_the_orphan_featured_card_rule()
+    {
+        // An orphan last card in a three-column .grid-3 event grid stretches across the row
+        // (site.css, appended after the .grid-3 rules) instead of leaving two empty cells.
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync("/en");
+
+        var match = Regex.Match(html, "href=\"([^\"]*site\\.css[^\"]*)\"");
+        Assert.True(match.Success, "No site.css stylesheet link found on /en.");
+
+        var css = await client.GetStringAsync(match.Groups[1].Value);
+        Assert.Contains(":last-child:nth-child(3n + 1)", css, StringComparison.Ordinal);
     }
 }

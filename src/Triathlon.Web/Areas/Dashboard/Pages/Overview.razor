@@ -1,21 +1,122 @@
 @page "/dashboard"
-@using System.Security.Claims
+@using System.Globalization
+@inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 
 <PageTitle>@L["Overview"]</PageTitle>
 
-<AuthorizeView>
-    <Authorized>
-        <MudText Typo="Typo.h4" GutterBottom="true">@L["Overview"]</MudText>
-        <MudText Typo="Typo.body1">@L["WelcomeBody", context.User.Identity?.Name ?? ""]</MudText>
-        <MudText Typo="Typo.body2" Class="mt-2">@L["Roles"]: @RoleList(context)</MudText>
-    </Authorized>
-</AuthorizeView>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Overview"]</MudText>
+
+@if (loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else
+{
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4" Outlined="true">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@L["PublishedEvents"]</MudText>
+                <MudText Typo="Typo.h4" Class="mt-1">@publishedEventsCount</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                    @L["NextEvent"]: @(nextEventDate is { } date ? date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "—")
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4" Outlined="true">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@L["Drafts"]</MudText>
+                <MudText Typo="Typo.h4" Class="mt-1">@DraftsTotal</MudText>
+                <MudStack Row="true" Spacing="3" Class="mt-2" Wrap="Wrap.Wrap">
+                    <MudLink Href="dashboard/pages">@L["Pages"] (@draftPagesCount)</MudLink>
+                    <MudLink Href="dashboard/news">@L["News"] (@draftNewsCount)</MudLink>
+                    <MudLink Href="dashboard/events">@L["Events"] (@draftEventsCount)</MudLink>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4" Outlined="true">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@L["Documents"]</MudText>
+                <MudText Typo="Typo.h4" Class="mt-1">@documentsCount</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4" Outlined="true">
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2">@L["LatestActivity"]</MudText>
+
+        @if (activity.Count == 0)
+        {
+            <MudText Color="Color.Secondary">@L["NoActivity"]</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true">
+                <thead>
+                    <tr>
+                        <th>@L["Entity"]</th>
+                        <th>@L["Action"]</th>
+                        <th>@L["User"]</th>
+                        <th>@L["When"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in activity)
+                    {
+                        <tr @key="row.Id">
+                            <td>@row.Entity</td>
+                            <td>@row.Action</td>
+                            <td>@row.User</td>
+                            <td>@row.At.ToOffset(EventsService.RiyadhOffset).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudPaper>
+}
 
 @code {
-    private static string RoleList(AuthenticationState state)
+    private bool loading = true;
+    private int publishedEventsCount;
+    private DateOnly? nextEventDate;
+    private int draftPagesCount;
+    private int draftNewsCount;
+    private int draftEventsCount;
+    private int documentsCount;
+    private IReadOnlyList<ActivityLog> activity = [];
+
+    private int DraftsTotal => draftPagesCount + draftNewsCount + draftEventsCount;
+
+    protected override async Task OnInitializedAsync()
     {
-        var roles = state.User.FindAll(ClaimTypes.Role).Select(claim => claim.Value).ToArray();
-        return roles.Length == 0 ? "none" : string.Join(", ", roles);
+        loading = true;
+
+        var data = await Scope.RunAsync(async sp =>
+        {
+            var eventsService = sp.GetRequiredService<EventsService>();
+            var events = await eventsService.AllForEditAsync(false, CancellationToken.None);
+            var pages = await sp.GetRequiredService<ContentService>().PagesAsync(false, CancellationToken.None);
+            var news = await sp.GetRequiredService<NewsService>().AllForEditAsync(false, CancellationToken.None);
+            var documents = await sp.GetRequiredService<DocumentsService>().DocumentsForEditAsync(false, CancellationToken.None);
+            var activityRows = await sp.GetRequiredService<IActivityQuery>().LatestAsync(10, CancellationToken.None);
+            return (Events: events, Pages: pages, News: news, Documents: documents, Activity: activityRows, Today: eventsService.Today);
+        });
+
+        var published = data.Events.Where(row => row.Event.IsPublished).ToList();
+        publishedEventsCount = published.Count;
+        nextEventDate = published.Where(row => row.Event.DateStart >= data.Today).OrderBy(row => row.Event.DateStart)
+            .Select(row => (DateOnly?)row.Event.DateStart).FirstOrDefault();
+
+        draftPagesCount = data.Pages.Count(page => !page.IsPublished);
+        draftNewsCount = data.News.Count(post => !post.IsPublished);
+        draftEventsCount = data.Events.Count(row => !row.Event.IsPublished);
+
+        documentsCount = data.Documents.Count;
+        activity = data.Activity;
+
+        loading = false;
     }
 }

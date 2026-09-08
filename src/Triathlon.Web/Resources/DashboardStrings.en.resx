@@ -422,6 +422,38 @@
     <value>No activity yet.</value>
     <comment>ActivityDrawer empty state.</comment>
   </data>
+  <data name="PublishedEvents" xml:space="preserve">
+    <value>Published events</value>
+    <comment>Overview tile heading: count of published events.</comment>
+  </data>
+  <data name="NextEvent" xml:space="preserve">
+    <value>Next event</value>
+    <comment>Overview tile label before the next published event's start date.</comment>
+  </data>
+  <data name="Drafts" xml:space="preserve">
+    <value>Drafts</value>
+    <comment>Overview tile heading: draft count across pages, news and events.</comment>
+  </data>
+  <data name="LatestActivity" xml:space="preserve">
+    <value>Latest activity</value>
+    <comment>Overview tile heading above the ten most recent audit log rows.</comment>
+  </data>
+  <data name="Entity" xml:space="preserve">
+    <value>Entity</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="Action" xml:space="preserve">
+    <value>Action</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>When</value>
+    <comment>Overview activity table column heading, Riyadh time.</comment>
+  </data>
   <data name="NoMedia" xml:space="preserve">
     <value>No files uploaded yet.</value>
     <comment>MediaPickerDialog empty state.</comment>
@@ -485,14 +517,6 @@
   <data name="Slug" xml:space="preserve">
     <value>Slug</value>
     <comment>Label of SlugField.</comment>
-  </data>
-  <data name="WelcomeBody" xml:space="preserve">
-    <value>Signed in as {0}.</value>
-    <comment>Overview page greeting; {0} is the signed-in user's name.</comment>
-  </data>
-  <data name="Roles" xml:space="preserve">
-    <value>Roles</value>
-    <comment>Overview page label before the signed-in user's role list.</comment>
   </data>
   <data name="UsersPlaceholder" xml:space="preserve">
     <value>User management arrives with the CRM in Week 5.</value>

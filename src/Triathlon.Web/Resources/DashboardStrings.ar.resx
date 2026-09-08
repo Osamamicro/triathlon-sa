@@ -422,6 +422,38 @@
     <value>لا يوجد نشاط بعد.</value>
     <comment>ActivityDrawer empty state.</comment>
   </data>
+  <data name="PublishedEvents" xml:space="preserve">
+    <value>الفعاليات المنشورة</value>
+    <comment>Overview tile heading: count of published events.</comment>
+  </data>
+  <data name="NextEvent" xml:space="preserve">
+    <value>الفعالية القادمة</value>
+    <comment>Overview tile label before the next published event's start date.</comment>
+  </data>
+  <data name="Drafts" xml:space="preserve">
+    <value>المسودات</value>
+    <comment>Overview tile heading: draft count across pages, news and events.</comment>
+  </data>
+  <data name="LatestActivity" xml:space="preserve">
+    <value>آخر النشاطات</value>
+    <comment>Overview tile heading above the ten most recent audit log rows.</comment>
+  </data>
+  <data name="Entity" xml:space="preserve">
+    <value>الكيان</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="Action" xml:space="preserve">
+    <value>الإجراء</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>المستخدم</value>
+    <comment>Overview activity table column heading.</comment>
+  </data>
+  <data name="When" xml:space="preserve">
+    <value>الوقت</value>
+    <comment>Overview activity table column heading, Riyadh time.</comment>
+  </data>
   <data name="NoMedia" xml:space="preserve">
     <value>لم تُرفع أي ملفات بعد.</value>
     <comment>MediaPickerDialog empty state.</comment>
@@ -485,14 +517,6 @@
   <data name="Slug" xml:space="preserve">
     <value>المعرّف</value>
     <comment>Label of SlugField.</comment>
-  </data>
-  <data name="WelcomeBody" xml:space="preserve">
-    <value>تم تسجيل الدخول باسم {0}.</value>
-    <comment>Overview page greeting; {0} is the signed-in user's name.</comment>
-  </data>
-  <data name="Roles" xml:space="preserve">
-    <value>الأدوار</value>
-    <comment>Overview page label before the signed-in user's role list.</comment>
   </data>
   <data name="UsersPlaceholder" xml:space="preserve">
     <value>ستتوفر إدارة المستخدمين مع نظام إدارة علاقات الرياضيين في الأسبوع الخامس.</value>
