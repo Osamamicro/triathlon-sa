@@ -32,6 +32,11 @@ public sealed class MediaService(AppDbContext db, IFileStore store, ContentCommi
             throw new ContentValidationException("File", "Validation_File", ex.Message);
         }
 
+        if (await PathIsTakenAsync(stored.Path, ct))
+        {
+            throw new ContentValidationException("File", "Validation_DuplicateRow");
+        }
+
         var asset = new MediaAsset
         {
             Kind = kind,
@@ -53,7 +58,12 @@ public sealed class MediaService(AppDbContext db, IFileStore store, ContentCommi
 
     public async Task<PagedResult<MediaAsset>> ListAsync(FileKind? kind, int skip, int take, CancellationToken ct)
     {
-        var q = db.MediaAssets.AsNoTracking().OrderByDescending(a => a.CreatedAt).AsQueryable();
+        // Mirror PageQuery's clamp (Domain/Common/PagedResult.cs): a caller-supplied skip/take must
+        // never turn into an unbounded or negative query.
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(skip, 0);
+
+        var q = db.MediaAssets.AsNoTracking().OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id).AsQueryable();
         if (kind is { } value)
         {
             q = q.Where(a => a.Kind == value);
@@ -63,6 +73,16 @@ public sealed class MediaService(AppDbContext db, IFileStore store, ContentCommi
         var items = await q.Skip(skip).Take(take).ToListAsync(ct);
         return new PagedResult<MediaAsset>(items, total, (skip / take) + 1, take);
     }
+
+    /// <summary>
+    /// Whether <paramref name="path"/> already names a catalog row, soft-deleted ones included — the
+    /// underlying <see cref="IFileStore"/> addresses every upload by a fresh GUID, so a real
+    /// collision should never happen, but <see cref="UploadAsync"/> checks it anyway rather than let
+    /// two rows silently share one file. Internal so <c>MediaServiceTests</c> can exercise the check
+    /// directly, since forcing the file store itself to reuse a path is not practical from a test.
+    /// </summary>
+    internal Task<bool> PathIsTakenAsync(string path, CancellationToken ct) =>
+        db.MediaAssets.IgnoreQueryFilters().AnyAsync(a => a.Path == path, ct);
 
     public async Task UpdateAltAsync(Guid id, string? altEn, string? altAr, CancellationToken ct)
     {

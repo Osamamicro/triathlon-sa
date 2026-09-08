@@ -147,13 +147,13 @@ public sealed partial class DocumentsService
         if (await db.TrainingGuides.IgnoreQueryFilters().AnyAsync(g => g.Slug == input.Slug && g.Id != input.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
         if (input.FileSize is { } size && size < 0) throw new ContentValidationException("FileSize", "Validation_FileSize");
-        if (input.IsPublished && input.FilePath is null && input.Chapters.Count == 0)
+        var filePath = guard.FilePath(input.FilePath, "FilePath");
+        if (input.IsPublished && filePath is null && input.Chapters.Count == 0)
             throw new ContentValidationException("IsPublished", "Validation_GuideNeedsContent");
 
         var titleEn = Required(input.TitleEn, "TitleEn"); var titleAr = Required(input.TitleAr, "TitleAr");
         var summaryEn = Required(input.SummaryEn, "SummaryEn"); var summaryAr = Required(input.SummaryAr, "SummaryAr");
         var levelEn = Required(input.LevelEn, "LevelEn"); var levelAr = Required(input.LevelAr, "LevelAr");
-        var filePath = guard.FilePath(input.FilePath, "FilePath");
 
         var guide = input.Id is { } id
             ? await GuideForEditAsync(id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
@@ -165,9 +165,9 @@ public sealed partial class DocumentsService
         {
             if (chapter.Id is { } cid && !chapterIds.Add(cid))
                 throw new ContentValidationException("Chapters", "Validation_DuplicateRow");
-            var bodyEn = guard.Html(chapter.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_Required");
-            var bodyAr = guard.Html(chapter.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_Required");
-            validatedChapters.Add((Required(chapter.TitleEn, "TitleEn"), Required(chapter.TitleAr, "TitleAr"), bodyEn, bodyAr));
+            var bodyEn = guard.Html(chapter.BodyEn) ?? throw new ContentValidationException("Chapters", "Validation_Required");
+            var bodyAr = guard.Html(chapter.BodyAr) ?? throw new ContentValidationException("Chapters", "Validation_Required");
+            validatedChapters.Add((Required(chapter.TitleEn, "Chapters"), Required(chapter.TitleAr, "Chapters"), bodyEn, bodyAr));
         }
 
         // ---- pass 2: every check above passed — assign and upsert chapters ----
@@ -182,7 +182,7 @@ public sealed partial class DocumentsService
         guide.TitleEn = titleEn; guide.TitleAr = titleAr;
         guide.SummaryEn = summaryEn; guide.SummaryAr = summaryAr;
         guide.LevelEn = levelEn; guide.LevelAr = levelAr;
-        guide.FilePath = filePath; guide.FileSize = input.FileSize;
+        guide.FilePath = filePath; guide.FileSize = filePath is null ? null : input.FileSize;
         guide.IsPublished = input.IsPublished; guide.SortOrder = input.SortOrder;
 
         var keep = new HashSet<Guid>();

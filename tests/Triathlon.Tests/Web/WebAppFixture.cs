@@ -66,6 +66,14 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
     /// </summary>
     public const string ThrowingPath = "/__test/throw";
 
+    /// <summary>
+    /// Where this fixture's uploads land, instead of the real app's <c>wwwroot/media</c> — a shared
+    /// test suite writing into the source tree would leave gitignored files behind after every run
+    /// and could race other test processes touching the same folder. Created in
+    /// <see cref="InitializeAsync"/>, removed (best effort) in <see cref="IAsyncLifetime.DisposeAsync"/>.
+    /// </summary>
+    private readonly string _mediaRoot = Path.Combine(Path.GetTempPath(), "triathlon-tests-media-" + Guid.NewGuid().ToString("N"));
+
     private readonly List<EmailMessage> _sentEmails = [];
 
     /// <summary>
@@ -86,6 +94,8 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
 
     public async Task InitializeAsync()
     {
+        Directory.CreateDirectory(_mediaRoot);
+
         if (_sqlServer is not null)
         {
             await _sqlServer.StartAsync();
@@ -138,6 +148,18 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
         {
             await _postgres!.DisposeAsync();
         }
+
+        try
+        {
+            Directory.Delete(_mediaRoot, recursive: true);
+        }
+        catch (IOException)
+        {
+            // Best effort: a leftover temp directory is not worth failing the test run for.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -183,6 +205,7 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
                 ["Database:SeedContent"] = "true",
                 ["Seed:AdminEmail"] = AdminEmail,
                 ["Seed:AdminPassword"] = AdminPassword,
+                ["Media:Root"] = _mediaRoot,
             }));
     }
 

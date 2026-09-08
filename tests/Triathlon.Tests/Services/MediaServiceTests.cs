@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Triathlon.Tests.Web;
 using Triathlon.Web.Data;
+using Triathlon.Web.Domain.Media;
 using Triathlon.Web.Services;
 
 namespace Triathlon.Tests.Services;
@@ -41,6 +42,21 @@ public sealed class MediaServiceTests(WebAppFixture app)
 
         await Assert.ThrowsAsync<ContentValidationException>(() =>
             media.UploadAsync(text, "doc.pdf", FileKind.Pdf, null, null, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task A_path_already_in_the_catalog_is_reported_as_taken()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var media = scope.ServiceProvider.GetRequiredService<MediaService>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var path = "/media/2026/09/" + Guid.NewGuid().ToString("N") + ".png";
+        db.MediaAssets.Add(new MediaAsset { Path = path, ContentType = "image/png", Size = 1, OriginalFileName = "existing.png" });
+        await db.SaveChangesAsync(CancellationToken.None);
+
+        Assert.True(await media.PathIsTakenAsync(path, CancellationToken.None));
+        Assert.False(await media.PathIsTakenAsync(path + "-not-taken", CancellationToken.None));
     }
 
     [Fact]

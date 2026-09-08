@@ -135,4 +135,17 @@ public sealed class LibraryWriteTests(WebAppFixture app)
             CancellationToken.None));
         Assert.Equal("IsPublished", ex.Field);
     }
+
+    [Fact]
+    public async Task Publishing_a_guide_with_a_whitespace_file_path_and_no_chapters_is_refused()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var documents = scope.ServiceProvider.GetRequiredService<DocumentsService>();
+        var slug = "blank-path-" + Guid.NewGuid().ToString("N")[..8];
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => documents.SaveGuideAsync(
+            new GuideInput(null, slug, "Blank path", "مسار فارغ", "Summary", "ملخص", "Beginner", "مبتدئ", " ", 10, true, 1, []),
+            CancellationToken.None));
+        Assert.Equal("IsPublished", ex.Field);
+    }
 }
