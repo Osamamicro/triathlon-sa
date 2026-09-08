@@ -198,7 +198,10 @@ button.primary:hover {
 }
 
 .stf-kpi-table-scroll {
-    overflow-inline: auto;
+    /* overflow-inline is Firefox-only; overflow-x is the actual cross-browser scroll-axis property
+       and is fine to use physically here despite the logical-properties rule elsewhere — the scroll
+       axis is direction-agnostic and mirrors on its own under dir="rtl". */
+    overflow-x: auto;
 }
 
 .stf-kpi-table-scroll table {

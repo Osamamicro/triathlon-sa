@@ -36,14 +36,17 @@
                 <TitleContent>
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="stf-block-panel-title">
                         <MudText>@BlockHeader(block, index)</MudText>
-                        <MudStack Row="true" Spacing="1" @onclick:stopPropagation="true">
+                        @* @onclick:stopPropagation is inert on a component (MudStack) — it only attaches to a
+                           plain element's native DOM listener — so this has to be a <div>, or move/delete would
+                           also toggle the panel open/closed. *@
+                        <div class="d-flex ga-1" @onclick:stopPropagation="true">
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
                                            Disabled="@(index == 0)" OnClick="@(() => MoveBlock(index, -1))" />
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
                                            Disabled="@(index == model.Blocks.Count - 1)" OnClick="@(() => MoveBlock(index, 1))" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
                                            OnClick="@(() => RemoveBlock(index))" />
-                        </MudStack>
+                        </div>
                     </MudStack>
                 </TitleContent>
                 <ChildContent>

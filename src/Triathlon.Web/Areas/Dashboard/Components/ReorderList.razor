@@ -15,10 +15,13 @@
                     @ItemTemplate(item)
                 </div>
                 <MudStack Spacing="1">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
-                                   Disabled="@(index == 0)" OnClick="@(() => MoveAsync(index, -1))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
-                                   Disabled="@(index == Items.Count - 1)" OnClick="@(() => MoveAsync(index, 1))" />
+                    @if (AllowReorder)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
+                                       Disabled="@(index == 0)" OnClick="@(() => MoveAsync(index, -1))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
+                                       Disabled="@(index == Items.Count - 1)" OnClick="@(() => MoveAsync(index, 1))" />
+                    }
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
                                    OnClick="@(() => RemoveAsync(index))" />
                 </MudStack>
@@ -40,6 +43,12 @@
 
     [Parameter]
     public string? Class { get; set; }
+
+    /// <summary>False hides the up/down move buttons (remove stays available) — for a list whose order
+    /// is derived from the data itself (e.g. Growth, sorted by year) rather than a free drag order, so
+    /// there is no reorder affordance that would snap back on the next render.</summary>
+    [Parameter]
+    public bool AllowReorder { get; set; } = true;
 
     private async Task MoveAsync(int index, int delta)
     {

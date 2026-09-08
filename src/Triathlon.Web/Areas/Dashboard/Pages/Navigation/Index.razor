@@ -30,6 +30,11 @@
         public string Href { get; set; } = "";
         public bool IsPublished { get; set; } = true;
 
+        /// <summary>Cascaded to this row's own <c>BilingualField Name="Label"</c>, so a refused save's
+        /// "Label" error lands on the offending row's LabelEn/LabelAr input, not every row.</summary>
+        public Dictionary<string, string> FieldErrors { get; } = new(StringComparer.Ordinal);
+        public string? HrefError { get; set; }
+
         public static NavItemRow From(NavItem n) => new() { Id = n.Id, LabelEn = n.LabelEn, LabelAr = n.LabelAr, Href = n.Href, IsPublished = n.IsPublished };
 
         public NavItemInput ToInput() => new(Id, LabelEn ?? "", LabelAr ?? "", Href, IsPublished);
@@ -50,13 +55,29 @@
     };
 
     private readonly Dictionary<NavLocation, bool> dirty = new();
-    private readonly Dictionary<NavLocation, bool> saving = new();
+
+    // Read via the raw indexer in the Save button's Disabled expression below (unlike dirty, which
+    // uses GetValueOrDefault) — pre-populated the same way as loading so that expression never hits
+    // a missing key. Before this fix a location without a save attempt yet (i.e. every location, on
+    // first load) had no entry here, and the moment it became dirty the `||` on that Disabled
+    // expression stopped short-circuiting and threw KeyNotFoundException, crashing the whole circuit.
+    private readonly Dictionary<NavLocation, bool> saving = new()
+    {
+        [NavLocation.Header] = false,
+        [NavLocation.FooterCompete] = false,
+        [NavLocation.FooterInvolved] = false,
+    };
     private readonly Dictionary<NavLocation, Dictionary<string, string>> fieldErrors = new()
     {
         [NavLocation.Header] = new(StringComparer.Ordinal),
         [NavLocation.FooterCompete] = new(StringComparer.Ordinal),
         [NavLocation.FooterInvolved] = new(StringComparer.Ordinal),
     };
+
+    /// <summary>The "Id"-keyed banner from a refused save, if any (this route never actually throws
+    /// one today — items always carry a row — kept for the same reason every other screen keeps it:
+    /// a generic exception on this location must not be silently dropped).</summary>
+    private readonly Dictionary<NavLocation, string?> banner = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,6 +106,13 @@
     {
         saving[location] = true;
         fieldErrors[location].Clear();
+        banner[location] = null;
+        foreach (var row in items[location])
+        {
+            row.FieldErrors.Clear();
+            row.HrefError = null;
+        }
+
         try
         {
             var input = items[location].Select(r => r.ToInput()).ToList();
@@ -94,12 +122,49 @@
         }
         catch (ContentValidationException ex)
         {
-            EditShell.Handle(L, ex, out _, fieldErrors[location]);
+            EditShell.Handle(L, ex, out var message, fieldErrors[location]);
+            banner[location] = message;
+            AnchorRowErrors(location);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally
         {
             saving[location] = false;
+        }
+    }
+
+    /// <summary>
+    /// The service throws "Label"/"Href" as a whole-save field, not tied to a row index — the same
+    /// checks are re-run here against every row so the offending row(s) get the error on their own
+    /// input instead of a page-wide alert. "Navigation" (duplicate id) stays list-level: there is no
+    /// per-row check that reproduces it, so it is left in <see cref="fieldErrors"/> and shown as a
+    /// banner alert.
+    /// </summary>
+    private void AnchorRowErrors(NavLocation location)
+    {
+        var errors = fieldErrors[location];
+        if (errors.Remove("Label", out var labelMessage))
+        {
+            foreach (var row in items[location])
+            {
+                if (string.IsNullOrWhiteSpace(row.LabelEn))
+                {
+                    row.FieldErrors["LabelEn"] = labelMessage;
+                }
+
+                if (string.IsNullOrWhiteSpace(row.LabelAr))
+                {
+                    row.FieldErrors["LabelAr"] = labelMessage;
+                }
+            }
+        }
+
+        if (errors.Remove("Href", out var hrefMessage))
+        {
+            foreach (var row in items[location].Where(r => !string.IsNullOrWhiteSpace(r.Href) && ContentService.SafeHref(r.Href) is null))
+            {
+                row.HrefError = hrefMessage;
+            }
         }
     }
 
@@ -110,6 +175,10 @@
         }
         else
         {
+            @if (banner.GetValueOrDefault(location) is { } bannerMessage)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-3">@bannerMessage</MudAlert>
+            }
             @foreach (var message in fieldErrors[location].Values)
             {
                 <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
@@ -117,18 +186,21 @@
 
             <ReorderList TItem="NavItemRow" Items="@items[location]" OnChanged="@(() => dirty[location] = true)">
                 <ItemTemplate Context="row">
-                    <MudGrid>
-                        <MudItem xs="12" md="6">
-                            <BilingualField Label="@L["Label"]" Name="Label" En="@row.LabelEn" EnChanged="@(v => { row.LabelEn = v; dirty[location] = true; })"
-                                             Ar="@row.LabelAr" ArChanged="@(v => { row.LabelAr = v; dirty[location] = true; })" />
-                        </MudItem>
-                        <MudItem xs="12" md="4">
-                            <MudTextField T="string" Label="@L["Href"]" Value="@row.Href" ValueChanged="@(v => { row.Href = v ?? ""; dirty[location] = true; })" />
-                        </MudItem>
-                        <MudItem xs="12" md="2" Class="d-flex align-center">
-                            <MudSwitch T="bool" Label="@L["Published"]" Value="@row.IsPublished" ValueChanged="@(v => { row.IsPublished = v; dirty[location] = true; })" Color="Color.Primary" />
-                        </MudItem>
-                    </MudGrid>
+                    <CascadingValue Value="@row.FieldErrors" Name="FieldErrors" IsFixed="false">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <BilingualField Label="@L["Label"]" Name="Label" En="@row.LabelEn" EnChanged="@(v => { row.LabelEn = v; dirty[location] = true; })"
+                                                 Ar="@row.LabelAr" ArChanged="@(v => { row.LabelAr = v; dirty[location] = true; })" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="@L["Href"]" Value="@row.Href" ValueChanged="@(v => { row.Href = v ?? ""; dirty[location] = true; })"
+                                              Error="@(row.HrefError is not null)" ErrorText="@row.HrefError" />
+                            </MudItem>
+                            <MudItem xs="12" md="2" Class="d-flex align-center">
+                                <MudSwitch T="bool" Label="@L["Published"]" Value="@row.IsPublished" ValueChanged="@(v => { row.IsPublished = v; dirty[location] = true; })" Color="Color.Primary" />
+                            </MudItem>
+                        </MudGrid>
+                    </CascadingValue>
                 </ItemTemplate>
             </ReorderList>
 

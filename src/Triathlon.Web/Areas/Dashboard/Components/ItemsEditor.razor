@@ -110,8 +110,11 @@
             CellsEnText is null ? null : Split(CellsEnText),
             CellsArText is null ? null : Split(CellsArText));
 
+        // TrimEntries only — RemoveEmptyEntries would collapse "A||C" to two cells instead of three,
+        // misaligning every later cell against the public table's by-index EN/AR pairing. An empty
+        // cell (including a trailing one from a trailing "|") is the editor's literal intent.
         private static string[] Split(string text) =>
-            text.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            text.Split('|', StringSplitOptions.TrimEntries);
     }
 
     private List<Row> rows = [];

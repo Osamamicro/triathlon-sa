@@ -1,5 +1,6 @@
 @page "/dashboard/statistics"
 @attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Common
 @using Triathlon.Web.Domain.Stats
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
@@ -43,7 +44,17 @@ else
                                           Error="@row.FieldErrors.ContainsKey("LabelEn")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelEn")" /></td>
                         <td dir="rtl"><MudTextField T="string" Value="@row.LabelAr" ValueChanged="@(v => row.LabelAr = v)"
                                           Error="@row.FieldErrors.ContainsKey("LabelAr")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelAr")" /></td>
-                        <td><MudNumericField T="long" Value="@row.Value" ValueChanged="@(v => row.Value = v)" /></td>
+                        <td>
+                            @if (row.Source == KpiSource.Computed)
+                            {
+                                <MudNumericField T="long" Value="@row.Value" ReadOnly="true" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["ComputedHint"]</MudText>
+                            }
+                            else
+                            {
+                                <MudNumericField T="long" Value="@row.Value" ValueChanged="@(v => row.Value = v)" />
+                            }
+                        </td>
                         <td><MudTextField T="string" Value="@row.Suffix" ValueChanged="@(v => row.Suffix = v)" /></td>
                         <td><MudCheckBox T="bool" Value="@row.ShowPlus" ValueChanged="@(v => row.ShowPlus = v)" /></td>
                         <td><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" /></td>
@@ -68,10 +79,6 @@ else
                                 <MudSelectItem Value="KpiSource.Manual">@L["Manual"]</MudSelectItem>
                                 <MudSelectItem Value="KpiSource.Computed">@L["Computed"]</MudSelectItem>
                             </MudSelect>
-                            @if (row.Source == KpiSource.Computed)
-                            {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["ComputedHint"]</MudText>
-                            }
                         </td>
                         <td>
                             @if (row.Error is { } rowError)
@@ -88,24 +95,31 @@ else
     </div>
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["Regions"]</MudText>
+    @if (regionsBanner is { } regionsBannerMessage)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@regionsBannerMessage</MudAlert>
+    }
     @foreach (var message in regionErrors.Values)
     {
         <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
     }
     <ReorderList TItem="RegionRow" Items="@regions" OnChanged="@(() => regionsDirty = true)">
         <ItemTemplate Context="row">
-            <MudGrid>
-                <MudItem xs="12" md="3">
-                    <MudTextField T="string" Label="@L["Key"]" Value="@row.Key" ValueChanged="@(v => { row.Key = v ?? ""; regionsDirty = true; })" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <BilingualField Label="@L["Name"]" Name="Name" En="@row.NameEn" EnChanged="@(v => { row.NameEn = v; regionsDirty = true; })"
-                                     Ar="@row.NameAr" ArChanged="@(v => { row.NameAr = v; regionsDirty = true; })" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudNumericField T="int" Label="@L["Value"]" Value="@row.Athletes" ValueChanged="@(v => { row.Athletes = v; regionsDirty = true; })" Min="0" />
-                </MudItem>
-            </MudGrid>
+            <CascadingValue Value="@row.FieldErrors" Name="FieldErrors" IsFixed="false">
+                <MudGrid>
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string" Label="@L["Key"]" Value="@row.Key" ValueChanged="@(v => { row.Key = v ?? ""; regionsDirty = true; })"
+                                      Error="@(row.KeyError is not null)" ErrorText="@row.KeyError" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <BilingualField Label="@L["Name"]" Name="Name" En="@row.NameEn" EnChanged="@(v => { row.NameEn = v; regionsDirty = true; })"
+                                         Ar="@row.NameAr" ArChanged="@(v => { row.NameAr = v; regionsDirty = true; })" />
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        <MudNumericField T="int" Label="@L["Value"]" Value="@row.Athletes" ValueChanged="@(v => { row.Athletes = v; regionsDirty = true; })" Min="0" />
+                    </MudItem>
+                </MudGrid>
+            </CascadingValue>
         </ItemTemplate>
     </ReorderList>
     <MudStack Row="true" Spacing="3" Class="mt-3 mb-6">
@@ -118,7 +132,7 @@ else
     {
         <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
     }
-    <ReorderList TItem="GrowthRow" Items="@growth" OnChanged="@(() => growthDirty = true)">
+    <ReorderList TItem="GrowthRow" Items="@growth" AllowReorder="false" OnChanged="@(() => growthDirty = true)">
         <ItemTemplate Context="row">
             <MudGrid>
                 <MudItem xs="12" md="6">
@@ -143,6 +157,11 @@ else
         public string? LabelEn { get; set; }
         public string? LabelAr { get; set; }
         public long Value { get; set; }
+
+        /// <summary>The value as loaded from the server. A <c>Computed</c> row's field is read-only, but
+        /// this is the value actually sent on save regardless — the nightly job owns computed values,
+        /// the dashboard never writes one back, even defensively against a bound field somehow changing.</summary>
+        public long OriginalValue { get; set; }
         public string? Suffix { get; set; }
         public bool ShowPlus { get; set; }
         public string? NoteEn { get; set; }
@@ -158,12 +177,12 @@ else
 
         public static KpiRow From(Kpi k) => new()
         {
-            Id = k.Id, LabelEn = k.LabelEn, LabelAr = k.LabelAr, Value = k.Value, Suffix = k.Suffix, ShowPlus = k.ShowPlus,
+            Id = k.Id, LabelEn = k.LabelEn, LabelAr = k.LabelAr, Value = k.Value, OriginalValue = k.Value, Suffix = k.Suffix, ShowPlus = k.ShowPlus,
             NoteEn = k.NoteEn, NoteAr = k.NoteAr, Color = k.Color, SortOrder = k.SortOrder,
             ShowOnHome = k.ShowOnHome, HomeOrder = k.HomeOrder, Source = k.Source,
         };
 
-        public KpiInput ToInput() => new(Id, LabelEn ?? "", LabelAr ?? "", Value, Suffix, ShowPlus, NoteEn, NoteAr, Color, SortOrder, ShowOnHome, HomeOrder, Source);
+        public KpiInput ToInput() => new(Id, LabelEn ?? "", LabelAr ?? "", Source == KpiSource.Computed ? OriginalValue : Value, Suffix, ShowPlus, NoteEn, NoteAr, Color, SortOrder, ShowOnHome, HomeOrder, Source);
     }
 
     private sealed class RegionRow
@@ -173,6 +192,11 @@ else
         public string? NameEn { get; set; }
         public string? NameAr { get; set; }
         public int Athletes { get; set; }
+        public string? KeyError { get; set; }
+
+        /// <summary>Cascaded to this row's own <c>BilingualField Name="Name"</c>, so a refused save's
+        /// "NameEn"/"NameAr" error lands on the offending row's input, not every row.</summary>
+        public Dictionary<string, string> FieldErrors { get; } = new(StringComparer.Ordinal);
 
         public static RegionRow From(RegionStat r) => new() { Id = r.Id, Key = r.Key, NameEn = r.NameEn, NameAr = r.NameAr, Athletes = r.Athletes };
 
@@ -197,6 +221,7 @@ else
 
     private bool regionsDirty;
     private bool regionsSaving;
+    private string? regionsBanner;
     private readonly Dictionary<string, string> regionErrors = new(StringComparer.Ordinal);
 
     private bool growthDirty;
@@ -259,6 +284,13 @@ else
     {
         regionsSaving = true;
         regionErrors.Clear();
+        regionsBanner = null;
+        foreach (var row in regions)
+        {
+            row.KeyError = null;
+            row.FieldErrors.Clear();
+        }
+
         try
         {
             var input = regions.Select((r, i) => r.ToInput(i + 1)).ToList();
@@ -270,12 +302,65 @@ else
         }
         catch (ContentValidationException ex)
         {
-            EditShell.Handle(L, ex, out _, regionErrors);
+            EditShell.Handle(L, ex, out regionsBanner, regionErrors);
+            AnchorRegionErrors();
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally
         {
             regionsSaving = false;
+        }
+    }
+
+    /// <summary>
+    /// The service throws "Key" (blank/invalid format) and "NameEn"/"NameAr" (blank) as whole-save
+    /// fields, and duplicate keys as the list-level "Regions" field — none tied to a row index. The
+    /// same checks are re-run here against every row so the offending row(s) get the error on their
+    /// own input instead of a page-wide alert. A duplicate key against a soft-deleted row (the one
+    /// case that needs the database to detect) is left as the "Regions" banner — there is no client
+    /// data to re-derive it from.
+    /// </summary>
+    private void AnchorRegionErrors()
+    {
+        if (regionErrors.Remove("Key", out var keyMessage))
+        {
+            foreach (var row in regions.Where(r => !Slugs.IsValid(r.Key)))
+            {
+                row.KeyError = keyMessage;
+            }
+        }
+
+        if (regionErrors.TryGetValue("Regions", out var listMessage))
+        {
+            var duplicateKeys = regions.GroupBy(r => r.Key, StringComparer.Ordinal)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToHashSet(StringComparer.Ordinal);
+            if (duplicateKeys.Count > 0)
+            {
+                foreach (var row in regions.Where(r => duplicateKeys.Contains(r.Key)))
+                {
+                    row.KeyError = listMessage;
+                }
+
+                regionErrors.Remove("Regions");
+            }
+        }
+
+        if (regionErrors.Remove("NameEn", out var nameEnMessage))
+        {
+            foreach (var row in regions.Where(r => string.IsNullOrWhiteSpace(r.NameEn)))
+            {
+                row.FieldErrors["NameEn"] = nameEnMessage;
+            }
+        }
+
+        if (regionErrors.Remove("NameAr", out var nameArMessage))
+        {
+            foreach (var row in regions.Where(r => string.IsNullOrWhiteSpace(r.NameAr)))
+            {
+                row.FieldErrors["NameAr"] = nameArMessage;
+            }
         }
     }
 
