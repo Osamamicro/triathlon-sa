@@ -30,17 +30,24 @@ window.stfEditor = (function () {
         quill.root.innerHTML = initialHtml || "";
         quill.root.setAttribute("dir", isRtl ? "rtl" : "ltr");
 
-        let timer = null;
+        // The record is stored before any timer is set and mutated in place from here on, so
+        // destroy() always sees the live pending timer through this same object — a plain local
+        // `timer` variable captured by value into the instances record at the end of create() would
+        // freeze at its initial null, and destroy() would clear nothing, leaving a debounced
+        // callback free to fire invokeMethodAsync on a DotNetObjectReference the component has
+        // already disposed.
+        const record = { quill: quill, timer: null };
+        instances[elementId] = record;
+
         quill.on("text-change", function () {
-            if (timer) {
-                window.clearTimeout(timer);
+            if (record.timer) {
+                window.clearTimeout(record.timer);
             }
-            timer = window.setTimeout(function () {
+            record.timer = window.setTimeout(function () {
+                record.timer = null;
                 dotNetRef.invokeMethodAsync("OnHtmlChanged", quill.root.innerHTML);
             }, DEBOUNCE_MS);
         });
-
-        instances[elementId] = { quill: quill, timer: timer };
     }
 
     function destroy(elementId) {

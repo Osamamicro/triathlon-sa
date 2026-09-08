@@ -24,10 +24,19 @@
     [Parameter]
     public string? Source { get; set; }
 
+    /// <summary>
+    /// Whether a value in <see cref="PublicSite.ReservedSlugs"/> (minus <see cref="PublicSite.CompanionPageSlugs"/>)
+    /// is flagged as <c>SlugReserved</c>. Defaults to true for top-level content such as pages;
+    /// event, news and guide slugs live under their own URL segment and can never collide with a
+    /// reserved top-level route, so those screens pass <c>false</c> and only the format check applies.
+    /// </summary>
+    [Parameter]
+    public bool Reserved { get; set; } = true;
+
     private bool userTyped;
     private bool touched;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (userTyped || !string.IsNullOrEmpty(Value) || string.IsNullOrWhiteSpace(Source))
         {
@@ -38,7 +47,7 @@
         if (!string.IsNullOrEmpty(derived) && derived != Value)
         {
             Value = derived;
-            _ = ValueChanged.InvokeAsync(Value);
+            await ValueChanged.InvokeAsync(Value);
         }
     }
 
@@ -64,7 +73,8 @@
     }
 
     private bool IsReserved(string? slug) =>
-        !string.IsNullOrEmpty(slug)
+        Reserved
+        && !string.IsNullOrEmpty(slug)
         && PublicSite.ReservedSlugs.Contains(slug)
         && !PublicSite.CompanionPageSlugs.Contains(slug);
 

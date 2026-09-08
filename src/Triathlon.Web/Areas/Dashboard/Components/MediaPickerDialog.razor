@@ -32,7 +32,11 @@
 
             @if (items.Count == 0)
             {
-                <MudText Color="Color.Secondary" Class="my-2">@L["NoActivity"]</MudText>
+                <MudText Color="Color.Secondary" Class="my-2">@L["NoMedia"]</MudText>
+            }
+            else if (pageCount > 1)
+            {
+                <MudPagination Count="@pageCount" Selected="@pageNumber" SelectedChanged="OnPageChangedAsync" Class="my-2" />
             }
 
             <MudDivider Class="my-3" />
@@ -64,21 +68,39 @@
     [Parameter, EditorRequired]
     public FileKind Kind { get; set; }
 
+    private const int PageSize = 24;
+
     private List<MediaAsset> items = [];
     private bool loading = true;
     private bool uploading;
     private string? error;
+    private int pageNumber = 1;
+    private int total;
 
     private string Accept => Kind == FileKind.Image ? "image/*" : ".pdf";
+    private int pageCount => Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
         loading = true;
-        var page = await MediaService.ListAsync(Kind, 0, 60, CancellationToken.None);
-        items = [.. page.Items];
-        loading = false;
+        try
+        {
+            var result = await MediaService.ListAsync(Kind, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
+            items = [.. result.Items];
+            total = result.Total;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnPageChangedAsync(int value)
+    {
+        pageNumber = value;
+        await LoadAsync();
     }
 
     private async Task OnFileSelectedAsync(IBrowserFile file)
@@ -88,8 +110,18 @@
             return;
         }
 
-        uploading = true;
         error = null;
+
+        // OpenReadStream(maxAllowedSize) below throws IOException synchronously the moment the
+        // browser-reported size is over the limit — checked here first so the common case shows an
+        // inline error instead of ever reaching that throw.
+        if (file.Size > LocalFileStore.MaxBytes)
+        {
+            error = L["Validation_File", OverLimitText];
+            return;
+        }
+
+        uploading = true;
         try
         {
             await using var stream = file.OpenReadStream(LocalFileStore.MaxBytes);
@@ -100,11 +132,19 @@
         {
             error = L[ex.Key, [.. ex.Arguments]];
         }
+        catch (IOException)
+        {
+            // Belt-and-suspenders for the Size check above: a stale/misreported Size, or a stream
+            // that grows mid-read, must still surface as an inline error rather than kill the circuit.
+            error = L["Validation_File", OverLimitText];
+        }
         finally
         {
             uploading = false;
         }
     }
+
+    private static string OverLimitText => $"> {LocalFileStore.MaxBytes / (1024 * 1024)} MB";
 
     private void Select(MediaAsset asset) => MudDialog.Close(DialogResult.Ok(asset));
 

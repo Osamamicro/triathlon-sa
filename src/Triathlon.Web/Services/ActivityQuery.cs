@@ -10,7 +10,7 @@ namespace Triathlon.Web.Services;
 /// itself is append-only and has no dedicated write service — every write goes through
 /// <see cref="ActivityLogger"/> or <see cref="ContentCommit"/> alongside the change it is logging.
 /// </summary>
-public sealed class ActivityQuery(AppDbContext db)
+public sealed class ActivityQuery(AppDbContext db) : IActivityQuery
 {
     /// <summary>
     /// Every logged action against one entity type, optionally narrowed to a single row, newest

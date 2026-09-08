@@ -13,7 +13,9 @@ public sealed class PublishBarTests : BunitContext
         var cut = Render<PublishBar>(parameters => parameters.Add(p => p.IsPublished, false));
 
         Assert.Contains("Draft", cut.Markup, StringComparison.Ordinal);
-        Assert.Contains("Publish", cut.Markup, StringComparison.Ordinal);
+
+        var button = cut.FindAll("button").Single(b => b.TextContent.Trim() == "Publish");
+        Assert.Equal("Publish", button.TextContent.Trim());
     }
 
     [Fact]

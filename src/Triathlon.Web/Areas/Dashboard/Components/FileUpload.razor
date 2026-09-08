@@ -49,8 +49,18 @@
             return;
         }
 
-        uploading = true;
         error = null;
+
+        // OpenReadStream(maxAllowedSize) below throws IOException synchronously the moment the
+        // browser-reported size is over the limit — checked here first so the common case shows an
+        // inline error instead of ever reaching that throw.
+        if (file.Size > MaxBytes)
+        {
+            error = L["Validation_File", OverLimitText];
+            return;
+        }
+
+        uploading = true;
         try
         {
             await using var stream = file.OpenReadStream(MaxBytes);
@@ -61,9 +71,17 @@
         {
             error = L[ex.Key, [.. ex.Arguments]];
         }
+        catch (IOException)
+        {
+            // Belt-and-suspenders for the Size check above: a stale/misreported Size, or a stream
+            // that grows mid-read, must still surface as an inline error rather than kill the circuit.
+            error = L["Validation_File", OverLimitText];
+        }
         finally
         {
             uploading = false;
         }
     }
+
+    private string OverLimitText => $"> {MaxBytes / (1024 * 1024)} MB";
 }

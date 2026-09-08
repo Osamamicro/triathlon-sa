@@ -77,7 +77,7 @@ builder.Services.AddScoped<ContentService>();
 builder.Services.AddScoped<NewsService>();
 builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<CrmService>();
-builder.Services.AddScoped<ActivityQuery>();
+builder.Services.AddScoped<IActivityQuery, ActivityQuery>();
 builder.Services.AddScoped<EmailJob>();
 builder.Services.AddScoped<ComputedKpisJob>();
 

@@ -420,7 +420,11 @@
   </data>
   <data name="NoActivity" xml:space="preserve">
     <value>No activity yet.</value>
-    <comment>ActivityDrawer empty state, and the media library dialog's empty state.</comment>
+    <comment>ActivityDrawer empty state.</comment>
+  </data>
+  <data name="NoMedia" xml:space="preserve">
+    <value>No files uploaded yet.</value>
+    <comment>MediaPickerDialog empty state.</comment>
   </data>
   <data name="Saved" xml:space="preserve">
     <value>Saved.</value>

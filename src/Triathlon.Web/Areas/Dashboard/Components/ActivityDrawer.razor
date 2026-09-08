@@ -1,10 +1,10 @@
 @* The audit trail for one entity: who touched it and what changed, newest first. Anchor="End" so
    MudRTLProvider mirrors it to the left in Arabic, the same as every other end-anchored surface. *@
 @using System.Text.Json
-@inject ActivityQuery Query
+@inject IActivityQuery Query
 @inject IStringLocalizer<DashboardStrings> L
 
-<MudDrawer @bind-Open="Open" Anchor="Anchor.End" Elevation="2" Width="420px" Variant="DrawerVariant.Temporary">
+<MudDrawer Open="Open" OpenChanged="OnOpenChangedAsync" Anchor="Anchor.End" Elevation="2" Width="420px" Variant="DrawerVariant.Temporary">
     <MudDrawerHeader>
         <MudText Typo="Typo.h6">@L["Activity"]</MudText>
     </MudDrawerHeader>
@@ -90,12 +90,29 @@
         wasOpen = Open;
     }
 
+    // MudDrawer manages its own open/close (the scrim, Escape, the edge swipe) and only tells the
+    // parent about it through OpenChanged — a plain @bind-Open here binds MudDrawer's parameter to
+    // this component's own Open field and stops there, so the parent that owns the state never
+    // hears about a close and the drawer becomes impossible to dismiss from outside. Wiring
+    // OpenChanged explicitly makes sure the parent's own EventCallback still fires.
+    private async Task OnOpenChangedAsync(bool value)
+    {
+        Open = value;
+        await OpenChanged.InvokeAsync(value);
+    }
+
     private async Task LoadAsync()
     {
         loading = true;
-        var logs = await Query.ForEntityAsync(Entity, EntityId, 50, CancellationToken.None);
-        rows = [.. logs.Select(log => new ActivityRow(log, ParseDiff(log.Diff)))];
-        loading = false;
+        try
+        {
+            var logs = await Query.ForEntityAsync(Entity, EntityId, 50, CancellationToken.None);
+            rows = [.. logs.Select(log => new ActivityRow(log, ParseDiff(log.Diff)))];
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private static string RiyadhTime(DateTimeOffset at) =>
