@@ -7,7 +7,14 @@ namespace Triathlon.Web.Services;
 /// <summary>RFC 5545 output for the public calendar feed. Hand-written: the feed is one VEVENT per event with no recurrence.</summary>
 public static class IcsWriter
 {
-    public static string Write(IEnumerable<Event> events, string culture, string baseUrl)
+    /// <summary>
+    /// How long a timed event's VEVENT is assumed to run, for the DTEND a subscribing calendar
+    /// needs — the site itself never asks an organiser for an end time. An all-day event does not use
+    /// this: its DTEND is the exclusive day after <c>DateEnd ?? DateStart</c>, as before.
+    /// </summary>
+    public static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(4);
+
+    public static string Write(IEnumerable<Event> events, string culture, string baseUrl, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(culture);
@@ -39,10 +46,22 @@ public static class IcsWriter
         {
             Line(sb, "BEGIN:VEVENT");
             Line(sb, "UID:" + e.Slug + "@triathlon.sa");
-            Line(sb, "DTSTAMP:" + (e.UpdatedAt ?? e.CreatedAt).UtcDateTime.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture));
+            Line(sb, "DTSTAMP:" + now.UtcDateTime.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture));
             if (e.StartTime is { } t)
             {
                 Line(sb, "DTSTART;TZID=Asia/Riyadh:" + e.DateStart.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + "T" + t.ToString("HHmmss", CultureInfo.InvariantCulture));
+
+                // A start after 20:00 pushes the default 4-hour duration past midnight, which
+                // TimeOnly.Add wraps back into the small hours rather than carrying a day — clamped
+                // to the last second of the same calendar day instead of an end that reads before
+                // its own start.
+                var end = t.Add(DefaultDuration);
+                if (end < t)
+                {
+                    end = new TimeOnly(23, 59, 59);
+                }
+
+                Line(sb, "DTEND;TZID=Asia/Riyadh:" + (e.DateEnd ?? e.DateStart).ToString("yyyyMMdd", CultureInfo.InvariantCulture) + "T" + end.ToString("HHmmss", CultureInfo.InvariantCulture));
             }
             else
             {

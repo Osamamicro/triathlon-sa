@@ -2,8 +2,11 @@
 @using Triathlon.Web.Services
 @inject IStringLocalizer<Shared> L
 @inject ContentService Content
+@inject TimeProvider Clock
 @{
-    var year = DateTime.UtcNow.Year;
+    // Riyadh's own year, not the server's UTC year: the two disagree for the last few hours of
+    // December in Riyadh, which is already January in UTC.
+    var year = Clock.GetUtcNow().ToOffset(EventsService.RiyadhOffset).Year;
 
     // The two link columns are rows in the same table the header reads; the contact column stays
     // here because it is the federation's own details rather than site navigation.

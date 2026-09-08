@@ -5,72 +5,90 @@ namespace Triathlon.Web.Data.Seed;
 
 /// <summary>
 /// Transcribes the prototype's statistics (<c>assets/js/data.js</c> lines 10–37) into the database:
-/// the ten KPI tiles, the six region-athlete counts and the four-year growth series. Idempotent:
-/// skips entirely once any KPI exists.
+/// the ten KPI tiles' real values, the six region-athlete counts and the four-year growth series.
+/// <see cref="SeedStructure"/> creates the ten KPI rows themselves (started at
+/// <c>Value = 0</c>, in the same keys/labels/sort order used below) before this ever runs, so this
+/// class only ever updates existing rows — it never inserts a <see cref="Kpi"/>.
+/// <para>
+/// Each of the three tables here guards itself independently: the KPI values are only set while
+/// every KPI still reads zero (so a real value the dashboard or the nightly computed-KPI job has
+/// since written is never stomped on), and regions/growth are each guarded on their own, empty table.
+/// </para>
 /// </summary>
 public static class SeedStats
 {
     public static async Task RunAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Kpis.AnyAsync(ct)) return;
+        await KpiValuesAsync(db, ct);
+        await RegionsAsync(db, ct);
+        await GrowthAsync(db, ct);
+    }
 
-        Kpi K(string key, long value, (string En, string Ar) label, int sortOrder,
-            string? suffix = null, bool showPlus = false, (string En, string Ar)? note = null,
-            bool showOnHome = false, int homeOrder = 0) => new()
+    private static async Task KpiValuesAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.Kpis.AnyAsync(k => k.Value != 0, ct)) return;
+
+        var values = new Dictionary<string, long>(StringComparer.Ordinal)
         {
-            Key = key, LabelEn = label.En, LabelAr = label.Ar, Value = value, SortOrder = sortOrder,
-            Suffix = suffix, ShowPlus = showPlus, NoteEn = note?.En, NoteAr = note?.Ar,
-            ShowOnHome = showOnHome, HomeOrder = homeOrder, Source = KpiSource.Manual,
+            ["athletes"] = 1284,
+            ["elite"] = 42,
+            ["participants"] = 18650,
+            ["tournaments"] = 24,
+            ["community"] = 46,
+            ["clubs"] = 17,
+            ["regions"] = 9,
+            ["volunteers"] = 380,
+            ["women"] = 31,
+            ["youth"] = 27,
         };
 
-        var kpis = new List<Kpi>
+        var kpis = await db.Kpis.ToListAsync(ct);
+        var changed = false;
+        foreach (var kpi in kpis)
         {
-            K("athletes", 1284, ("Registered athletes", "رياضي مسجل"), 1,
-                showPlus: true, note: ("+31% VS 2025", "‎+31% مقارنة بـ2025"),
-                showOnHome: true, homeOrder: 1),
-            K("elite", 42, ("Elite athletes", "رياضيو النخبة"), 2,
-                note: ("NATIONAL SQUAD POOL", "قاعدة المنتخب الوطني"),
-                showOnHome: true, homeOrder: 2),
-            K("participants", 18650, ("Race participations", "مشاركة في السباقات"), 3,
-                showPlus: true, note: ("SINCE 2023", "منذ 2023"),
-                showOnHome: true, homeOrder: 4),
-            K("tournaments", 24, ("Tournaments held", "بطولة أقيمت"), 4,
-                note: ("ACROSS 9 REGIONS", "في 9 مناطق"),
-                showOnHome: true, homeOrder: 3),
-            K("community", 46, ("Community events", "فعالية مجتمعية"), 5),
-            K("clubs", 17, ("Affiliated clubs", "نادياً منتسباً"), 6),
-            K("regions", 9, ("Active regions", "مناطق نشطة"), 7),
-            K("volunteers", 380, ("Trained volunteers", "متطوع مدرب"), 8),
-            K("women", 31, ("Women participation", "مشاركة نسائية"), 9, suffix: "%"),
-            K("youth", 27, ("Under-19 athletes", "رياضيون تحت 19"), 10, suffix: "%"),
-        };
+            if (values.TryGetValue(kpi.Key, out var value))
+            {
+                kpi.Value = value;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync(ct);
+        }
+    }
+
+    private static async Task RegionsAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.RegionStats.AnyAsync(ct)) return;
 
         RegionStat R(string key, (string En, string Ar) name, int athletes, int sortOrder) => new()
         {
             Key = key, NameEn = name.En, NameAr = name.Ar, Athletes = athletes, SortOrder = sortOrder,
         };
 
-        var regions = new List<RegionStat>
-        {
+        db.RegionStats.AddRange(
             R("riyadh", ("Riyadh", "الرياض"), 512, 1),
             R("makkah", ("Makkah (Jeddah)", "مكة المكرمة (جدة)"), 341, 2),
             R("eastern", ("Eastern Province", "المنطقة الشرقية"), 214, 3),
             R("madinah", ("Madinah / Yanbu", "المدينة / ينبع"), 96, 4),
             R("asir", ("Asir (Abha)", "عسير (أبها)"), 62, 5),
-            R("tabuk", ("Tabuk / NEOM", "تبوك / نيوم"), 59, 6),
-        };
+            R("tabuk", ("Tabuk / NEOM", "تبوك / نيوم"), 59, 6));
 
-        var growth = new List<GrowthPoint>
-        {
-            new() { Year = 2023, Athletes = 310 },
-            new() { Year = 2024, Athletes = 640 },
-            new() { Year = 2025, Athletes = 980 },
-            new() { Year = 2026, Athletes = 1284 },
-        };
+        await db.SaveChangesAsync(ct);
+    }
 
-        db.Kpis.AddRange(kpis);
-        db.RegionStats.AddRange(regions);
-        db.GrowthPoints.AddRange(growth);
+    private static async Task GrowthAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.GrowthPoints.AnyAsync(ct)) return;
+
+        db.GrowthPoints.AddRange(
+            new GrowthPoint { Year = 2023, Athletes = 310 },
+            new GrowthPoint { Year = 2024, Athletes = 640 },
+            new GrowthPoint { Year = 2025, Athletes = 980 },
+            new GrowthPoint { Year = 2026, Athletes = 1284 });
+
         await db.SaveChangesAsync(ct);
     }
 }

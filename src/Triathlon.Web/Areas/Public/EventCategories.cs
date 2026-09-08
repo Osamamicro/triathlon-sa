@@ -17,7 +17,12 @@ public static class EventCategories
         ["Age Group"] = "الفئات العمرية",
         ["Junior"] = "الناشئون",
         ["Open"] = "مفتوح",
-        ["Youth"] = "الشباب",
+        // "الناشئون" rather than the prototype's "الشباب" for community events (SeedEvents.cs): this
+        // is also the athlete-registration form's existing Arabic label for the same English key
+        // (AthleteCategories.Arabic), and the two must agree since Task 3.1.F makes one delegate to
+        // the other.
+        ["Youth"] = "الناشئون",
+        ["Community"] = "مجتمعي",
         ["Masters"] = "الماسترز",
         ["Family"] = "العائلة",
         ["Relay"] = "التتابع",

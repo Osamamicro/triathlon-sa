@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Triathlon.Web.Api;
 
 namespace Triathlon.Web.Areas.Public.Pages;
 
@@ -9,12 +10,15 @@ namespace Triathlon.Web.Areas.Public.Pages;
 /// </summary>
 public sealed class RegisterReceivedModel : PageModel
 {
-    /// <summary>The name the applicant typed, carried on the redirect and re-encoded by Razor.</summary>
+    /// <summary>
+    /// The name the applicant typed, carried through TempData rather than the redirect's query
+    /// string (see <see cref="PublicApi.ConfirmationNameKey"/>) and re-encoded by Razor.
+    /// </summary>
     public string? Name { get; private set; }
 
-    public void OnGet(string? name)
+    public void OnGet()
     {
-        Name = name;
+        Name = TempData[PublicApi.ConfirmationNameKey] as string;
 
         ViewData["Title"] = PublicText.Bi("Application received", "تم استلام الطلب");
     }

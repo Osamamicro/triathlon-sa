@@ -5,10 +5,12 @@ namespace Triathlon.Web.Data.Seed;
 
 /// <summary>
 /// Transcribes the prototype's navigation, governance structure and editable pages
-/// (<c>join.html</c>, <c>rules.html</c>, <c>training.html</c> and the contact details in the footer)
-/// into the CMS tables, so the header, the footer and every block-built page render from rows.
+/// (<c>join.html</c>, <c>rules.html</c>, <c>training.html</c>) into the CMS tables, so the header
+/// and every block-built page render from rows. Called from <see cref="SeedStructure"/>, which also
+/// owns the site settings (the footer's contact details) and the KPI rows — this class stays the
+/// factory for navigation, committees and pages only.
 /// <para>
-/// Each of the three aggregates guards its own table rather than the seeder guarding one of them:
+/// Each of the three aggregates guards its own table rather than the caller guarding one of them:
 /// a database seeded by an earlier task already has events and documents in it, and must still pick
 /// up the navigation, the committees and the pages on its next start. Pages are guarded per slug
 /// (rather than the whole table), so a database that already has <c>join</c>/<c>contact</c>/
@@ -17,19 +19,11 @@ namespace Triathlon.Web.Data.Seed;
 /// </summary>
 public static class SeedPages
 {
-    public static async Task RunAsync(AppDbContext db, CancellationToken ct)
-    {
-        await NavigationAsync(db, ct);
-        await CommitteesAsync(db, ct);
-        await ContentPagesAsync(db, ct);
-        await SettingsAsync(db, ct);
-    }
-
     // ---------------------------------------------------------------------------------------
     // Navigation
     // ---------------------------------------------------------------------------------------
 
-    private static async Task NavigationAsync(AppDbContext db, CancellationToken ct)
+    internal static async Task NavigationAsync(AppDbContext db, CancellationToken ct)
     {
         if (await db.NavItems.AnyAsync(ct)) return;
 
@@ -79,7 +73,7 @@ public static class SeedPages
     // Committees
     // ---------------------------------------------------------------------------------------
 
-    private static async Task CommitteesAsync(AppDbContext db, CancellationToken ct)
+    internal static async Task CommitteesAsync(AppDbContext db, CancellationToken ct)
     {
         if (await db.Committees.AnyAsync(ct)) return;
 
@@ -112,7 +106,7 @@ public static class SeedPages
     // Pages
     // ---------------------------------------------------------------------------------------
 
-    private static async Task ContentPagesAsync(AppDbContext db, CancellationToken ct)
+    internal static async Task ContentPagesAsync(AppDbContext db, CancellationToken ct)
     {
         var added = false;
 
@@ -128,38 +122,6 @@ public static class SeedPages
         await SeedIfMissing("rules", Rules);
         await SeedIfMissing("training", Training);
         await SeedIfMissing("home", Home);
-
-        if (added)
-        {
-            await db.SaveChangesAsync(ct);
-        }
-    }
-
-    // ---------------------------------------------------------------------------------------
-    // Settings
-    // ---------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// Guarded per key, like <see cref="ContentPagesAsync"/>: a database seeded by an earlier task
-    /// still picks up a setting added later. Task 3.1.F moves this into <c>SeedStructure</c>.
-    /// </summary>
-    private static async Task SettingsAsync(AppDbContext db, CancellationToken ct)
-    {
-        var added = false;
-
-        async Task SeedIfMissing(string key, string valueEn, string valueAr)
-        {
-            if (await db.SiteSettings.AnyAsync(s => s.Key == key, ct)) return;
-            db.SiteSettings.Add(new SiteSetting { Key = key, ValueEn = valueEn, ValueAr = valueAr });
-            added = true;
-        }
-
-        await SeedIfMissing(SettingKeys.ContactEmail, "info@triathlon.sa", "info@triathlon.sa");
-        await SeedIfMissing(SettingKeys.ContactWebsite, "https://triathlon.sa", "https://triathlon.sa");
-        await SeedIfMissing(SettingKeys.ContactX, "https://x.com/TriathlonKSA", "https://x.com/TriathlonKSA");
-        await SeedIfMissing(SettingKeys.FooterBlurb,
-            "The national governing body for triathlon, duathlon and aquathlon in the Kingdom of Saudi Arabia.",
-            "الجهة الوطنية المنظمة لرياضات الترايثلون والدواثلون والأكواثلون في المملكة العربية السعودية.");
 
         if (added)
         {

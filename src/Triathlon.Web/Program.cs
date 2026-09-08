@@ -201,18 +201,36 @@ app.MapHealthChecks(StagingBasicAuthMiddleware.HealthPath).AllowAnonymous();
 // and a GET that changes on every render so a cache hit is provable. Null outside the tests.
 Program.ConfigureTestEndpoints?.Invoke(app);
 
-// Staging and production keep this off and migrate as a deployment step; developers and the
+// Staging and production keep migration off and apply it as a deployment step; developers and the
 // integration tests turn it on so a fresh database is usable immediately.
-if (app.Configuration.GetValue("Database:MigrateOnStartup", false))
+//
+// The structural seed (navigation, committees, pages, settings, the ten zero-valued KPI rows) is a
+// separate switch, default true, from the demo content: production runs migrations as its own
+// deployment step and then starts the app with MigrateOnStartup off, so this has to be reachable
+// even without that block above having run — the tables just have to already be there.
+var migrateOnStartup = app.Configuration.GetValue("Database:MigrateOnStartup", false);
+var seedStructure = app.Configuration.GetValue("Database:SeedStructure", true);
+
+if (migrateOnStartup)
 {
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await SeedIdentity.RunAsync(scope.ServiceProvider);
 
+    if (seedStructure)
+    {
+        await SeedStructure.RunAsync(scope.ServiceProvider);
+    }
+
     if (app.Configuration.GetValue("Database:SeedContent", false))
     {
         await SeedContent.RunAsync(scope.ServiceProvider);
     }
+}
+else if (seedStructure)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await SeedStructure.RunAsync(scope.ServiceProvider);
 }
 
 app.Run();

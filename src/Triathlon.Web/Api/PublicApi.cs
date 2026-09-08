@@ -19,6 +19,15 @@ namespace Triathlon.Web.Api;
 /// </summary>
 public static class PublicApi
 {
+    /// <summary>
+    /// The TempData key both confirmation pages (<c>Registered.cshtml.cs</c>,
+    /// <c>RegisterReceived.cshtml.cs</c>) read the visitor's name back from, instead of a
+    /// <c>?name=</c> query string parameter — a query string is copyable and bookmarkable, and this
+    /// is a one-time confirmation addressed to whoever just submitted the form, not a link anyone
+    /// with the URL should be able to replay with their own name spliced in.
+    /// </summary>
+    public const string ConfirmationNameKey = "ConfirmationName";
+
     /// <summary>The guest entry form as the browser posts it; property names match the field names.</summary>
     public sealed class GuestEntryForm
     {
@@ -113,11 +122,11 @@ public static class PublicApi
 
         // The whole calendar as a subscribable feed, so an athlete's phone keeps the season without
         // visiting the site again.
-        api.MapGet("/calendar.ics", async (string? type, string? culture, EventsService events, HttpContext http, CancellationToken ct) =>
+        api.MapGet("/calendar.ics", async (string? type, string? culture, EventsService events, TimeProvider clock, HttpContext http, CancellationToken ct) =>
         {
             var lang = string.Equals(culture, "ar", StringComparison.OrdinalIgnoreCase) ? "ar" : PublicSite.DefaultCulture;
             var list = await events.AllPublishedAsync(ParseType(type), ct);
-            var ics = IcsWriter.Write(list, lang, $"{http.Request.Scheme}://{http.Request.Host}");
+            var ics = IcsWriter.Write(list, lang, $"{http.Request.Scheme}://{http.Request.Host}", clock.GetUtcNow());
 
             return Results.Text(ics, "text/calendar", Encoding.UTF8);
         })
@@ -142,8 +151,8 @@ public static class PublicApi
 
             // A browser posts "" for an optional field the visitor left alone, and [Phone] rejects
             // an empty string as readily as a malformed one — so blanks become "absent" first.
-            form.Phone = NullIfBlank(form.Phone);
-            form.Club = NullIfBlank(form.Club);
+            form.Phone = FormPosts.NullIfBlank(form.Phone);
+            form.Club = FormPosts.NullIfBlank(form.Club);
 
             // Loaded before validation so a posted category can be checked against the event's own
             // list — a crafted POST must not be able to write an arbitrary 64-char category string.
@@ -165,11 +174,6 @@ public static class PublicApi
                 // page itself renders the branded 404.
                 if (ev is not null)
                 {
-                    var invalidFields = results
-                        .SelectMany(r => r.MemberNames)
-                        .Select(ToFieldName)
-                        .Distinct(StringComparer.OrdinalIgnoreCase);
-
                     // Empty string, not null, for the optional fields: TryRead hands this back out as
                     // a non-nullable IReadOnlyDictionary<string, string>, and an absent value there
                     // reads the same as "not typed" either way.
@@ -181,16 +185,9 @@ public static class PublicApi
                         [nameof(GuestEntryForm.Category)] = form.Category,
                         [nameof(GuestEntryForm.Club)] = form.Club ?? "",
                         [nameof(GuestEntryForm.Declaration)] = form.Declaration,
-                    }.ToDictionary(kv => ToFieldName(kv.Key), kv => kv.Value);
+                    };
 
-                    // A minimal API delegate never runs through MVC's result filters, which is what
-                    // saves TempData for a Razor Page automatically — so this endpoint saves it by
-                    // hand. Save() writes the cookie onto HttpContext.Response synchronously, which
-                    // happens here, before the IResult below sets the redirect's status line and
-                    // Location header, so both land on the same 302 response.
-                    var tempData = tempDataFactory.GetTempData(httpContext);
-                    FormRoundTrip.Store(tempData, posted, invalidFields);
-                    tempData.Save();
+                    FormPosts.RoundTrip(tempDataFactory, httpContext, results, posted);
                 }
 
                 return Results.Redirect(PublicCulture.Url(culture, path + "/register") + "?invalid=1");
@@ -199,13 +196,18 @@ public static class PublicApi
             var outcome = await events.RegisterAsync(
                 slug, new GuestRegistration(form.FullName, form.Email, form.Phone, form.Category, form.Club), ct);
 
+            // The confirmation page reads this back out of TempData rather than a ?name= query
+            // string — see ConfirmationNameKey.
+            var tempData = tempDataFactory.GetTempData(httpContext);
+            tempData[ConfirmationNameKey] = form.FullName;
+            tempData.Save();
+
             var confirmation = PublicCulture.Url(culture, path + "/registered");
-            var name = "&name=" + Uri.EscapeDataString(form.FullName);
 
             return outcome switch
             {
-                RegistrationOutcome.Confirmed => Results.Redirect(confirmation + "?outcome=confirmed" + name),
-                RegistrationOutcome.Waitlist => Results.Redirect(confirmation + "?outcome=waitlist" + name),
+                RegistrationOutcome.Confirmed => Results.Redirect(confirmation + "?outcome=confirmed"),
+                RegistrationOutcome.Waitlist => Results.Redirect(confirmation + "?outcome=waitlist"),
                 RegistrationOutcome.Closed => Results.Redirect(PublicCulture.Url(culture, path)),
                 _ => Results.NotFound(),
             };
@@ -236,9 +238,9 @@ public static class PublicApi
             var formUrl = PublicCulture.Url(culture, "register");
 
             // A browser posts "" for a select left on its blank option; those mean "not chosen".
-            form.City = NullIfBlank(form.City);
-            form.Club = NullIfBlank(form.Club);
-            form.Event = NullIfBlank(form.Event);
+            form.City = FormPosts.NullIfBlank(form.City);
+            form.Club = FormPosts.NullIfBlank(form.Club);
+            form.Event = FormPosts.NullIfBlank(form.Event);
 
             var results = new List<ValidationResult>();
             var isValid = Validator.TryValidateObject(form, new ValidationContext(form), results, validateAllProperties: true);
@@ -307,11 +309,6 @@ public static class PublicApi
 
             if (!isValid)
             {
-                var invalidFields = results
-                    .SelectMany(r => r.MemberNames)
-                    .Select(ToFieldName)
-                    .Distinct(StringComparer.OrdinalIgnoreCase);
-
                 var posted = new Dictionary<string, string?>
                 {
                     [nameof(AthleteRegistrationForm.FullName)] = form.FullName,
@@ -322,13 +319,9 @@ public static class PublicApi
                     [nameof(AthleteRegistrationForm.Club)] = form.Club ?? "",
                     [nameof(AthleteRegistrationForm.Event)] = form.Event ?? "",
                     [nameof(AthleteRegistrationForm.Declaration)] = form.Declaration,
-                }.ToDictionary(kv => ToFieldName(kv.Key), kv => kv.Value);
+                };
 
-                // A minimal API delegate never runs through MVC's result filters, which is what
-                // saves TempData for a Razor Page automatically — so this endpoint saves it by hand.
-                var tempData = tempDataFactory.GetTempData(httpContext);
-                FormRoundTrip.Store(tempData, posted, invalidFields);
-                tempData.Save();
+                FormPosts.RoundTrip(tempDataFactory, httpContext, results, posted);
 
                 return Results.Redirect(formUrl + "?invalid=1");
             }
@@ -349,7 +342,13 @@ public static class PublicApi
                 new AthleteApplication(form.FullName, form.Email, dateOfBirth!.Value, cityKey, form.Category, clubId, interestEventId, culture),
                 ct);
 
-            return Results.Redirect(PublicCulture.Url(culture, "register/received") + "?name=" + Uri.EscapeDataString(form.FullName));
+            // The confirmation page reads this back out of TempData rather than a ?name= query
+            // string — see ConfirmationNameKey.
+            var tempData = tempDataFactory.GetTempData(httpContext);
+            tempData[ConfirmationNameKey] = form.FullName;
+            tempData.Save();
+
+            return Results.Redirect(PublicCulture.Url(culture, "register/received"));
         })
         .RequireRateLimiting(RateLimitSetup.PublicPost)
         // .NET 10 minimal-API validation would answer 400 JSON to a browser form; we validate the
@@ -398,14 +397,4 @@ public static class PublicApi
         "community" => EventType.Community,
         _ => null,
     };
-
-    private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    /// <summary>
-    /// <see cref="ValidationResult.MemberNames"/> carries the C# property name ("FullName"); the
-    /// form field, the TempData round trip and the "field invalid" CSS hook all key off the
-    /// lower-camel-case name the HTML input uses instead ("fullName").
-    /// </summary>
-    private static string ToFieldName(string memberName) =>
-        memberName.Length == 0 ? memberName : char.ToLowerInvariant(memberName[0]) + memberName[1..];
 }

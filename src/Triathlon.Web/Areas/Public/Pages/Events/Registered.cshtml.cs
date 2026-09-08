@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Triathlon.Web.Api;
 using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Services;
 
@@ -16,10 +17,13 @@ public sealed class RegisteredModel(EventsService events) : PageModel
 
     public bool Waitlisted { get; private set; }
 
-    /// <summary>The name the visitor typed, carried on the redirect and re-encoded by Razor.</summary>
+    /// <summary>
+    /// The name the visitor typed, carried through TempData rather than the redirect's query string
+    /// (see <see cref="PublicApi.ConfirmationNameKey"/>) and re-encoded by Razor.
+    /// </summary>
     public string? Name { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(string slug, string? outcome, string? name, CancellationToken ct)
+    public async Task<IActionResult> OnGetAsync(string slug, string? outcome, CancellationToken ct)
     {
         var found = await events.BySlugAsync(slug, ct);
         if (found is null)
@@ -29,7 +33,7 @@ public sealed class RegisteredModel(EventsService events) : PageModel
 
         Event = found;
         Waitlisted = outcome == "waitlist";
-        Name = name;
+        Name = TempData[PublicApi.ConfirmationNameKey] as string;
 
         ViewData["Title"] = PublicText.Bi("Entry received", "تم استلام التسجيل");
 

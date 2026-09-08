@@ -107,8 +107,10 @@ public sealed class EventsPagesTests(WebAppFixture app)
             });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);     // followed the redirect
-        Assert.StartsWith("/en/events/riyadh-sprint-2026/registered?outcome=confirmed",
-            response.RequestMessage!.RequestUri!.PathAndQuery, StringComparison.Ordinal);
+        var pathAndQuery = response.RequestMessage!.RequestUri!.PathAndQuery;
+        Assert.StartsWith("/en/events/riyadh-sprint-2026/registered?outcome=confirmed", pathAndQuery, StringComparison.Ordinal);
+        // The visitor's name travels through TempData, not the redirect's query string.
+        Assert.DoesNotContain("name=", pathAndQuery, StringComparison.Ordinal);
         Assert.Contains("Test Guest", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 

@@ -45,7 +45,7 @@ public sealed class AthleteRegistrationTests(WebAppFixture app)
             ["city"] = "riyadh", ["category"] = "Age Group", ["club"] = "", ["event"] = "", ["declaration"] = "on",
         });
 
-        Assert.EndsWith("/en/register/received?name=Test%20Athlete",
+        Assert.EndsWith("/en/register/received",
             response.RequestMessage!.RequestUri!.PathAndQuery, StringComparison.Ordinal);
         Assert.Contains("Test Athlete", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
 

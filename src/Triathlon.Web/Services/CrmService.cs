@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Triathlon.Web.Areas.Public;
 using Triathlon.Web.Data;
 using Triathlon.Web.Domain.Crm;
 using Triathlon.Web.Jobs;
@@ -34,16 +35,13 @@ public static class AthleteCategories
 
     public static readonly IReadOnlyList<string> All = [Youth, AgeGroup, Elite, Para, Community];
 
-    /// <summary>The Arabic label for a category; unknown values come back unchanged.</summary>
-    public static string Arabic(string category) => category switch
-    {
-        Youth => "الناشئون",
-        AgeGroup => "الفئات العمرية",
-        Elite => "النخبة",
-        Para => "ذوو الإعاقة",
-        Community => "مجتمعي",
-        _ => category,
-    };
+    /// <summary>
+    /// The Arabic label for a category. Delegates to <see cref="Areas.Public.EventCategories.Label"/>
+    /// — the same lookup the event-entry form's category dropdown uses — so the two forms cannot
+    /// drift apart on what "Youth" or "Community" reads as in Arabic; unknown values come back
+    /// unchanged either way.
+    /// </summary>
+    public static string Arabic(string category) => EventCategories.Label(category).Ar;
 }
 
 /// <summary>

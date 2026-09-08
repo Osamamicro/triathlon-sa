@@ -65,6 +65,18 @@ public sealed class PublicShellTests(WebAppFixture app)
         Assert.Contains("<h2>Compete</h2>", footer, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Footer_shows_the_current_year_from_the_clock()
+    {
+        // WebAppFixture pins TimeProvider to 2026-09-07; the footer must read that clock (in Riyadh
+        // time) rather than the server's own DateTime.UtcNow.
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync("/en");
+        var footer = html[html.IndexOf("<footer", StringComparison.Ordinal)..];
+
+        Assert.Contains("© 2026", footer, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("/en/governance/documents")]
     [InlineData("/en/events/timeline")]
