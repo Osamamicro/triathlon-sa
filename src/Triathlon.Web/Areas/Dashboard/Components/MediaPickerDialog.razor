@@ -1,0 +1,112 @@
+@* The shared media library, opened from MediaPicker: pick an existing upload, or add a new one. *@
+@using Microsoft.AspNetCore.Components.Forms
+@inject MediaService MediaService
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudDialog>
+    <DialogContent>
+        @if (loading)
+        {
+            <MudProgressCircular Indeterminate="true" Class="ma-4" />
+        }
+        else
+        {
+            <MudGrid>
+                @foreach (var asset in items)
+                {
+                    <MudItem xs="4" sm="3" md="2">
+                        <MudPaper Class="pa-1 stf-media-tile" @onclick="@(() => Select(asset))" Elevation="0" Outlined="true">
+                            @if (asset.Kind == FileKind.Image)
+                            {
+                                <MudImage Src="@asset.Path" Alt="@asset.OriginalFileName" Fluid="true" ObjectFit="ObjectFit.Cover" Height="80" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Large" />
+                            }
+                            <MudText Typo="Typo.caption" Class="d-block text-truncate">@asset.OriginalFileName</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            @if (items.Count == 0)
+            {
+                <MudText Color="Color.Secondary" Class="my-2">@L["NoActivity"]</MudText>
+            }
+
+            <MudDivider Class="my-3" />
+
+            <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelectedAsync" Accept="@Accept">
+                <CustomContent Context="picker">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload"
+                               Disabled="@uploading" OnClick="@picker.OpenFilePickerAsync">
+                        @(uploading ? L["Uploading"] : L["Upload"])
+                    </MudButton>
+                </CustomContent>
+            </MudFileUpload>
+
+            @if (error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-2">@error</MudAlert>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@L["Cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public FileKind Kind { get; set; }
+
+    private List<MediaAsset> items = [];
+    private bool loading = true;
+    private bool uploading;
+    private string? error;
+
+    private string Accept => Kind == FileKind.Image ? "image/*" : ".pdf";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        var page = await MediaService.ListAsync(Kind, 0, 60, CancellationToken.None);
+        items = [.. page.Items];
+        loading = false;
+    }
+
+    private async Task OnFileSelectedAsync(IBrowserFile file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+
+        uploading = true;
+        error = null;
+        try
+        {
+            await using var stream = file.OpenReadStream(LocalFileStore.MaxBytes);
+            var asset = await MediaService.UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None);
+            items.Insert(0, asset);
+        }
+        catch (ContentValidationException ex)
+        {
+            error = L[ex.Key, [.. ex.Arguments]];
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private void Select(MediaAsset asset) => MudDialog.Close(DialogResult.Ok(asset));
+
+    private void Cancel() => MudDialog.Cancel();
+}

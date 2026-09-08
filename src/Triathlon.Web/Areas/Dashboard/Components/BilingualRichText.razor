@@ -1,0 +1,119 @@
+@* Same side-by-side English/Arabic shape as BilingualField, but for rich (HTML) body copy: two
+   Quill editors bridged through wwwroot/js/editor.js. Quill owns the DOM inside each div — this
+   component never touches it directly except to create and destroy the editor. *@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject IStringLocalizer<DashboardStrings> L
+@implements IAsyncDisposable
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudText Typo="Typo.caption" Class="d-block mb-1">@($"{Label} (EN)")</MudText>
+        <div id="@enElementId" class="stf-rich-text"></div>
+        @if (Required && enTouched && IsBlank(En))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error">@L["Required"]</MudText>
+        }
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudText Typo="Typo.caption" Class="d-block mb-1">@($"{Label} (AR)")</MudText>
+        <div id="@arElementId" class="stf-rich-text" dir="rtl" lang="ar"></div>
+        @if (Required && arTouched && IsBlank(Ar))
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error">@L["Required"]</MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string? En { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> EnChanged { get; set; }
+
+    [Parameter]
+    public string? Ar { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ArChanged { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; } = true;
+
+    private readonly string enElementId = "stf-rt-en-" + Guid.NewGuid().ToString("N");
+    private readonly string arElementId = "stf-rt-ar-" + Guid.NewGuid().ToString("N");
+
+    private DotNetObjectReference<EditorBridge>? enBridgeRef;
+    private DotNetObjectReference<EditorBridge>? arBridgeRef;
+
+    private bool enTouched;
+    private bool arTouched;
+
+    /// <summary>Whether both sides carry non-empty content, when this field is required.</summary>
+    public bool IsValid => !Required || (!IsBlank(En) && !IsBlank(Ar));
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var enBridge = new EditorBridge(async html =>
+        {
+            En = html;
+            enTouched = true;
+            await EnChanged.InvokeAsync(html);
+            StateHasChanged();
+        });
+        var arBridge = new EditorBridge(async html =>
+        {
+            Ar = html;
+            arTouched = true;
+            await ArChanged.InvokeAsync(html);
+            StateHasChanged();
+        });
+
+        enBridgeRef = DotNetObjectReference.Create(enBridge);
+        arBridgeRef = DotNetObjectReference.Create(arBridge);
+
+        await JS.InvokeVoidAsync("stfEditor.create", enElementId, En ?? "", false, enBridgeRef);
+        await JS.InvokeVoidAsync("stfEditor.create", arElementId, Ar ?? "", true, arBridgeRef);
+    }
+
+    /// <summary>A tag is not empty content — Quill's own placeholder markup is <c>&lt;p&gt;&lt;br&gt;&lt;/p&gt;</c>.</summary>
+    private static bool IsBlank(string? html) =>
+        string.IsNullOrWhiteSpace(html) || string.IsNullOrWhiteSpace(System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*>", ""));
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("stfEditor.destroy", enElementId);
+            await JS.InvokeVoidAsync("stfEditor.destroy", arElementId);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is already gone (navigation, tab close) — nothing left to clean up client-side.
+        }
+
+        enBridgeRef?.Dispose();
+        arBridgeRef?.Dispose();
+    }
+
+    /// <summary>
+    /// One instance per editor: <c>editor.js</c> calls back a fixed method name (<see cref="OnHtmlChanged"/>)
+    /// on whatever <c>dotNetRef</c> it was created with, so the English and Arabic editors each need
+    /// their own reference rather than sharing the component's — a shared reference could not tell
+    /// which side just changed.
+    /// </summary>
+    private sealed class EditorBridge(Func<string, Task> onChanged)
+    {
+        [JSInvokable]
+        public Task OnHtmlChanged(string html) => onChanged(html);
+    }
+}

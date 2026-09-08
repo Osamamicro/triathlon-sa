@@ -226,4 +226,292 @@
     <value>إحدى القيم خارج النطاق المسموح.</value>
     <comment>Shown when a posted region/growth row's athlete count is negative, or a growth row's year is outside 2000-2100.</comment>
   </data>
+  <data name="OtherLanguage" xml:space="preserve">
+    <value>English</value>
+    <comment>App-bar link that switches the dashboard's language; names the *other* language, in that language's own script.</comment>
+  </data>
+  <data name="SignOut" xml:space="preserve">
+    <value>تسجيل الخروج</value>
+    <comment>Sign-out button in the app bar.</comment>
+  </data>
+  <data name="ToggleNavigation" xml:space="preserve">
+    <value>تبديل القائمة</value>
+    <comment>aria-label of the app bar's drawer toggle button.</comment>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>نظرة عامة</value>
+    <comment>Title of the dashboard landing page and its nav link.</comment>
+  </data>
+  <data name="NavContent" xml:space="preserve">
+    <value>المحتوى</value>
+    <comment>Nav group heading for pages, news, governance and navigation.</comment>
+  </data>
+  <data name="NavEvents" xml:space="preserve">
+    <value>الفعاليات</value>
+    <comment>Nav group heading for events and cities.</comment>
+  </data>
+  <data name="NavLibrary" xml:space="preserve">
+    <value>المكتبة</value>
+    <comment>Nav group heading for documents, rules and guides.</comment>
+  </data>
+  <data name="NavCrm" xml:space="preserve">
+    <value>إدارة العلاقات</value>
+    <comment>Nav group heading for athletes and registrations.</comment>
+  </data>
+  <data name="NavAdmin" xml:space="preserve">
+    <value>الإدارة</value>
+    <comment>Nav group heading for users, settings and jobs.</comment>
+  </data>
+  <data name="Pages" xml:space="preserve">
+    <value>الصفحات</value>
+    <comment>Nav link to the CMS pages screen.</comment>
+  </data>
+  <data name="News" xml:space="preserve">
+    <value>الأخبار</value>
+    <comment>Nav link to the news screen.</comment>
+  </data>
+  <data name="Governance" xml:space="preserve">
+    <value>الحوكمة</value>
+    <comment>Nav link to the governance documents screen.</comment>
+  </data>
+  <data name="Navigation" xml:space="preserve">
+    <value>التنقل</value>
+    <comment>Nav link to the site-navigation editor screen.</comment>
+  </data>
+  <data name="Events" xml:space="preserve">
+    <value>الفعاليات</value>
+    <comment>Nav link to the events screen.</comment>
+  </data>
+  <data name="Cities" xml:space="preserve">
+    <value>المدن</value>
+    <comment>Nav link to the cities/map screen.</comment>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>الوثائق</value>
+    <comment>Nav link to the documents library screen.</comment>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>اللوائح</value>
+    <comment>Nav link to the competition rules screen.</comment>
+  </data>
+  <data name="Guides" xml:space="preserve">
+    <value>الأدلة</value>
+    <comment>Nav link to the training guides screen.</comment>
+  </data>
+  <data name="Statistics" xml:space="preserve">
+    <value>الإحصائيات</value>
+    <comment>Nav link to the statistics screen.</comment>
+  </data>
+  <data name="Media" xml:space="preserve">
+    <value>الوسائط</value>
+    <comment>Nav link to the shared media library screen.</comment>
+  </data>
+  <data name="Athletes" xml:space="preserve">
+    <value>الرياضيون</value>
+    <comment>Nav link to the CRM athletes screen (disabled until Week 5).</comment>
+  </data>
+  <data name="Registrations" xml:space="preserve">
+    <value>التسجيلات</value>
+    <comment>Nav link to the CRM registrations screen (disabled until Week 5).</comment>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>المستخدمون</value>
+    <comment>Nav link and heading of the user-management screen.</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>الإعدادات</value>
+    <comment>Nav link to the site settings screen.</comment>
+  </data>
+  <data name="Jobs" xml:space="preserve">
+    <value>المهام</value>
+    <comment>Nav link to the Hangfire dashboard, opened in a new tab.</comment>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>تغيير كلمة المرور</value>
+    <comment>Nav link and heading of the change-password screen.</comment>
+  </data>
+  <data name="Required" xml:space="preserve">
+    <value>هذا الحقل مطلوب</value>
+    <comment>Error text under a bilingual field's side that was left blank.</comment>
+  </data>
+  <data name="SlugInvalid" xml:space="preserve">
+    <value>استخدم أحرفًا لاتينية صغيرة وأرقامًا وشرطات فقط.</value>
+    <comment>Error text under SlugField when the value fails Slugs.IsValid.</comment>
+  </data>
+  <data name="SlugReserved" xml:space="preserve">
+    <value>هذا المعرّف محجوز لصفحات الموقع الأساسية.</value>
+    <comment>Error text under SlugField when the value collides with PublicSite.ReservedSlugs.</comment>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>مسودة</value>
+    <comment>PublishBar status chip for an unpublished item.</comment>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>منشور</value>
+    <comment>PublishBar status chip for a published item.</comment>
+  </data>
+  <data name="SaveDraft" xml:space="preserve">
+    <value>حفظ كمسودة</value>
+    <comment>PublishBar button that saves without publishing.</comment>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>نشر</value>
+    <comment>PublishBar button that publishes the item.</comment>
+  </data>
+  <data name="Unpublish" xml:space="preserve">
+    <value>إلغاء النشر</value>
+    <comment>PublishBar button that unpublishes the item.</comment>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>حذف</value>
+    <comment>PublishBar kebab menu item, and ConfirmDialog's default danger action label.</comment>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>استرجاع</value>
+    <comment>Action that brings a soft-deleted row back.</comment>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>معاينة</value>
+    <comment>PublishBar link that opens the public page in a new tab.</comment>
+  </data>
+  <data name="Choose" xml:space="preserve">
+    <value>اختيار</value>
+    <comment>MediaPicker button that opens the library dialog.</comment>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>إزالة</value>
+    <comment>MediaPicker button that clears the current selection.</comment>
+  </data>
+  <data name="Upload" xml:space="preserve">
+    <value>رفع</value>
+    <comment>Upload button on FileUpload and the media library dialog.</comment>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>جارٍ الرفع…</value>
+    <comment>Upload button label while a file is being sent.</comment>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+    <comment>Dialog cancel button.</comment>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>تأكيد</value>
+    <comment>Generic confirm action label.</comment>
+  </data>
+  <data name="TypeToConfirm" xml:space="preserve">
+    <value>اكتب للتأكيد</value>
+    <comment>Label of ConfirmDialog's type-to-confirm text field.</comment>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>آخر تحديث</value>
+    <comment>PublishBar caption before the last-saved timestamp and editor name.</comment>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>النشاط</value>
+    <comment>Heading of ActivityDrawer.</comment>
+  </data>
+  <data name="Before" xml:space="preserve">
+    <value>قبل</value>
+    <comment>ActivityDrawer diff table column heading.</comment>
+  </data>
+  <data name="After" xml:space="preserve">
+    <value>بعد</value>
+    <comment>ActivityDrawer diff table column heading.</comment>
+  </data>
+  <data name="NoActivity" xml:space="preserve">
+    <value>لا يوجد نشاط بعد.</value>
+    <comment>ActivityDrawer empty state, and the media library dialog's empty state.</comment>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>تم الحفظ.</value>
+    <comment>Snackbar shown after a successful draft save.</comment>
+  </data>
+  <data name="PublishedToast" xml:space="preserve">
+    <value>تم النشر.</value>
+    <comment>Snackbar shown after a successful publish.</comment>
+  </data>
+  <data name="ErrorSaving" xml:space="preserve">
+    <value>حدث خطأ أثناء الحفظ.</value>
+    <comment>Fallback error snackbar for a save that failed without a specific validation message.</comment>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>الإنجليزية</value>
+    <comment>Language name shown in its own language, e.g. in a settings picker.</comment>
+  </data>
+  <data name="Arabic" xml:space="preserve">
+    <value>العربية</value>
+    <comment>Language name shown in its own language, e.g. in a settings picker.</comment>
+  </data>
+  <data name="ShowDeleted" xml:space="preserve">
+    <value>إظهار المحذوف</value>
+    <comment>Toggle on a list screen that reveals soft-deleted rows.</comment>
+  </data>
+  <data name="NewItem" xml:space="preserve">
+    <value>جديد</value>
+    <comment>Button that starts a new row on a list screen.</comment>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>بحث</value>
+    <comment>Search field placeholder on a list screen.</comment>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>الإجراءات</value>
+    <comment>Column heading / aria-label for a row's action menu.</comment>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>تعديل</value>
+    <comment>Row action that opens an item for editing.</comment>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>الحالة</value>
+    <comment>List-screen column heading for draft/published status.</comment>
+  </data>
+  <data name="UpdatedAt" xml:space="preserve">
+    <value>تاريخ التحديث</value>
+    <comment>List-screen column heading for the last-saved timestamp.</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>الاسم</value>
+    <comment>Generic column heading, e.g. ActivityDrawer's diff table.</comment>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>العنوان</value>
+    <comment>Generic field/column label for a content item's title.</comment>
+  </data>
+  <data name="Slug" xml:space="preserve">
+    <value>المعرّف</value>
+    <comment>Label of SlugField.</comment>
+  </data>
+  <data name="WelcomeBody" xml:space="preserve">
+    <value>تم تسجيل الدخول باسم {0}.</value>
+    <comment>Overview page greeting; {0} is the signed-in user's name.</comment>
+  </data>
+  <data name="Roles" xml:space="preserve">
+    <value>الأدوار</value>
+    <comment>Overview page label before the signed-in user's role list.</comment>
+  </data>
+  <data name="UsersPlaceholder" xml:space="preserve">
+    <value>ستتوفر إدارة المستخدمين مع نظام إدارة علاقات الرياضيين في الأسبوع الخامس.</value>
+    <comment>Body text of the Users screen stub.</comment>
+  </data>
+  <data name="CurrentPassword" xml:space="preserve">
+    <value>كلمة المرور الحالية</value>
+    <comment>Label of the current-password field on the change-password form.</comment>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>كلمة المرور الجديدة</value>
+    <comment>Label of the new-password field on the change-password form.</comment>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>تأكيد كلمة المرور الجديدة</value>
+    <comment>Label of the confirm-password field on the change-password form.</comment>
+  </data>
+  <data name="UpdatePassword" xml:space="preserve">
+    <value>تحديث كلمة المرور</value>
+    <comment>Submit button of the change-password form.</comment>
+  </data>
+  <data name="PasswordChanged" xml:space="preserve">
+    <value>تم تغيير كلمة المرور بنجاح.</value>
+    <comment>Status message shown after a successful password change.</comment>
+  </data>
 </root>

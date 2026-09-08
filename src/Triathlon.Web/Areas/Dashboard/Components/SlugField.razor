@@ -1,0 +1,74 @@
+@* The slug for a page, event, news post, rule or guide. Left alone, it tracks the English title
+   through Slugs' one formatting rule; typed into once, it stops following the title. *@
+@using System.Text.RegularExpressions
+@using Triathlon.Web.Areas.Public
+@using Triathlon.Web.Domain.Common
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudTextField T="string"
+              Label="@L["Slug"]"
+              Value="@Value"
+              ValueChanged="OnChangedAsync"
+              Error="@hasError"
+              ErrorText="@errorText"
+              OnBlur="@((FocusEventArgs _) => touched = true)" />
+
+@code {
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    /// <summary>The English title this slug is derived from until the user types one of their own.</summary>
+    [Parameter]
+    public string? Source { get; set; }
+
+    private bool userTyped;
+    private bool touched;
+
+    protected override void OnParametersSet()
+    {
+        if (userTyped || !string.IsNullOrEmpty(Value) || string.IsNullOrWhiteSpace(Source))
+        {
+            return;
+        }
+
+        var derived = Derive(Source);
+        if (!string.IsNullOrEmpty(derived) && derived != Value)
+        {
+            Value = derived;
+            _ = ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    private async Task OnChangedAsync(string? value)
+    {
+        userTyped = true;
+        touched = true;
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    // Not a [GeneratedRegex]: the source generator that backs it only sees the original syntax
+    // trees in a compilation pass, and a .razor file's @code block is emitted by the Razor
+    // generator itself — one generator's output is invisible to another, so the partial method it
+    // needs never gets its implementation.
+    private static readonly Regex NonSlugPattern = new("[^a-z0-9]+", RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static string Derive(string source)
+    {
+        var lowered = source.Trim().ToLowerInvariant();
+        var withHyphens = NonSlugPattern.Replace(lowered, "-");
+        return withHyphens.Trim('-');
+    }
+
+    private bool IsReserved(string? slug) =>
+        !string.IsNullOrEmpty(slug)
+        && PublicSite.ReservedSlugs.Contains(slug)
+        && !PublicSite.CompanionPageSlugs.Contains(slug);
+
+    private bool hasError => touched && !string.IsNullOrEmpty(Value) && (!Slugs.IsValid(Value) || IsReserved(Value));
+
+    private string? errorText => IsReserved(Value) ? L["SlugReserved"] : L["SlugInvalid"];
+}

@@ -226,4 +226,292 @@
     <value>A value is out of range.</value>
     <comment>Shown when a posted region/growth row's athlete count is negative, or a growth row's year is outside 2000-2100.</comment>
   </data>
+  <data name="OtherLanguage" xml:space="preserve">
+    <value>العربية</value>
+    <comment>App-bar link that switches the dashboard's language; names the *other* language, in that language's own script.</comment>
+  </data>
+  <data name="SignOut" xml:space="preserve">
+    <value>Sign out</value>
+    <comment>Sign-out button in the app bar.</comment>
+  </data>
+  <data name="ToggleNavigation" xml:space="preserve">
+    <value>Toggle navigation</value>
+    <comment>aria-label of the app bar's drawer toggle button.</comment>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>Overview</value>
+    <comment>Title of the dashboard landing page and its nav link.</comment>
+  </data>
+  <data name="NavContent" xml:space="preserve">
+    <value>Content</value>
+    <comment>Nav group heading for pages, news, governance and navigation.</comment>
+  </data>
+  <data name="NavEvents" xml:space="preserve">
+    <value>Events</value>
+    <comment>Nav group heading for events and cities.</comment>
+  </data>
+  <data name="NavLibrary" xml:space="preserve">
+    <value>Library</value>
+    <comment>Nav group heading for documents, rules and guides.</comment>
+  </data>
+  <data name="NavCrm" xml:space="preserve">
+    <value>CRM</value>
+    <comment>Nav group heading for athletes and registrations.</comment>
+  </data>
+  <data name="NavAdmin" xml:space="preserve">
+    <value>Administration</value>
+    <comment>Nav group heading for users, settings and jobs.</comment>
+  </data>
+  <data name="Pages" xml:space="preserve">
+    <value>Pages</value>
+    <comment>Nav link to the CMS pages screen.</comment>
+  </data>
+  <data name="News" xml:space="preserve">
+    <value>News</value>
+    <comment>Nav link to the news screen.</comment>
+  </data>
+  <data name="Governance" xml:space="preserve">
+    <value>Governance</value>
+    <comment>Nav link to the governance documents screen.</comment>
+  </data>
+  <data name="Navigation" xml:space="preserve">
+    <value>Navigation</value>
+    <comment>Nav link to the site-navigation editor screen.</comment>
+  </data>
+  <data name="Events" xml:space="preserve">
+    <value>Events</value>
+    <comment>Nav link to the events screen.</comment>
+  </data>
+  <data name="Cities" xml:space="preserve">
+    <value>Cities</value>
+    <comment>Nav link to the cities/map screen.</comment>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>Documents</value>
+    <comment>Nav link to the documents library screen.</comment>
+  </data>
+  <data name="Rules" xml:space="preserve">
+    <value>Rules</value>
+    <comment>Nav link to the competition rules screen.</comment>
+  </data>
+  <data name="Guides" xml:space="preserve">
+    <value>Guides</value>
+    <comment>Nav link to the training guides screen.</comment>
+  </data>
+  <data name="Statistics" xml:space="preserve">
+    <value>Statistics</value>
+    <comment>Nav link to the statistics screen.</comment>
+  </data>
+  <data name="Media" xml:space="preserve">
+    <value>Media</value>
+    <comment>Nav link to the shared media library screen.</comment>
+  </data>
+  <data name="Athletes" xml:space="preserve">
+    <value>Athletes</value>
+    <comment>Nav link to the CRM athletes screen (disabled until Week 5).</comment>
+  </data>
+  <data name="Registrations" xml:space="preserve">
+    <value>Registrations</value>
+    <comment>Nav link to the CRM registrations screen (disabled until Week 5).</comment>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>Nav link and heading of the user-management screen.</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Nav link to the site settings screen.</comment>
+  </data>
+  <data name="Jobs" xml:space="preserve">
+    <value>Jobs</value>
+    <comment>Nav link to the Hangfire dashboard, opened in a new tab.</comment>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+    <comment>Nav link and heading of the change-password screen.</comment>
+  </data>
+  <data name="Required" xml:space="preserve">
+    <value>Required</value>
+    <comment>Error text under a bilingual field's side that was left blank.</comment>
+  </data>
+  <data name="SlugInvalid" xml:space="preserve">
+    <value>Use lower-case letters, numbers and hyphens only.</value>
+    <comment>Error text under SlugField when the value fails Slugs.IsValid.</comment>
+  </data>
+  <data name="SlugReserved" xml:space="preserve">
+    <value>This slug is reserved for the site's own pages.</value>
+    <comment>Error text under SlugField when the value collides with PublicSite.ReservedSlugs.</comment>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>Draft</value>
+    <comment>PublishBar status chip for an unpublished item.</comment>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>Published</value>
+    <comment>PublishBar status chip for a published item.</comment>
+  </data>
+  <data name="SaveDraft" xml:space="preserve">
+    <value>Save draft</value>
+    <comment>PublishBar button that saves without publishing.</comment>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>Publish</value>
+    <comment>PublishBar button that publishes the item.</comment>
+  </data>
+  <data name="Unpublish" xml:space="preserve">
+    <value>Unpublish</value>
+    <comment>PublishBar button that unpublishes the item.</comment>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+    <comment>PublishBar kebab menu item, and ConfirmDialog's default danger action label.</comment>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>Restore</value>
+    <comment>Action that brings a soft-deleted row back.</comment>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+    <comment>PublishBar link that opens the public page in a new tab.</comment>
+  </data>
+  <data name="Choose" xml:space="preserve">
+    <value>Choose</value>
+    <comment>MediaPicker button that opens the library dialog.</comment>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+    <comment>MediaPicker button that clears the current selection.</comment>
+  </data>
+  <data name="Upload" xml:space="preserve">
+    <value>Upload</value>
+    <comment>Upload button on FileUpload and the media library dialog.</comment>
+  </data>
+  <data name="Uploading" xml:space="preserve">
+    <value>Uploading…</value>
+    <comment>Upload button label while a file is being sent.</comment>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Dialog cancel button.</comment>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirm</value>
+    <comment>Generic confirm action label.</comment>
+  </data>
+  <data name="TypeToConfirm" xml:space="preserve">
+    <value>Type to confirm</value>
+    <comment>Label of ConfirmDialog's type-to-confirm text field.</comment>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>Last updated</value>
+    <comment>PublishBar caption before the last-saved timestamp and editor name.</comment>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Activity</value>
+    <comment>Heading of ActivityDrawer.</comment>
+  </data>
+  <data name="Before" xml:space="preserve">
+    <value>Before</value>
+    <comment>ActivityDrawer diff table column heading.</comment>
+  </data>
+  <data name="After" xml:space="preserve">
+    <value>After</value>
+    <comment>ActivityDrawer diff table column heading.</comment>
+  </data>
+  <data name="NoActivity" xml:space="preserve">
+    <value>No activity yet.</value>
+    <comment>ActivityDrawer empty state, and the media library dialog's empty state.</comment>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Saved.</value>
+    <comment>Snackbar shown after a successful draft save.</comment>
+  </data>
+  <data name="PublishedToast" xml:space="preserve">
+    <value>Published.</value>
+    <comment>Snackbar shown after a successful publish.</comment>
+  </data>
+  <data name="ErrorSaving" xml:space="preserve">
+    <value>Something went wrong while saving.</value>
+    <comment>Fallback error snackbar for a save that failed without a specific validation message.</comment>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+    <comment>Language name shown in its own language, e.g. in a settings picker.</comment>
+  </data>
+  <data name="Arabic" xml:space="preserve">
+    <value>Arabic</value>
+    <comment>Language name shown in its own language, e.g. in a settings picker.</comment>
+  </data>
+  <data name="ShowDeleted" xml:space="preserve">
+    <value>Show deleted</value>
+    <comment>Toggle on a list screen that reveals soft-deleted rows.</comment>
+  </data>
+  <data name="NewItem" xml:space="preserve">
+    <value>New</value>
+    <comment>Button that starts a new row on a list screen.</comment>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+    <comment>Search field placeholder on a list screen.</comment>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+    <comment>Column heading / aria-label for a row's action menu.</comment>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Row action that opens an item for editing.</comment>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+    <comment>List-screen column heading for draft/published status.</comment>
+  </data>
+  <data name="UpdatedAt" xml:space="preserve">
+    <value>Updated</value>
+    <comment>List-screen column heading for the last-saved timestamp.</comment>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+    <comment>Generic column heading, e.g. ActivityDrawer's diff table.</comment>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+    <comment>Generic field/column label for a content item's title.</comment>
+  </data>
+  <data name="Slug" xml:space="preserve">
+    <value>Slug</value>
+    <comment>Label of SlugField.</comment>
+  </data>
+  <data name="WelcomeBody" xml:space="preserve">
+    <value>Signed in as {0}.</value>
+    <comment>Overview page greeting; {0} is the signed-in user's name.</comment>
+  </data>
+  <data name="Roles" xml:space="preserve">
+    <value>Roles</value>
+    <comment>Overview page label before the signed-in user's role list.</comment>
+  </data>
+  <data name="UsersPlaceholder" xml:space="preserve">
+    <value>User management arrives with the CRM in Week 5.</value>
+    <comment>Body text of the Users screen stub.</comment>
+  </data>
+  <data name="CurrentPassword" xml:space="preserve">
+    <value>Current password</value>
+    <comment>Label of the current-password field on the change-password form.</comment>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New password</value>
+    <comment>Label of the new-password field on the change-password form.</comment>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Confirm new password</value>
+    <comment>Label of the confirm-password field on the change-password form.</comment>
+  </data>
+  <data name="UpdatePassword" xml:space="preserve">
+    <value>Update password</value>
+    <comment>Submit button of the change-password form.</comment>
+  </data>
+  <data name="PasswordChanged" xml:space="preserve">
+    <value>Your password has been changed.</value>
+    <comment>Status message shown after a successful password change.</comment>
+  </data>
 </root>

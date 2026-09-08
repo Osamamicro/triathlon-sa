@@ -155,3 +155,29 @@ button.primary:hover {
     font-size: 0.8125rem;
     color: var(--stf-muted);
 }
+
+/* The MudBlazor half of the dashboard, below: the component kit from Task 3.1.G. */
+
+.stf-publish-bar {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1100;
+}
+
+.stf-rich-text .ql-editor {
+    min-block-size: 8rem;
+}
+
+.stf-media-tile {
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.stf-media-tile:hover {
+    border-color: var(--stf-green);
+}
+
+.stf-diff-table td,
+.stf-diff-table th {
+    word-break: break-word;
+}

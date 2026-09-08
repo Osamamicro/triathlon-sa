@@ -1,13 +1,14 @@
 @page "/dashboard"
 @using System.Security.Claims
+@inject IStringLocalizer<DashboardStrings> L
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>@L["Overview"]</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <MudText Typo="Typo.h4" GutterBottom="true">Welcome</MudText>
-        <MudText Typo="Typo.body1">Signed in as @context.User.Identity?.Name.</MudText>
-        <MudText Typo="Typo.body2" Class="mt-2">Roles: @RoleList(context)</MudText>
+        <MudText Typo="Typo.h4" GutterBottom="true">@L["Overview"]</MudText>
+        <MudText Typo="Typo.body1">@L["WelcomeBody", context.User.Identity?.Name ?? ""]</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">@L["Roles"]: @RoleList(context)</MudText>
     </Authorized>
 </AuthorizeView>
 

@@ -1,22 +1,25 @@
 @inherits LayoutComponentBase
+@inject IStringLocalizer<DashboardStrings> L
 
-<MudThemeProvider />
+<MudRTLProvider RightToLeft="@IsRtl">
+<MudThemeProvider Theme="@DashboardTheme.Theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="Toggle navigation" />
-        <MudText Typo="Typo.h6">Federation dashboard</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" aria-label="@L["ToggleNavigation"]" />
+        <MudText Typo="Typo.h6">@L["Brand"]</MudText>
         <MudSpacer />
+        <MudLink Href="@CultureLink" Class="mx-4" Color="Color.Inherit">@L["OtherLanguage"]</MudLink>
         <AuthorizeView>
             <Authorized>
-                <MudText Typo="Typo.body2" Class="mr-4">@context.User.Identity?.Name</MudText>
+                <MudText Typo="Typo.body2" Class="mx-4">@context.User.Identity?.Name</MudText>
                 <form action="dashboard/logout" method="post">
                     <AntiforgeryToken />
                     <input type="hidden" name="returnUrl" value="dashboard/login" />
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit">Sign out</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit">@L["SignOut"]</MudButton>
                 </form>
             </Authorized>
         </AuthorizeView>
@@ -24,45 +27,55 @@
 
     <MudDrawer @bind-Open="drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
         <MudNavMenu>
-            <MudNavLink Href="dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Overview</MudNavLink>
-
-            @* The destinations below are built by later tasks; the entries are here so the role
-               filtering is wired and reviewable now. *@
+            <MudNavLink Href="dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@L["Overview"]</MudNavLink>
             <AuthorizeView Policy="@Policies.Content" Context="content">
-                <MudNavGroup Title="Content" Icon="@Icons.Material.Filled.Article" Expanded="true">
-                    <MudNavLink Disabled="true">Pages</MudNavLink>
-                    <MudNavLink Disabled="true">Events</MudNavLink>
-                    <MudNavLink Disabled="true">Documents</MudNavLink>
+                <MudNavGroup Title="@L["NavContent"]" Icon="@Icons.Material.Filled.Article" Expanded="true">
+                    <MudNavLink Href="dashboard/pages">@L["Pages"]</MudNavLink>
+                    <MudNavLink Href="dashboard/news">@L["News"]</MudNavLink>
+                    <MudNavLink Href="dashboard/governance">@L["Governance"]</MudNavLink>
+                    <MudNavLink Href="dashboard/navigation">@L["Navigation"]</MudNavLink>
                 </MudNavGroup>
+                <MudNavGroup Title="@L["NavEvents"]" Icon="@Icons.Material.Filled.Flag" Expanded="true">
+                    <MudNavLink Href="dashboard/events">@L["Events"]</MudNavLink>
+                    <MudNavLink Href="dashboard/cities">@L["Cities"]</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Title="@L["NavLibrary"]" Icon="@Icons.Material.Filled.LibraryBooks" Expanded="true">
+                    <MudNavLink Href="dashboard/documents">@L["Documents"]</MudNavLink>
+                    <MudNavLink Href="dashboard/rules">@L["Rules"]</MudNavLink>
+                    <MudNavLink Href="dashboard/guides">@L["Guides"]</MudNavLink>
+                </MudNavGroup>
+                <MudNavLink Href="dashboard/statistics" Icon="@Icons.Material.Filled.BarChart">@L["Statistics"]</MudNavLink>
+                <MudNavLink Href="dashboard/media" Icon="@Icons.Material.Filled.PermMedia">@L["Media"]</MudNavLink>
             </AuthorizeView>
-
             <AuthorizeView Policy="@Policies.Crm" Context="crm">
-                <MudNavGroup Title="CRM" Icon="@Icons.Material.Filled.Groups" Expanded="true">
-                    <MudNavLink Disabled="true">Athletes</MudNavLink>
-                    <MudNavLink Disabled="true">Clubs</MudNavLink>
-                    <MudNavLink Disabled="true">Registrations</MudNavLink>
+                <MudNavGroup Title="@L["NavCrm"]" Icon="@Icons.Material.Filled.Groups" Expanded="false">
+                    <MudNavLink Disabled="true">@L["Athletes"]</MudNavLink>
+                    <MudNavLink Disabled="true">@L["Registrations"]</MudNavLink>
                 </MudNavGroup>
             </AuthorizeView>
-
             <AuthorizeView Policy="@Policies.Admin" Context="admin">
-                <MudNavLink Disabled="true" Icon="@Icons.Material.Filled.ManageAccounts">Users</MudNavLink>
-                <MudNavLink Disabled="true" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+                <MudNavGroup Title="@L["NavAdmin"]" Icon="@Icons.Material.Filled.AdminPanelSettings" Expanded="false">
+                    <MudNavLink Href="dashboard/users">@L["Users"]</MudNavLink>
+                    <MudNavLink Href="dashboard/settings">@L["Settings"]</MudNavLink>
+                    <MudNavLink Href="dashboard/jobs" Target="_blank">@L["Jobs"]</MudNavLink>
+                </MudNavGroup>
             </AuthorizeView>
-
             <MudDivider Class="my-2" />
-            <MudNavLink Href="dashboard/account/password" Icon="@Icons.Material.Filled.Password">Change password</MudNavLink>
+            <MudNavLink Href="dashboard/account/password" Icon="@Icons.Material.Filled.Password">@L["ChangePassword"]</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-6">
             @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+</MudRTLProvider>
 
 @code {
     private bool drawerOpen = true;
-
+    private static bool IsRtl => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
+    private string CultureLink => $"/dashboard/culture/{(IsRtl ? "en" : "ar")}?returnUrl={Uri.EscapeDataString("/dashboard")}";
     private void ToggleDrawer() => drawerOpen = !drawerOpen;
 }

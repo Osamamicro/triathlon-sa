@@ -1,0 +1,80 @@
+@* The one confirmation dialog every dashboard delete/unpublish action reaches for. A dangerous
+   action can additionally require typing a phrase back before the confirm button unlocks. *@
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>@Body</MudText>
+
+        @if (TypeToConfirm is { Length: > 0 })
+        {
+            <MudTextField T="string" @bind-Value="typed" Label="@L["TypeToConfirm"]" Class="mt-3" AutoFocus="true" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@L["Cancel"]</MudButton>
+        <MudButton Color="@(Danger ? Color.Error : Color.Primary)" Variant="Variant.Filled"
+                   Disabled="@(!CanConfirm)" OnClick="Confirm">
+            @ConfirmText
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Body { get; set; } = "";
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "";
+
+    [Parameter]
+    public bool Danger { get; set; }
+
+    [Parameter]
+    public string? TypeToConfirm { get; set; }
+
+    private string typed = "";
+
+    private bool CanConfirm => string.IsNullOrEmpty(TypeToConfirm) || string.Equals(typed, TypeToConfirm, StringComparison.Ordinal);
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    /// <summary>
+    /// Shows a <see cref="ConfirmDialog"/> and returns whether the user confirmed — the shape every
+    /// caller actually wants, instead of unwrapping a <see cref="DialogResult"/> at every call site.
+    /// </summary>
+    public static async Task<bool> ShowAsync(
+        IDialogService dialogService,
+        string title,
+        string body,
+        string confirmText,
+        bool danger = false,
+        string? typeToConfirm = null)
+    {
+        ArgumentNullException.ThrowIfNull(dialogService);
+
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Body, body },
+            { x => x.ConfirmText, confirmText },
+            { x => x.Danger, danger },
+            { x => x.TypeToConfirm, typeToConfirm },
+        };
+
+        var dialog = await dialogService.ShowAsync<ConfirmDialog>(title, parameters);
+        var result = await dialog.Result;
+        return result is { Canceled: false };
+    }
+}

@@ -1,0 +1,62 @@
+@* One media reference on a content form: an image thumbnail or a PDF's file name, with a dialog
+   onto the shared library (MediaPickerDialog) to change it. *@
+@inject IDialogService DialogService
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="stf-media-picker">
+    @if (string.IsNullOrEmpty(Path))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Label</MudText>
+    }
+    else if (Kind == FileKind.Image)
+    {
+        <MudImage Src="@Path" Alt="@Label" Width="96" Height="64" ObjectFit="ObjectFit.Cover" Class="rounded" />
+    }
+    else
+    {
+        <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(Path)</MudChip>
+    }
+
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="OpenAsync">@L["Choose"]</MudButton>
+
+    @if (!string.IsNullOrEmpty(Path))
+    {
+        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" OnClick="RemoveAsync">@L["Remove"]</MudButton>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public FileKind Kind { get; set; }
+
+    [Parameter]
+    public string? Path { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> PathChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    private async Task OpenAsync()
+    {
+        var parameters = new DialogParameters<MediaPickerDialog> { { x => x.Kind, Kind } };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<MediaPickerDialog>(Label, parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: MediaAsset asset })
+        {
+            Path = asset.Path;
+            await PathChanged.InvokeAsync(Path);
+        }
+    }
+
+    private async Task RemoveAsync()
+    {
+        Path = null;
+        await PathChanged.InvokeAsync(null);
+    }
+
+    private static string FileName(string path) => path[(path.LastIndexOf('/') + 1)..];
+}

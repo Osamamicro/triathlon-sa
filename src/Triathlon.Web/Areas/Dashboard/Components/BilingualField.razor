@@ -1,0 +1,85 @@
+@* A side-by-side English/Arabic text field pair — the one shape every bilingual dashboard form
+   reaches for. Below 1024px the two stack; at that width and up MudGrid puts them side by side. *@
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudTextField T="string"
+                       Label="@($"{Label} (EN)")"
+                       Value="@En"
+                       ValueChanged="OnEnChangedAsync"
+                       Lines="Lines"
+                       MaxLength="@(MaxLength ?? DefaultMaxLength)"
+                       HelperText="@HelperText"
+                       Error="@enError"
+                       ErrorText="@(enError ? (string)L["Required"] : null)"
+                       OnBlur="@((FocusEventArgs _) => enTouched = true)" />
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudTextField T="string"
+                       Label="@($"{Label} (AR)")"
+                       Value="@Ar"
+                       ValueChanged="OnArChangedAsync"
+                       Lines="Lines"
+                       MaxLength="@(MaxLength ?? DefaultMaxLength)"
+                       Error="@arError"
+                       ErrorText="@(arError ? (string)L["Required"] : null)"
+                       OnBlur="@((FocusEventArgs _) => arTouched = true)"
+                       dir="rtl" lang="ar" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string? En { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> EnChanged { get; set; }
+
+    [Parameter]
+    public string? Ar { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ArChanged { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; } = true;
+
+    [Parameter]
+    public int Lines { get; set; } = 1;
+
+    [Parameter]
+    public int? MaxLength { get; set; }
+
+    [Parameter]
+    public string? HelperText { get; set; }
+
+    /// <summary>MudTextField's own default — passed explicitly since it does not accept a null MaxLength.</summary>
+    private const int DefaultMaxLength = 524288;
+
+    private bool enTouched;
+    private bool arTouched;
+
+    private bool enError => Required && enTouched && string.IsNullOrWhiteSpace(En);
+    private bool arError => Required && arTouched && string.IsNullOrWhiteSpace(Ar);
+
+    /// <summary>Whether both sides carry text, when this field is required. Read by the caller before it saves.</summary>
+    public bool IsValid => !Required || (!string.IsNullOrWhiteSpace(En) && !string.IsNullOrWhiteSpace(Ar));
+
+    private async Task OnEnChangedAsync(string? value)
+    {
+        En = value;
+        enTouched = true;
+        await EnChanged.InvokeAsync(value);
+    }
+
+    private async Task OnArChangedAsync(string? value)
+    {
+        Ar = value;
+        arTouched = true;
+        await ArChanged.InvokeAsync(value);
+    }
+}

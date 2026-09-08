@@ -9,6 +9,8 @@
     <base href="/" />
     <ResourcePreloader />
     <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet" href="@Assets["css/fonts.css"]" />
+    <link rel="stylesheet" href="@Assets["lib/quill/quill.snow.css"]" />
     <link rel="stylesheet" href="@Assets["dashboard.css"]" />
     @* No <ImportMap />: it renders an inline <script type="importmap">, which the dashboard's
        Content-Security-Policy (script-src 'self') blocks, and nothing here needs it — every
@@ -22,6 +24,8 @@
     <Routes @rendermode="PageRenderMode" />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["lib/quill/quill.js"]"></script>
+    <script src="@Assets["js/editor.js"]"></script>
 </body>
 
 </html>

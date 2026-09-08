@@ -1,0 +1,161 @@
+@* The audit trail for one entity: who touched it and what changed, newest first. Anchor="End" so
+   MudRTLProvider mirrors it to the left in Arabic, the same as every other end-anchored surface. *@
+@using System.Text.Json
+@inject ActivityQuery Query
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudDrawer @bind-Open="Open" Anchor="Anchor.End" Elevation="2" Width="420px" Variant="DrawerVariant.Temporary">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">@L["Activity"]</MudText>
+    </MudDrawerHeader>
+
+    @if (loading)
+    {
+        <MudProgressCircular Indeterminate="true" Class="ma-4" />
+    }
+    else if (rows.Count == 0)
+    {
+        <MudText Class="pa-4" Color="Color.Secondary">@L["NoActivity"]</MudText>
+    }
+    else
+    {
+        <MudExpansionPanels>
+            @foreach (var row in rows)
+            {
+                <MudExpansionPanel Dense="true">
+                    <TitleContent>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="flex-grow-1 pr-4">
+                            <MudText Typo="Typo.body2">@row.Log.Action — @row.Log.User</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@RiyadhTime(row.Log.At)</MudText>
+                        </MudStack>
+                    </TitleContent>
+                    <ChildContent>
+                        @if (row.Changes.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@L["NoActivity"]</MudText>
+                        }
+                        else
+                        {
+                            <MudSimpleTable Dense="true" Class="stf-diff-table">
+                                <thead>
+                                    <tr>
+                                        <th>@L["Name"]</th>
+                                        <th>@L["Before"]</th>
+                                        <th>@L["After"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var change in row.Changes)
+                                    {
+                                        <tr>
+                                            <td>@change.Key</td>
+                                            <td>@change.Before</td>
+                                            <td>@change.After</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+</MudDrawer>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Entity { get; set; } = "";
+
+    [Parameter]
+    public Guid? EntityId { get; set; }
+
+    [Parameter]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OpenChanged { get; set; }
+
+    private bool loading = true;
+    private List<ActivityRow> rows = [];
+    private bool wasOpen;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Open && !wasOpen)
+        {
+            await LoadAsync();
+        }
+
+        wasOpen = Open;
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        var logs = await Query.ForEntityAsync(Entity, EntityId, 50, CancellationToken.None);
+        rows = [.. logs.Select(log => new ActivityRow(log, ParseDiff(log.Diff)))];
+        loading = false;
+    }
+
+    private static string RiyadhTime(DateTimeOffset at) =>
+        at.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm");
+
+    /// <summary>Every key present on either side of the diff whose before/after values actually differ.</summary>
+    private static List<DiffRow> ParseDiff(string? diffJson)
+    {
+        if (string.IsNullOrWhiteSpace(diffJson))
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(diffJson);
+        var before = document.RootElement.TryGetProperty("before", out var b) ? b : default;
+        var after = document.RootElement.TryGetProperty("after", out var a) ? a : default;
+
+        var keys = new SortedSet<string>(StringComparer.Ordinal);
+        AddKeys(before, keys);
+        AddKeys(after, keys);
+
+        var changes = new List<DiffRow>();
+        foreach (var key in keys)
+        {
+            var beforeValue = ValueOf(before, key);
+            var afterValue = ValueOf(after, key);
+            if (!string.Equals(beforeValue, afterValue, StringComparison.Ordinal))
+            {
+                changes.Add(new DiffRow(key, beforeValue, afterValue));
+            }
+        }
+
+        return changes;
+    }
+
+    private static void AddKeys(JsonElement element, SortedSet<string> keys)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return;
+        }
+
+        foreach (var property in element.EnumerateObject())
+        {
+            keys.Add(property.Name);
+        }
+    }
+
+    private static string? ValueOf(JsonElement element, string key)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(key, out var value))
+        {
+            return null;
+        }
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Null => null,
+            _ => value.GetRawText(),
+        };
+    }
+}

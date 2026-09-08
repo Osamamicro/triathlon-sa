@@ -1,0 +1,69 @@
+@* A standalone upload control — for a document/rule/guide's own file, as opposed to MediaPicker's
+   "choose from the library" flow. Uploads straight into MediaService and hands the caller the
+   resulting MediaAsset; the caller decides what to do with its Path. *@
+@using Microsoft.AspNetCore.Components.Forms
+@inject MediaService MediaService
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelectedAsync" Accept="@Accept">
+        <CustomContent Context="picker">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload"
+                       Disabled="@uploading" OnClick="@picker.OpenFilePickerAsync">
+                @(uploading ? L["Uploading"] : L["Upload"])
+            </MudButton>
+        </CustomContent>
+    </MudFileUpload>
+
+    @if (uploading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+    }
+</MudStack>
+
+@if (error is not null)
+{
+    <MudText Color="Color.Error" Typo="Typo.caption">@error</MudText>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public FileKind Kind { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaAsset> OnUploaded { get; set; }
+
+    [Parameter]
+    public string Accept { get; set; } = "";
+
+    [Parameter]
+    public long MaxBytes { get; set; } = LocalFileStore.MaxBytes;
+
+    private bool uploading;
+    private string? error;
+
+    private async Task OnFileSelectedAsync(IBrowserFile file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+
+        uploading = true;
+        error = null;
+        try
+        {
+            await using var stream = file.OpenReadStream(MaxBytes);
+            var asset = await MediaService.UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None);
+            await OnUploaded.InvokeAsync(asset);
+        }
+        catch (ContentValidationException ex)
+        {
+            error = L[ex.Key, [.. ex.Arguments]];
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+}

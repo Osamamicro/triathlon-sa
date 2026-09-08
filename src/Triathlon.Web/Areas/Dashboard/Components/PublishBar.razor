@@ -1,0 +1,87 @@
+@* Every content editor's bottom bar: status, preview, save/publish, delete. Sticky at the foot of
+   the viewport (see .stf-publish-bar in dashboard.css) so it stays reachable on a long form. *@
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudPaper Class="stf-publish-bar pa-3" Elevation="4" Square="true">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Wrap="Wrap.Wrap">
+        <MudChip T="string" Color="@(IsPublished ? Color.Success : Color.Default)" Variant="Variant.Filled">
+            @(IsPublished ? L["Published"] : L["Draft"])
+        </MudChip>
+
+        @if (LastUpdatedAt is { } at)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @L["LastUpdated"]: @at.ToString("yyyy-MM-dd HH:mm")
+                @if (!string.IsNullOrEmpty(LastUpdatedBy))
+                {
+                    @($" — {LastUpdatedBy}")
+                }
+            </MudText>
+        }
+
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudText Color="Color.Error" Typo="Typo.body2">@Error</MudText>
+        }
+
+        <MudSpacer />
+
+        @if (!string.IsNullOrEmpty(PreviewUrl))
+        {
+            <MudLink Href="@PreviewUrl" Target="_blank">@L["Preview"]</MudLink>
+        }
+
+        <MudButton Variant="Variant.Outlined" OnClick="OnSaveDraft" Disabled="@IsSaving">@L["SaveDraft"]</MudButton>
+
+        @if (IsPublished)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnUnpublish" Disabled="@IsSaving">@L["Unpublish"]</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnPublish" Disabled="@IsSaving">@L["Publish"]</MudButton>
+        }
+
+        @if (OnDelete.HasDelegate)
+        {
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="@L["Actions"]">
+                <MudMenuItem OnClick="OnDelete">@L["Delete"]</MudMenuItem>
+            </MudMenu>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public bool IsPublished { get; set; }
+
+    [Parameter]
+    public bool IsDirty { get; set; }
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveDraft { get; set; }
+
+    [Parameter]
+    public EventCallback OnPublish { get; set; }
+
+    [Parameter]
+    public EventCallback OnUnpublish { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    [Parameter]
+    public string? PreviewUrl { get; set; }
+
+    [Parameter]
+    public DateTimeOffset? LastUpdatedAt { get; set; }
+
+    [Parameter]
+    public string? LastUpdatedBy { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+}

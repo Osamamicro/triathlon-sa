@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Triathlon.Web.Domain.Identity;
 
 namespace Triathlon.Tests.Web;
 
@@ -21,6 +24,46 @@ public static partial class DashboardClient
         });
         await SignInAsync(client, email, password);
         return client;
+    }
+
+    /// <summary>
+    /// Creates a fresh <see cref="Roles.Editor"/> account and signs it in — the "not an admin" side
+    /// of every authorization test, since the seeded account is a <see cref="Roles.SuperAdmin"/>.
+    /// A new random email each call, so tests can run in parallel without colliding.
+    /// </summary>
+    public static async Task<(HttpClient Client, string Email)> CreateEditorAsync(WebAppFixture app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        const string password = "Editor-Pass-2026!";
+        var email = $"editor-{Guid.NewGuid():N}@triathlon.test";
+
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            var user = new AppUser { UserName = email, Email = email, EmailConfirmed = true };
+            var created = await userManager.CreateAsync(user, password);
+            if (!created.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Could not create editor test user: {string.Join(" ", created.Errors.Select(e => e.Description))}");
+            }
+
+            var added = await userManager.AddToRoleAsync(user, Roles.Editor);
+            if (!added.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Could not add editor test user to role: {string.Join(" ", added.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        var client = app.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            BaseAddress = WebAppFixture.HttpsBaseAddress,
+        });
+        await SignInAsync(client, email, password);
+        return (client, email);
     }
 
     public static async Task SignInAsync(HttpClient client, string? email = null, string? password = null)

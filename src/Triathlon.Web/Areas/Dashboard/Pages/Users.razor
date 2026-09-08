@@ -1,0 +1,8 @@
+@page "/dashboard/users"
+@attribute [Authorize(Policy = Policies.Admin)]
+@inject IStringLocalizer<DashboardStrings> L
+
+<PageTitle>@L["Users"]</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@L["Users"]</MudText>
+<MudText Typo="Typo.body1">@L["UsersPlaceholder"]</MudText>
