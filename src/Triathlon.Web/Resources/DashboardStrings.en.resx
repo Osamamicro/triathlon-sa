@@ -222,4 +222,8 @@
     <value>Each key may appear only once.</value>
     <comment>Shown when a posted region list carries the same key twice.</comment>
   </data>
+  <data name="Validation_Range" xml:space="preserve">
+    <value>A value is out of range.</value>
+    <comment>Shown when a posted region/growth row's athlete count is negative, or a growth row's year is outside 2000-2100.</comment>
+  </data>
 </root>

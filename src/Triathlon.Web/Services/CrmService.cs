@@ -82,8 +82,9 @@ public sealed class CrmService(AppDbContext db, IBackgroundJobClient jobs, TimeP
         ArgumentNullException.ThrowIfNull(application);
 
         var email = application.Email.Trim();
+        var emailLower = email.ToLowerInvariant();
         var existing = await db.Athletes.FirstOrDefaultAsync(
-            a => a.Email.ToLower() == email.ToLower() && a.Status != AthleteStatus.Rejected, ct);
+            a => a.Email.ToLower() == emailLower && a.Status != AthleteStatus.Rejected, ct);
         if (existing is not null)
         {
             log.LogInformation("Duplicate application for {Email} ignored.", email);

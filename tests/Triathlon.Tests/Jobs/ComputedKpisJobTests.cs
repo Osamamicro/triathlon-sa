@@ -27,10 +27,12 @@ public sealed class ComputedKpisJobTests(WebAppFixture app)
 
         KpiSource originalSource;
         long originalValue;
+        int expectedActiveClubs;
 
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            expectedActiveClubs = await db.Clubs.CountAsync(c => c.IsActive);
             var clubs = await db.Kpis.SingleAsync(k => k.Key == "clubs");
             originalSource = clubs.Source;
             originalValue = clubs.Value;
@@ -51,7 +53,7 @@ public sealed class ComputedKpisJobTests(WebAppFixture app)
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var clubs = await db.Kpis.AsNoTracking().SingleAsync(k => k.Key == "clubs");
-                Assert.Equal(6, clubs.Value); // the six clubs SeedClubs seeds, all IsActive
+                Assert.Equal(expectedActiveClubs, clubs.Value);
 
                 var log = await db.ActivityLogs
                     .Where(l => l.Entity == "Kpi" && l.Action == "compute")
@@ -63,7 +65,7 @@ public sealed class ComputedKpisJobTests(WebAppFixture app)
             }
 
             var page = await client.GetStringAsync("/en/statistics");
-            Assert.Contains("data-count=\"6\"", page, StringComparison.Ordinal);
+            Assert.Contains($"data-count=\"{expectedActiveClubs}\"", page, StringComparison.Ordinal);
         }
         finally
         {

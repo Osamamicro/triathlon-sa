@@ -82,25 +82,44 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
     public async Task<IReadOnlyList<RegionStat>> RegionsForEditAsync(CancellationToken ct) =>
         await db.RegionStats.AsNoTracking().OrderBy(r => r.SortOrder).ToListAsync(ct);
 
-    /// <summary>Replaces the whole region list: rows keep their ids, rows left out are deleted.</summary>
+    /// <summary>
+    /// Replaces the whole region list: rows keep their ids, rows left out are deleted. Every posted
+    /// key is also checked against every stored row, live or soft-deleted, that is not part of this
+    /// post — <c>IX_RegionStats_Key</c> is an unfiltered unique index, so a key still held by a
+    /// soft-deleted row (or by a live row the editor dropped from the list in this same post) is
+    /// refused rather than left to fail at <c>SaveChangesAsync</c>. A row's key therefore stays
+    /// reserved until the row that held it is restored — the same rule the slug checks follow.
+    /// </summary>
     public async Task SaveRegionsAsync(IReadOnlyList<RegionInput> items, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var existing = await db.RegionStats.ToListAsync(ct);
+        var all = await db.RegionStats.IgnoreQueryFilters().ToListAsync(ct);
+        var existing = all.Where(r => r.DeletedAt is null).ToList();
         var before = existing.OrderBy(r => r.SortOrder).Select(Audit.Snapshot).ToList();
 
         // ---- pass 1: validate every input — no row is mutated or added below this point ----
+        var postedIds = items.Where(i => i.Id is not null).Select(i => i.Id!.Value).ToHashSet();
         var seenIds = new HashSet<Guid>();
         var seenKeys = new HashSet<string>(StringComparer.Ordinal);
         var prepared = new List<(RegionInput Input, string NameEn, string NameAr)>(items.Count);
         foreach (var input in items)
         {
-            if (input.Id is { } dupId && !seenIds.Add(dupId))
-                throw new ContentValidationException("Regions", "Validation_DuplicateRow");
+            if (input.Id is { } dupId)
+            {
+                if (!seenIds.Add(dupId))
+                    throw new ContentValidationException("Regions", "Validation_DuplicateRow");
+                if (!existing.Any(r => r.Id == dupId))
+                    throw new ContentValidationException("Regions", "Validation_NotFound");
+            }
+
             if (!Slugs.IsValid(input.Key))
                 throw new ContentValidationException("Key", "Validation_SlugFormat");
             if (!seenKeys.Add(input.Key))
-                throw new ContentValidationException("Key", "Validation_KeyDuplicate");
+                throw new ContentValidationException("Regions", "Validation_KeyDuplicate");
+            if (all.Any(r => r.Key == input.Key && !postedIds.Contains(r.Id)))
+                throw new ContentValidationException("Regions", "Validation_KeyDuplicate");
+            if (input.Athletes < 0)
+                throw new ContentValidationException("Regions", "Validation_Range");
             prepared.Add((input, Required(input.NameEn, "NameEn"), Required(input.NameAr, "NameAr")));
         }
 
@@ -109,10 +128,9 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
         var saved = new List<RegionStat>();
         foreach (var (input, nameEn, nameAr) in prepared)
         {
-            var row = input.Id is { } id ? existing.FirstOrDefault(r => r.Id == id) : null;
-            if (row is null)
+            var row = input.Id is { } id ? existing.First(r => r.Id == id) : new RegionStat { Key = input.Key, NameEn = "", NameAr = "" };
+            if (input.Id is null)
             {
-                row = new RegionStat { Key = input.Key, NameEn = "", NameAr = "" };
                 db.RegionStats.Add(row);
             }
 
@@ -134,22 +152,43 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
     public async Task<IReadOnlyList<GrowthPoint>> GrowthForEditAsync(CancellationToken ct) =>
         await db.GrowthPoints.AsNoTracking().OrderBy(g => g.Year).ToListAsync(ct);
 
-    /// <summary>Replaces the whole growth series: rows keep their ids, rows left out are deleted.</summary>
+    /// <summary>
+    /// Replaces the whole growth series: rows keep their ids, rows left out are deleted. Every
+    /// posted year is also checked against every stored row, live or soft-deleted, that is not part
+    /// of this post — <c>IX_GrowthPoints_Year</c> is an unfiltered unique index, so a year still held
+    /// by a soft-deleted row (or by a live row the editor dropped from the list in this same post) is
+    /// refused rather than left to fail at <c>SaveChangesAsync</c>. A row's year therefore stays
+    /// reserved until the row that held it is restored — the same rule the slug checks follow.
+    /// </summary>
     public async Task SaveGrowthAsync(IReadOnlyList<GrowthInput> items, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var existing = await db.GrowthPoints.ToListAsync(ct);
+        var all = await db.GrowthPoints.IgnoreQueryFilters().ToListAsync(ct);
+        var existing = all.Where(g => g.DeletedAt is null).ToList();
         var before = existing.OrderBy(g => g.Year).Select(Audit.Snapshot).ToList();
 
         // ---- pass 1: validate every input — no row is mutated or added below this point ----
+        var postedIds = items.Where(i => i.Id is not null).Select(i => i.Id!.Value).ToHashSet();
         var seenIds = new HashSet<Guid>();
         var seenYears = new HashSet<int>();
         foreach (var input in items)
         {
-            if (input.Id is { } dupId && !seenIds.Add(dupId))
-                throw new ContentValidationException("Growth", "Validation_DuplicateRow");
+            if (input.Id is { } dupId)
+            {
+                if (!seenIds.Add(dupId))
+                    throw new ContentValidationException("Growth", "Validation_DuplicateRow");
+                if (!existing.Any(g => g.Id == dupId))
+                    throw new ContentValidationException("Growth", "Validation_NotFound");
+            }
+
             if (!seenYears.Add(input.Year))
-                throw new ContentValidationException("Year", "Validation_YearDuplicate");
+                throw new ContentValidationException("Growth", "Validation_YearDuplicate");
+            if (all.Any(g => g.Year == input.Year && !postedIds.Contains(g.Id)))
+                throw new ContentValidationException("Growth", "Validation_YearDuplicate");
+            if (input.Year is < 2000 or > 2100)
+                throw new ContentValidationException("Growth", "Validation_Range");
+            if (input.Athletes < 0)
+                throw new ContentValidationException("Growth", "Validation_Range");
         }
 
         // ---- pass 2: every check above passed — assign and upsert rows ----
@@ -157,10 +196,9 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
         var saved = new List<GrowthPoint>();
         foreach (var input in items)
         {
-            var row = input.Id is { } id ? existing.FirstOrDefault(g => g.Id == id) : null;
-            if (row is null)
+            var row = input.Id is { } id ? existing.First(g => g.Id == id) : new GrowthPoint();
+            if (input.Id is null)
             {
-                row = new GrowthPoint();
                 db.GrowthPoints.Add(row);
             }
 
