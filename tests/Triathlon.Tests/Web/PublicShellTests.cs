@@ -97,4 +97,20 @@ public sealed class PublicShellTests(WebAppFixture app)
         // CSP is script-src 'self': an inline script would be blocked silently in the browser.
         Assert.False(Markup.HasInlineScript(html));
     }
+
+    [Theory]
+    [InlineData("/en/events/timeline", "/en/events/timeline")]
+    [InlineData("/en/events", "/en/events")]
+    [InlineData("/ar/events/riyadh-sprint-2026", "/ar/events")]
+    [InlineData("/en", "/en")]
+    public async Task Exactly_one_header_link_is_current_and_it_is_the_longest_match(string path, string expectedHref)
+    {
+        using var client = app.CreateClient();
+        var html = await client.GetStringAsync(path);
+        var nav = html[html.IndexOf("<nav class=\"main-nav\"", StringComparison.Ordinal)..html.IndexOf("</nav>", StringComparison.Ordinal)];
+
+        // "events" and "events/timeline" both prefix-match the timeline URL; only the longer one may be current.
+        var current = System.Text.RegularExpressions.Regex.Matches(nav, "<a href=\"([^\"]+)\" aria-current=\"page\"");
+        Assert.Equal(expectedHref, Assert.Single(current).Groups[1].Value);
+    }
 }

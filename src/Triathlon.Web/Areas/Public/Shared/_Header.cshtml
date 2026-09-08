@@ -18,10 +18,19 @@
     // CacheTags.Site, so a navigation publish evicts the whole site in one call.
     var nav = await Content.NavigationAsync(NavLocation.Header, Context.RequestAborted);
 
-    bool Current(string path) => path.Length == 0
+    // Exactly one link is current: the one with the longest href that matches, so "events/timeline"
+    // wins over "events" on /en/events/timeline. The home link ("") only matches the home page.
+    bool Matches(string path) => path.Length == 0
         ? here.Length == 0
         : here.Equals(path, StringComparison.OrdinalIgnoreCase)
           || here.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
+
+    var current = nav.Where(item => Matches(item.Href))
+        .OrderByDescending(item => item.Href.Length)
+        .Select(item => item.Href)
+        .FirstOrDefault();
+
+    bool Current(string path) => current is not null && path == current;
 }
 <header class="site-header"><div class="container">
     @* The Federation's own mark, fetched from triathlon.sa. The anchor's accessible name comes
