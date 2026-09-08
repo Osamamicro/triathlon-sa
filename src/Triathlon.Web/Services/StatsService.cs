@@ -49,8 +49,12 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
             ?? throw new ContentValidationException("Id", "Validation_NotFound");
 
         // ---- pass 1: validate only — no property assignment below this point ----
-        var labelEn = Required(input.LabelEn, "LabelEn");
-        var labelAr = Required(input.LabelAr, "LabelAr");
+        var labelEn = FieldLength.Check(Required(input.LabelEn, "LabelEn"), 128, "LabelEn")!;
+        var labelAr = FieldLength.Check(Required(input.LabelAr, "LabelAr"), 128, "LabelAr")!;
+        var suffix = FieldLength.Check(Blank(input.Suffix), 8, "Suffix");
+        var noteEn = FieldLength.Check(Blank(input.NoteEn), 64, "NoteEn");
+        var noteAr = FieldLength.Check(Blank(input.NoteAr), 64, "NoteAr");
+        var color = FieldLength.Check(Blank(input.Color), 16, "Color");
 
         if (input.ShowOnHome)
         {
@@ -64,10 +68,10 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
         var before = Audit.Snapshot(row);
         row.LabelEn = labelEn; row.LabelAr = labelAr;
         row.Value = input.Value;
-        row.Suffix = Blank(input.Suffix);
+        row.Suffix = suffix;
         row.ShowPlus = input.ShowPlus;
-        row.NoteEn = Blank(input.NoteEn); row.NoteAr = Blank(input.NoteAr);
-        row.Color = Blank(input.Color);
+        row.NoteEn = noteEn; row.NoteAr = noteAr;
+        row.Color = color;
         row.SortOrder = input.SortOrder;
         row.ShowOnHome = input.ShowOnHome;
         row.HomeOrder = input.ShowOnHome ? input.HomeOrder : 0;
@@ -114,13 +118,18 @@ public sealed class StatsService(AppDbContext db, ContentCommit commit)
 
             if (!Slugs.IsValid(input.Key))
                 throw new ContentValidationException("Key", "Validation_SlugFormat");
+            // RegionStat.Key is HasMaxLength(64) while Slugs.MaxLength is 128 — same mismatch as
+            // City.Key, so it needs its own explicit guard rather than relying on Slugs.IsValid alone.
+            FieldLength.Check(input.Key, 64, "Key");
             if (!seenKeys.Add(input.Key))
                 throw new ContentValidationException("Regions", "Validation_KeyDuplicate");
             if (all.Any(r => r.Key == input.Key && !postedIds.Contains(r.Id)))
                 throw new ContentValidationException("Regions", "Validation_KeyDuplicate");
             if (input.Athletes < 0)
                 throw new ContentValidationException("Regions", "Validation_Range");
-            prepared.Add((input, Required(input.NameEn, "NameEn"), Required(input.NameAr, "NameAr")));
+            var regionNameEn = FieldLength.Check(Required(input.NameEn, "NameEn"), 128, "NameEn")!;
+            var regionNameAr = FieldLength.Check(Required(input.NameAr, "NameAr"), 128, "NameAr")!;
+            prepared.Add((input, regionNameEn, regionNameAr));
         }
 
         // ---- pass 2: every check above passed — assign and upsert rows ----

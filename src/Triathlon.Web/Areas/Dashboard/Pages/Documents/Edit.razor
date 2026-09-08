@@ -6,6 +6,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 @inject NavigationManager Nav
 @inject IDialogService Dialogs
 
@@ -131,6 +132,11 @@
             EditShell.Handle(L, ex, out error, fieldErrors);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out error);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
         finally
         {
             saving = false;
@@ -157,6 +163,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out error);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally
@@ -189,6 +200,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out error);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally

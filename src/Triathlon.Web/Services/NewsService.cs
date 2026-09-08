@@ -50,7 +50,11 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         // post or an unaudited Added row behind in the scope's DbContext for the next save to flush.
         var bodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_Required");
         var bodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_Required");
-        var heroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
+        var heroImagePath = FieldLength.Check(guard.FilePath(input.HeroImagePath, "HeroImagePath"), 512, "HeroImagePath");
+        var titleEn = FieldLength.Check(input.TitleEn.Trim(), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(input.TitleAr.Trim(), 256, "TitleAr")!;
+        var summaryEn = FieldLength.Check(input.SummaryEn.Trim(), 1024, "SummaryEn")!;
+        var summaryAr = FieldLength.Check(input.SummaryAr.Trim(), 1024, "SummaryAr")!;
 
         var post = input.Id is { } id
             ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
@@ -63,8 +67,8 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         }
 
         post.Slug = input.Slug;
-        post.TitleEn = input.TitleEn.Trim(); post.TitleAr = input.TitleAr.Trim();
-        post.SummaryEn = input.SummaryEn.Trim(); post.SummaryAr = input.SummaryAr.Trim();
+        post.TitleEn = titleEn; post.TitleAr = titleAr;
+        post.SummaryEn = summaryEn; post.SummaryAr = summaryAr;
         post.BodyEn = bodyEn;
         post.BodyAr = bodyAr;
         post.HeroImagePath = heroImagePath;

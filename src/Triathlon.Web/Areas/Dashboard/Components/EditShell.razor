@@ -165,4 +165,27 @@
             fieldErrors[ex.Field] = message;
         }
     }
+
+    /// <summary>
+    /// The circuit-safety net: a save can throw something that is not a <see cref="ContentValidationException"/>
+    /// — most notably a <see cref="DbUpdateException"/> from a column-level constraint the service's own
+    /// checks missed (see F1 in the Week 4 QA report) — and an unhandled exception on a Blazor Server
+    /// page terminates the whole circuit, freezing every control until the editor reloads. Every save
+    /// handler therefore pairs its <see cref="Handle"/> catch with this one: log the exception (an
+    /// editor never sees the stack trace, so ops needs it in the log) and surface one generic banner
+    /// instead of letting the circuit die.
+    /// </summary>
+    public static void HandleUnexpected(
+        IStringLocalizer<DashboardStrings> localizer,
+        Exception ex,
+        ILogger logger,
+        out string? banner)
+    {
+        ArgumentNullException.ThrowIfNull(localizer);
+        ArgumentNullException.ThrowIfNull(ex);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        logger.LogError(ex, "Unexpected exception during a dashboard save.");
+        banner = localizer["ErrorUnexpected"];
+    }
 }

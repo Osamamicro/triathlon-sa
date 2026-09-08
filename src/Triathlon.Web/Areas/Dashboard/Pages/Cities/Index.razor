@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Cities"]</PageTitle>
 
@@ -62,6 +63,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
     }

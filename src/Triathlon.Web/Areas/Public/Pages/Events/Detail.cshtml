@@ -107,35 +107,42 @@
     </div>
   </section>
 
-@if (ev.Results.Count > 0)
+@* F2 (Week 4 QA report): the results section — and specifically the PDF download link — must not
+   be gated on ev.Results having rows. An editor routinely attaches the results PDF before typing
+   up finisher rows; the section renders whenever either exists, the finisher table only when there
+   are rows to show. *@
+@if (ev.Results.Count > 0 || ev.ResultsFilePath is not null)
 {
   <section class="section" style="padding-top:0">
     <div class="container">
       <span class="eyebrow">@Bi("Official results", "النتائج الرسمية")</span>
       <h2>@Bi("Podium & top finishers", "منصة التتويج وأوائل المتسابقين")</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>@Bi("Athlete", "الرياضي")</th>
-              <th>@Bi("Club", "النادي")</th>
-              <th>@Bi("Time", "الزمن")</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach (var result in ev.Results)
-            {
+      @if (ev.Results.Count > 0)
+      {
+        <div class="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <td class="mono pos-@result.Position">@result.Position</td>
-                <td>@Bi(result.AthleteEn, result.AthleteAr)</td>
-                <td>@Bi(result.ClubEn ?? string.Empty, result.ClubAr ?? string.Empty)</td>
-                <td class="mono">@result.Time</td>
+                <th>#</th>
+                <th>@Bi("Athlete", "الرياضي")</th>
+                <th>@Bi("Club", "النادي")</th>
+                <th>@Bi("Time", "الزمن")</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              @foreach (var result in ev.Results)
+              {
+                <tr>
+                  <td class="mono pos-@result.Position">@result.Position</td>
+                  <td>@Bi(result.AthleteEn, result.AthleteAr)</td>
+                  <td>@Bi(result.ClubEn ?? string.Empty, result.ClubAr ?? string.Empty)</td>
+                  <td class="mono">@result.Time</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
       @if (ev.ResultsFilePath is { } resultsFile)
       {
         <div style="margin-top:20px">

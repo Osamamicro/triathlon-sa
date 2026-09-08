@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Navigation"]</PageTitle>
 
@@ -125,6 +126,12 @@
             EditShell.Handle(L, ex, out var message, fieldErrors[location]);
             banner[location] = message;
             AnchorRowErrors(location);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out var message);
+            banner[location] = message;
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally

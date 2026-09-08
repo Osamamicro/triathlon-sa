@@ -22,9 +22,9 @@ public sealed partial class DocumentsService
         ArgumentNullException.ThrowIfNull(input);
 
         // ---- pass 1: validate only — no property assignment, no db.*.Add, below this point ----
-        var titleEn = Required(input.TitleEn, "TitleEn");
-        var titleAr = Required(input.TitleAr, "TitleAr");
-        var filePath = guard.FilePath(Required(input.FilePath, "FilePath"))!;
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
+        var filePath = FieldLength.Check(guard.FilePath(Required(input.FilePath, "FilePath"))!, 512, "FilePath")!;
         if (input.FileSize < 0) throw new ContentValidationException("FileSize", "Validation_FileSize");
 
         var row = input.Id is { } id
@@ -84,9 +84,11 @@ public sealed partial class DocumentsService
         if (await db.Rules.IgnoreQueryFilters().AnyAsync(r => r.Slug == input.Slug && r.Id != input.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
 
-        var titleEn = Required(input.TitleEn, "TitleEn"); var titleAr = Required(input.TitleAr, "TitleAr");
-        var descriptionEn = Required(input.DescriptionEn, "DescriptionEn"); var descriptionAr = Required(input.DescriptionAr, "DescriptionAr");
-        var filePath = guard.FilePath(Required(input.FilePath, "FilePath"))!;
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
+        var descriptionEn = FieldLength.Check(Required(input.DescriptionEn, "DescriptionEn"), 1024, "DescriptionEn")!;
+        var descriptionAr = FieldLength.Check(Required(input.DescriptionAr, "DescriptionAr"), 1024, "DescriptionAr")!;
+        var filePath = FieldLength.Check(guard.FilePath(Required(input.FilePath, "FilePath"))!, 512, "FilePath")!;
         if (input.FileSize < 0) throw new ContentValidationException("FileSize", "Validation_FileSize");
 
         var row = input.Id is { } id
@@ -153,13 +155,16 @@ public sealed partial class DocumentsService
         if (await db.TrainingGuides.IgnoreQueryFilters().AnyAsync(g => g.Slug == input.Slug && g.Id != input.Id, ct))
             throw new ContentValidationException("Slug", "Validation_SlugTaken", input.Slug);
         if (input.FileSize is { } size && size < 0) throw new ContentValidationException("FileSize", "Validation_FileSize");
-        var filePath = guard.FilePath(input.FilePath, "FilePath");
+        var filePath = FieldLength.Check(guard.FilePath(input.FilePath, "FilePath"), 512, "FilePath");
         if (input.IsPublished && filePath is null && input.Chapters.Count == 0)
             throw new ContentValidationException("IsPublished", "Validation_GuideNeedsContent");
 
-        var titleEn = Required(input.TitleEn, "TitleEn"); var titleAr = Required(input.TitleAr, "TitleAr");
-        var summaryEn = Required(input.SummaryEn, "SummaryEn"); var summaryAr = Required(input.SummaryAr, "SummaryAr");
-        var levelEn = Required(input.LevelEn, "LevelEn"); var levelAr = Required(input.LevelAr, "LevelAr");
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
+        var summaryEn = FieldLength.Check(Required(input.SummaryEn, "SummaryEn"), 1024, "SummaryEn")!;
+        var summaryAr = FieldLength.Check(Required(input.SummaryAr, "SummaryAr"), 1024, "SummaryAr")!;
+        var levelEn = FieldLength.Check(Required(input.LevelEn, "LevelEn"), 64, "LevelEn")!;
+        var levelAr = FieldLength.Check(Required(input.LevelAr, "LevelAr"), 64, "LevelAr")!;
 
         var guide = input.Id is { } id
             ? await GuideForEditAsync(id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
@@ -173,7 +178,9 @@ public sealed partial class DocumentsService
                 throw new ContentValidationException("Chapters", "Validation_DuplicateRow");
             var bodyEn = guard.Html(chapter.BodyEn) ?? throw new ContentValidationException("Chapters", "Validation_Required");
             var bodyAr = guard.Html(chapter.BodyAr) ?? throw new ContentValidationException("Chapters", "Validation_Required");
-            validatedChapters.Add((Required(chapter.TitleEn, "Chapters"), Required(chapter.TitleAr, "Chapters"), bodyEn, bodyAr));
+            var chapterTitleEn = FieldLength.Check(Required(chapter.TitleEn, "Chapters"), 256, "Chapters")!;
+            var chapterTitleAr = FieldLength.Check(Required(chapter.TitleAr, "Chapters"), 256, "Chapters")!;
+            validatedChapters.Add((chapterTitleEn, chapterTitleAr, bodyEn, bodyAr));
         }
 
         // ---- pass 2: every check above passed — assign and upsert chapters ----

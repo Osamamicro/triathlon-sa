@@ -135,20 +135,38 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
     private void Apply(Page page, PageInput input)
     {
         // ---- pass 1: validate only — no property assignment, no db.*.Add, below this point ----
-        // guard.Html and SafeHref never throw, so the only check here is the duplicate-id scan.
+        // guard.Html and SafeHref never throw; PageConfiguration bounds TitleEn/Ar and
+        // MetaDescriptionEn/Ar, so those get the same over-length guard as F1's Event.Season.
+        var titleEn = FieldLength.Check(input.TitleEn.Trim(), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(input.TitleAr.Trim(), 256, "TitleAr")!;
+        var metaDescriptionEn = FieldLength.Check(Blank(input.MetaDescriptionEn), 1024, "MetaDescriptionEn");
+        var metaDescriptionAr = FieldLength.Check(Blank(input.MetaDescriptionAr), 1024, "MetaDescriptionAr");
+
         var seenBlockIds = new HashSet<Guid>();
         foreach (var blockInput in input.Blocks)
         {
             if (blockInput.Id is { } dupId && !seenBlockIds.Add(dupId))
                 throw new ContentValidationException("Blocks", "Validation_DuplicateRow");
+            FieldLength.Check(Blank(blockInput.Variant), 32, "Blocks");
+            FieldLength.Check(Blank(blockInput.Anchor), 64, "Blocks");
+            FieldLength.Check(Blank(blockInput.EyebrowEn), 256, "Blocks");
+            FieldLength.Check(Blank(blockInput.EyebrowAr), 256, "Blocks");
+            FieldLength.Check(guard.Html(blockInput.TitleEn), 256, "Blocks");
+            FieldLength.Check(guard.Html(blockInput.TitleAr), 256, "Blocks");
+            FieldLength.Check(Blank(blockInput.CtaLabelEn), 128, "Blocks");
+            FieldLength.Check(Blank(blockInput.CtaLabelAr), 128, "Blocks");
+            FieldLength.Check(SafeHref(blockInput.CtaHref), 1024, "Blocks");
+            FieldLength.Check(Blank(blockInput.SecondaryLabelEn), 128, "Blocks");
+            FieldLength.Check(Blank(blockInput.SecondaryLabelAr), 128, "Blocks");
+            FieldLength.Check(SafeHref(blockInput.SecondaryHref), 1024, "Blocks");
         }
 
         // ---- pass 2: every check above passed — assign and upsert blocks ----
         page.Slug = input.Slug;
-        page.TitleEn = input.TitleEn.Trim();
-        page.TitleAr = input.TitleAr.Trim();
-        page.MetaDescriptionEn = Blank(input.MetaDescriptionEn);
-        page.MetaDescriptionAr = Blank(input.MetaDescriptionAr);
+        page.TitleEn = titleEn;
+        page.TitleAr = titleAr;
+        page.MetaDescriptionEn = metaDescriptionEn;
+        page.MetaDescriptionAr = metaDescriptionAr;
         page.IsPublished = input.IsPublished;
 
         var keep = new HashSet<Guid>();
@@ -240,7 +258,10 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
                 throw new ContentValidationException("Navigation", "Validation_DuplicateRow");
             if (string.IsNullOrWhiteSpace(input.LabelEn) || string.IsNullOrWhiteSpace(input.LabelAr))
                 throw new ContentValidationException("Label", "Validation_LabelBothLanguages");
+            FieldLength.Check(input.LabelEn.Trim(), 128, "Label");
+            FieldLength.Check(input.LabelAr.Trim(), 128, "Label");
             var href = SafeHref(input.Href) ?? (input.Href.Trim().Length == 0 ? "" : throw new ContentValidationException("Href", "Validation_Href", input.Href));
+            FieldLength.Check(href, 1024, "Href");
             prepared.Add((input, href));
         }
 
@@ -279,6 +300,13 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
     public async Task<Committee> SaveCommitteeAsync(CommitteeInput input, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(input);
+        var kindEn = FieldLength.Check(input.KindEn.Trim(), 256, "KindEn")!;
+        var kindAr = FieldLength.Check(input.KindAr.Trim(), 256, "KindAr")!;
+        var nameEn = FieldLength.Check(input.NameEn.Trim(), 256, "NameEn")!;
+        var nameAr = FieldLength.Check(input.NameAr.Trim(), 256, "NameAr")!;
+        var descriptionEn = FieldLength.Check(input.DescriptionEn.Trim(), 1024, "DescriptionEn")!;
+        var descriptionAr = FieldLength.Check(input.DescriptionAr.Trim(), 1024, "DescriptionAr")!;
+
         var row = input.Id is { } id
             ? await db.Committees.SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
             : null;
@@ -289,9 +317,9 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
             db.Committees.Add(row);
         }
 
-        row.KindEn = input.KindEn.Trim(); row.KindAr = input.KindAr.Trim();
-        row.NameEn = input.NameEn.Trim(); row.NameAr = input.NameAr.Trim();
-        row.DescriptionEn = input.DescriptionEn.Trim(); row.DescriptionAr = input.DescriptionAr.Trim();
+        row.KindEn = kindEn; row.KindAr = kindAr;
+        row.NameEn = nameEn; row.NameAr = nameAr;
+        row.DescriptionEn = descriptionEn; row.DescriptionAr = descriptionAr;
         row.SortOrder = input.SortOrder; row.IsPublished = input.IsPublished;
         await commit.ApplyAsync("Committee", row.Id, before is null ? "create" : "update", before, Audit.Snapshot(row), [CacheTags.Governance], ct);
         return row;
@@ -322,6 +350,11 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
     public async Task<Club> SaveClubAsync(ClubInput input, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(input);
+        var nameEn = FieldLength.Check(input.NameEn.Trim(), 128, "NameEn")!;
+        var nameAr = FieldLength.Check(input.NameAr.Trim(), 128, "NameAr")!;
+        var cityEn = FieldLength.Check(input.CityEn.Trim(), 128, "CityEn")!;
+        var cityAr = FieldLength.Check(input.CityAr.Trim(), 128, "CityAr")!;
+
         var row = input.Id is { } id
             ? await db.Clubs.SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
             : null;
@@ -332,8 +365,8 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
             db.Clubs.Add(row);
         }
 
-        row.NameEn = input.NameEn.Trim(); row.NameAr = input.NameAr.Trim();
-        row.CityEn = input.CityEn.Trim(); row.CityAr = input.CityAr.Trim();
+        row.NameEn = nameEn; row.NameAr = nameAr;
+        row.CityEn = cityEn; row.CityAr = cityAr;
         row.IsActive = input.IsActive; row.SortOrder = input.SortOrder;
         await commit.ApplyAsync("Club", row.Id, before is null ? "create" : "update", before, Audit.Snapshot(row), [CacheTags.Clubs], ct);
         return row;
@@ -382,6 +415,9 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
                 if (!IsPlausibleEmail(input.ValueEn) || !IsPlausibleEmail(input.ValueAr))
                     throw new ContentValidationException(input.Key, "Validation_Email", input.ValueEn);
             }
+
+            FieldLength.Check(input.ValueEn.Trim(), 1024, input.Key);
+            FieldLength.Check(input.ValueAr.Trim(), 1024, input.Key);
         }
 
         // ---- pass 2: every check above passed — assign and upsert rows ----

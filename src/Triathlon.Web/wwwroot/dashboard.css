@@ -197,15 +197,50 @@ button.primary:hover {
     block-size: 100%;
 }
 
+/* Shared by every dashboard table that can outgrow its column at the 1024px matrix breakpoint
+   (F4/F5, Week 4 QA report): overflow-x is the actual cross-browser scroll-axis property and is
+   fine to use physically here despite the logical-properties rule elsewhere — the scroll axis is
+   direction-agnostic and mirrors on its own under dir="rtl" (the same exception the KPI table
+   already carried). scrollbar-gutter reserves the track's space up front so the browser's default
+   auto-hiding overlay scrollbar — invisible until hovered on most desktop browsers, which is what
+   F4 and F5 actually filed — never has to be discovered by trial; the thin/coloured rules below
+   give it a permanent, low-contrast affordance instead of the reserved gutter sitting empty. */
+.stf-table-scroll,
 .stf-kpi-table-scroll {
-    /* overflow-inline is Firefox-only; overflow-x is the actual cross-browser scroll-axis property
-       and is fine to use physically here despite the logical-properties rule elsewhere — the scroll
-       axis is direction-agnostic and mirrors on its own under dir="rtl". */
     overflow-x: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, .55) transparent;
 }
 
+.stf-table-scroll::-webkit-scrollbar,
+.stf-kpi-table-scroll::-webkit-scrollbar {
+    block-size: 10px;
+}
+
+.stf-table-scroll::-webkit-scrollbar-track,
+.stf-kpi-table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.stf-table-scroll::-webkit-scrollbar-thumb,
+.stf-kpi-table-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, .55);
+    border-radius: 6px;
+}
+
+/* F3: Label/Note were fixed MudBlazor-default widths, far narrower than their own content
+   ("Registered athle…" mid-word clipping) — these give the two text columns room before the
+   overflow scroll (below) ever needs to kick in. F5: the previous flat 1700px min-inline-size on
+   every column made the table wider than it needed to be at 1024px; this trims it to what the
+   columns above actually add up to. */
 .stf-kpi-table-scroll table {
-    min-inline-size: 1700px;
+    min-inline-size: 1500px;
+}
+
+.stf-kpi-label-col,
+.stf-kpi-note-col {
+    min-inline-size: 12rem;
 }
 
 .stf-block-panel-title {

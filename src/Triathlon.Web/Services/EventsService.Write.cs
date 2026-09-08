@@ -94,13 +94,25 @@ public sealed partial class EventsService
         if (input.Capacity is { } cap && cap <= 0) throw new ContentValidationException("Capacity", "Validation_Capacity");
         if (input.RegistrationMode == RegistrationMode.External && !PublicText.IsSafeExternalUrl(input.ExternalRegistrationUrl))
             throw new ContentValidationException("ExternalRegistrationUrl", "Validation_ExternalUrl");
+        if (input.RegistrationMode == RegistrationMode.External)
+            FieldLength.Check(input.ExternalRegistrationUrl!.Trim(), 1024, "ExternalRegistrationUrl");
 
-        var season = Required(input.Season, "Season");
-        var titleEn = Required(input.TitleEn, "TitleEn"); var titleAr = Required(input.TitleAr, "TitleAr");
-        var venueEn = Required(input.VenueEn, "VenueEn"); var venueAr = Required(input.VenueAr, "VenueAr");
+        // Season/TitleEn/TitleAr/VenueEn/VenueAr/HeroImagePath/ResultsFilePath/SwimDistance/
+        // BikeDistance/RunDistance/Categories are all bounded columns (Data/Configurations/Events/
+        // EventConfiguration.cs) — see F1 in the Week 4 QA report: an over-length Season crashed the
+        // Blazor circuit with an unhandled DbUpdateException instead of a validation message.
+        var season = FieldLength.Check(Required(input.Season, "Season"), 16, "Season")!;
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
+        var venueEn = FieldLength.Check(Required(input.VenueEn, "VenueEn"), 256, "VenueEn")!;
+        var venueAr = FieldLength.Check(Required(input.VenueAr, "VenueAr"), 256, "VenueAr")!;
         var descriptionEn = Required(input.DescriptionEn, "DescriptionEn"); var descriptionAr = Required(input.DescriptionAr, "DescriptionAr");
-        var heroImagePath = guard.FilePath(input.HeroImagePath, "HeroImagePath");
-        var resultsFilePath = guard.FilePath(input.ResultsFilePath, "ResultsFilePath");
+        var heroImagePath = FieldLength.Check(guard.FilePath(input.HeroImagePath, "HeroImagePath"), 512, "HeroImagePath");
+        var resultsFilePath = FieldLength.Check(guard.FilePath(input.ResultsFilePath, "ResultsFilePath"), 512, "ResultsFilePath");
+        var swimDistance = FieldLength.Check(Blank(input.SwimDistance), 32, "SwimDistance");
+        var bikeDistance = FieldLength.Check(Blank(input.BikeDistance), 32, "BikeDistance");
+        var runDistance = FieldLength.Check(Blank(input.RunDistance), 32, "RunDistance");
+        var categories = FieldLength.Check(string.Join(',', input.Categories.Select(c => c.Trim()).Where(c => c.Length > 0)), 512, "Categories")!;
 
         var galleryIds = new HashSet<Guid>();
         var galleryPaths = new List<string>(input.Gallery.Count);
@@ -130,8 +142,8 @@ public sealed partial class EventsService
         ev.TitleEn = titleEn; ev.TitleAr = titleAr;
         ev.VenueEn = venueEn; ev.VenueAr = venueAr;
         ev.DescriptionEn = descriptionEn; ev.DescriptionAr = descriptionAr;
-        ev.SwimDistance = Blank(input.SwimDistance); ev.BikeDistance = Blank(input.BikeDistance); ev.RunDistance = Blank(input.RunDistance);
-        ev.Categories = string.Join(',', input.Categories.Select(c => c.Trim()).Where(c => c.Length > 0));
+        ev.SwimDistance = swimDistance; ev.BikeDistance = bikeDistance; ev.RunDistance = runDistance;
+        ev.Categories = categories;
         ev.RegistrationMode = input.RegistrationMode;
         ev.RegistrationOpen = input.RegistrationOpen;
         ev.ExternalRegistrationUrl = input.RegistrationMode == RegistrationMode.External ? input.ExternalRegistrationUrl!.Trim() : null;
@@ -185,15 +197,22 @@ public sealed partial class EventsService
     {
         ArgumentNullException.ThrowIfNull(input);
         if (!Slugs.IsValid(input.Key)) throw new ContentValidationException("Key", "Validation_SlugFormat");
+        // City.Key is HasMaxLength(64) (Data/Configurations/Events/CityConfiguration.cs) while
+        // Slugs.MaxLength is 128 — the two limits do not agree, so a slug-valid key between 65 and
+        // 128 characters would otherwise reach SaveChangesAsync unchecked (the same class of bug as
+        // F1's Event.Season).
+        FieldLength.Check(input.Key, 64, "Key");
         if (await db.Cities.IgnoreQueryFilters().AnyAsync(c => c.Key == input.Key && c.Id != input.Id, ct))
             throw new ContentValidationException("Key", "Validation_SlugTaken", input.Key);
+        var nameEn = FieldLength.Check(Required(input.NameEn, "NameEn"), 128, "NameEn")!;
+        var nameAr = FieldLength.Check(Required(input.NameAr, "NameAr"), 128, "NameAr")!;
 
         var city = input.Id is { } id
             ? await db.Cities.SingleOrDefaultAsync(c => c.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
             : null;
         var before = city is null ? null : Audit.Snapshot(city);
         if (city is null) { city = new City { Key = input.Key, NameEn = "", NameAr = "" }; db.Cities.Add(city); }
-        city.Key = input.Key; city.NameEn = Required(input.NameEn, "NameEn"); city.NameAr = Required(input.NameAr, "NameAr");
+        city.Key = input.Key; city.NameEn = nameEn; city.NameAr = nameAr;
         city.SvgX = input.SvgX; city.SvgY = input.SvgY; city.LabelAtEnd = input.LabelAtEnd; city.LabelDy = input.LabelDy; city.SortOrder = input.SortOrder;
         await commit.ApplyAsync("City", city.Id, before is null ? "create" : "update", before, Audit.Snapshot(city), [CacheTags.Events], ct);
         return city;

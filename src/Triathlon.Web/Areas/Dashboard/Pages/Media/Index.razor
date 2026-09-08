@@ -5,6 +5,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 @inject IDialogService Dialogs
 @inject IJSRuntime JS
 
@@ -161,6 +162,11 @@ else
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
     }
 
     private async Task CopyPathAsync(string path)
@@ -187,6 +193,11 @@ else
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
     }
 
     private async Task RestoreAsync(MediaAsset asset)
@@ -200,6 +211,11 @@ else
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
     }

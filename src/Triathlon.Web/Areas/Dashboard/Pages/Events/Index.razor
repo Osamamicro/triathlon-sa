@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Events"]</PageTitle>
 
@@ -39,7 +40,7 @@
     private IReadOnlyList<EventsService.EventRow> rows = [];
     private bool loading = true;
     private bool showDeleted;
-    private static string Culture => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar" : "en";
+    private static string Culture => DashboardCulture.IsArabic ? "ar" : "en";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -67,6 +68,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
     }

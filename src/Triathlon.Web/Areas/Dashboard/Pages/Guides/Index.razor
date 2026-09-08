@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Guides"]</PageTitle>
 
@@ -24,7 +25,10 @@
         <MudTd DataLabel="Title (EN)">@guide.TitleEn</MudTd>
         <MudTd DataLabel="Title (AR)" dir="rtl">@guide.TitleAr</MudTd>
         <MudTd DataLabel="@L["Slug"]">@guide.Slug</MudTd>
-        <MudTd DataLabel="@L["Level"]">@guide.LevelEn</MudTd>
+        @* F6 (Week 4 QA report): Level showed the English value regardless of locale — every other
+           bilingual list column on this page picks the *Ar field in the Arabic UI, this one never
+           was wired up to. *@
+        <MudTd DataLabel="@L["Level"]">@(DashboardCulture.IsArabic ? guide.LevelAr : guide.LevelEn)</MudTd>
         <MudTd DataLabel="@L["SortOrder"]">@guide.SortOrder</MudTd>
     </Columns>
 </EntityTable>
@@ -60,6 +64,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
     }

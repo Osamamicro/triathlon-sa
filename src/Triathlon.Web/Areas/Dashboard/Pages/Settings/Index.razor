@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Settings"]</PageTitle>
 
@@ -80,6 +81,11 @@ else
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out banner, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out banner);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally

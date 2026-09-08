@@ -22,43 +22,50 @@
 }
 else
 {
-    <MudTable Items="@FilteredItems" Dense="true" Hover="true" Striped="true">
-        <HeaderContent>
-            @Headers
-            @if (ShowStatus)
-            {
-                <MudTh>@L["Status"]</MudTh>
-            }
-            <MudTh>@L["Actions"]</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            @Columns(context)
-            @if (ShowStatus)
-            {
-                <MudTd DataLabel="@L["Status"]">
-                    @if (IsPublished(context) is { } published)
+    @* F4 (Week 4 QA report): at the 1024px matrix breakpoint the Events list (and every other list
+       screen sharing this component) overflowed the viewport with no visible scrollbar, cutting off
+       Status/Actions past the right edge. Wrapping the table in the same scroll container the KPI
+       table already used (dashboard.css) makes every list screen scroll horizontally inside the
+       page instead of clipping. *@
+    <div class="stf-table-scroll">
+        <MudTable Items="@FilteredItems" Dense="true" Hover="true" Striped="true">
+            <HeaderContent>
+                @Headers
+                @if (ShowStatus)
+                {
+                    <MudTh>@L["Status"]</MudTh>
+                }
+                <MudTh>@L["Actions"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @Columns(context)
+                @if (ShowStatus)
+                {
+                    <MudTd DataLabel="@L["Status"]">
+                        @if (IsPublished(context) is { } published)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(published ? Color.Success : Color.Default)">
+                                @(published ? L["Published"] : L["Draft"])
+                            </MudChip>
+                        }
+                    </MudTd>
+                }
+                <MudTd DataLabel="@L["Actions"]">
+                    @if (ShowDeleted)
                     {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(published ? Color.Success : Color.Default)">
-                            @(published ? L["Published"] : L["Draft"])
-                        </MudChip>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => OnRestore.InvokeAsync(context))">@L["Restore"]</MudButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Href="@EditHref(context)" aria-label="@L["Edit"]" />
                     }
                 </MudTd>
-            }
-            <MudTd DataLabel="@L["Actions"]">
-                @if (ShowDeleted)
-                {
-                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => OnRestore.InvokeAsync(context))">@L["Restore"]</MudButton>
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Href="@EditHref(context)" aria-label="@L["Edit"]" />
-                }
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText Color="Color.Secondary">@EmptyText</MudText>
-        </NoRecordsContent>
-    </MudTable>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Color="Color.Secondary">@EmptyText</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </div>
 }
 
 @code {

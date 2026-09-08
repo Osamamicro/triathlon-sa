@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.DependencyInjection;
+using Triathlon.Web.Domain.Events;
 using Triathlon.Web.Services;
 
 namespace Triathlon.Tests.Web;
@@ -61,6 +62,45 @@ public sealed class EventsPagesTests(WebAppFixture app)
         Assert.Contains("href=\"/en/events/riyadh-sprint-2026/register\"", upcoming, StringComparison.Ordinal);
         Assert.Contains("س. الحربي", done, StringComparison.Ordinal);
         Assert.Contains("58:41", done, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F2 (Week 4 QA report, P1): the results section — and the results-PDF download link
+    /// specifically — used to be gated on ev.Results.Count > 0, so an editor who attached the PDF
+    /// right after a race but had not yet typed up finisher rows got a public page with no trace of
+    /// "Results" anywhere in the HTML. The link must render whenever ResultsFilePath is set; the
+    /// finisher table stays gated on having rows.
+    /// </summary>
+    [Fact]
+    public async Task Results_pdf_link_shows_even_with_no_result_rows_yet()
+    {
+        var slug = "no-results-yet-" + Guid.NewGuid().ToString("N")[..8];
+        Guid id;
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+            var city = (await events.CitiesAsync(CancellationToken.None)).Single(c => c.Key == "riyadh").Id;
+            var input = new EventInput(
+                slug, EventType.Competition, true, "2026-27", new DateOnly(2026, 12, 5), null, new TimeOnly(6, 0), city,
+                "No Results Yet", "لا نتائج بعد", "Venue", "الموقع", "Desc", "وصف", "750m", "20km", "5km", ["Elite"],
+                RegistrationMode.Internal, true, null, 100, null, "/docs/competition-rules-2026.pdf", [], []);
+            id = (await events.CreateAsync(input, CancellationToken.None)).Id;
+        }
+
+        try
+        {
+            using var client = app.CreateClient();
+            var html = await client.GetStringAsync("/en/events/" + slug);
+
+            Assert.Contains("href=\"/docs/competition-rules-2026.pdf\"", html, StringComparison.Ordinal);
+            Assert.Contains("download", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("<table", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            await using var scope = app.Services.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<EventsService>().DeleteAsync(id, CancellationToken.None);
+        }
     }
 
     [Fact]

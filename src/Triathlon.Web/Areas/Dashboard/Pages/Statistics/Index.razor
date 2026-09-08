@@ -5,6 +5,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Statistics"]</PageTitle>
 
@@ -48,9 +49,9 @@ else
                 @foreach (var row in kpis)
                 {
                     <tr @key="row.Id">
-                        <td><MudTextField T="string" Value="@row.LabelEn" ValueChanged="@(v => row.LabelEn = v)"
+                        <td class="stf-kpi-label-col"><MudTextField T="string" Value="@row.LabelEn" ValueChanged="@(v => row.LabelEn = v)" FullWidth="true"
                                           Error="@row.FieldErrors.ContainsKey("LabelEn")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelEn")" /></td>
-                        <td dir="rtl"><MudTextField T="string" Value="@row.LabelAr" ValueChanged="@(v => row.LabelAr = v)"
+                        <td class="stf-kpi-label-col" dir="rtl"><MudTextField T="string" Value="@row.LabelAr" ValueChanged="@(v => row.LabelAr = v)" FullWidth="true"
                                           Error="@row.FieldErrors.ContainsKey("LabelAr")" ErrorText="@row.FieldErrors.GetValueOrDefault("LabelAr")" /></td>
                         <td>
                             @if (row.Source == KpiSource.Computed)
@@ -65,8 +66,8 @@ else
                         </td>
                         <td><MudTextField T="string" Value="@row.Suffix" ValueChanged="@(v => row.Suffix = v)" /></td>
                         <td><MudCheckBox T="bool" Value="@row.ShowPlus" ValueChanged="@(v => row.ShowPlus = v)" /></td>
-                        <td><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" /></td>
-                        <td dir="rtl"><MudTextField T="string" Value="@row.NoteAr" ValueChanged="@(v => row.NoteAr = v)" /></td>
+                        <td class="stf-kpi-note-col"><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" FullWidth="true" /></td>
+                        <td class="stf-kpi-note-col" dir="rtl"><MudTextField T="string" Value="@row.NoteAr" ValueChanged="@(v => row.NoteAr = v)" FullWidth="true" /></td>
                         <td>
                             <MudSelect T="string" Value="@(row.Color ?? "")" ValueChanged="@(v => row.Color = string.IsNullOrEmpty(v) ? null : v)">
                                 <MudSelectItem Value="@("")">@L["None"]</MudSelectItem>
@@ -275,6 +276,12 @@ else
             row.Error = banner;
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out var banner);
+            row.Error = banner;
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
         finally
         {
             row.Saving = false;
@@ -311,6 +318,11 @@ else
         {
             EditShell.Handle(L, ex, out regionsBanner, regionErrors);
             AnchorRegionErrors();
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out regionsBanner);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally
@@ -394,6 +406,11 @@ else
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, growthErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         finally

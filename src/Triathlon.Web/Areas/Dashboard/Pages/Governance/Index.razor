@@ -4,6 +4,7 @@
 @inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
 @inject ISnackbar Snackbar
+@inject ILogger<EditShell> Logger
 
 <PageTitle>@L["Committees"]</PageTitle>
 
@@ -20,7 +21,10 @@
         <MudTh>@L["SortOrder"]</MudTh>
     </Headers>
     <Columns Context="c">
-        <MudTd DataLabel="@L["Kind"]">@c.KindEn</MudTd>
+        @* F6 (Week 4 QA report): Kind showed the English value regardless of locale — every other
+           bilingual list column on this page picks the *Ar field in the Arabic UI, this one never
+           was wired up to. *@
+        <MudTd DataLabel="@L["Kind"]">@(DashboardCulture.IsArabic ? c.KindAr : c.KindEn)</MudTd>
         <MudTd DataLabel="Name (EN)">@c.NameEn</MudTd>
         <MudTd DataLabel="Name (AR)" dir="rtl">@c.NameAr</MudTd>
         <MudTd DataLabel="@L["SortOrder"]">@c.SortOrder</MudTd>
@@ -58,6 +62,11 @@
         catch (ContentValidationException ex)
         {
             EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        catch (DbUpdateException ex)
+        {
+            EditShell.HandleUnexpected(L, ex, Logger, out _);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
     }

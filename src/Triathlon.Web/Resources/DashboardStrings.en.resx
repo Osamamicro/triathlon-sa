@@ -206,6 +206,10 @@
     <value>The file size cannot be negative.</value>
     <comment>Shown when a saved file's size is a negative number.</comment>
   </data>
+  <data name="Validation_MaxLength" xml:space="preserve">
+    <value>At most {0} characters.</value>
+    <comment>Shown when a text field's value is longer than the column that stores it allows.</comment>
+  </data>
   <data name="Validation_File" xml:space="preserve">
     <value>The upload was refused: {0}</value>
     <comment>Shown when the media store rejects an upload's bytes (wrong type, mismatched kind, or over the size limit).</comment>
@@ -469,6 +473,10 @@
   <data name="ErrorSaving" xml:space="preserve">
     <value>Something went wrong while saving.</value>
     <comment>Fallback error snackbar for a save that failed without a specific validation message.</comment>
+  </data>
+  <data name="ErrorUnexpected" xml:space="preserve">
+    <value>The save failed for an unexpected reason. Nothing was changed. Please try again or contact the administrator.</value>
+    <comment>Banner shown when a save throws an exception EditShell does not otherwise handle (e.g. a database constraint), so the Blazor circuit is never allowed to crash silently.</comment>
   </data>
   <data name="English" xml:space="preserve">
     <value>English</value>

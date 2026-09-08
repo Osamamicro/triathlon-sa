@@ -235,4 +235,26 @@ public sealed class EventsWriteTests(WebAppFixture app)
             await events.DeleteAsync(id, CancellationToken.None);
         }
     }
+
+    /// <summary>
+    /// F1 (Week 4 QA report, P0): Event.Season is HasMaxLength(16) but nothing checked that before
+    /// the save reached SaveChangesAsync, so a 17-character Season crashed the Blazor circuit with
+    /// an unhandled Npgsql 22001 DbUpdateException instead of a validation message an editor could
+    /// act on. The service must now refuse it up front, keyed by field "Season".
+    /// </summary>
+    [Fact]
+    public async Task An_over_length_season_is_refused_instead_of_reaching_the_database()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var events = scope.ServiceProvider.GetRequiredService<EventsService>();
+        var city = await RiyadhAsync(scope.ServiceProvider);
+        var slug = "long-season-" + Guid.NewGuid().ToString("N")[..8];
+        var input = Input(slug, city) with { Season = "12345678901234567" }; // 17 characters, column allows 16
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => events.CreateAsync(input, CancellationToken.None));
+
+        Assert.Equal("Season", ex.Field);
+        Assert.Equal("Validation_MaxLength", ex.Key);
+        Assert.Equal(16, ex.Arguments.Single());
+    }
 }
