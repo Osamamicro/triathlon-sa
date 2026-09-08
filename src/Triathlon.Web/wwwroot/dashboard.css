@@ -181,3 +181,14 @@ button.primary:hover {
 .stf-diff-table th {
     word-break: break-word;
 }
+
+.stf-entity-search {
+    min-inline-size: 16rem;
+}
+
+.stf-activity-fab {
+    position: fixed;
+    inset-block-end: 5.5rem;
+    inset-inline-end: 1.5rem;
+    z-index: 1101;
+}

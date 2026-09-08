@@ -9,9 +9,26 @@ namespace Triathlon.Web.Services;
 /// <summary>The dashboard's write side for events and cities: create, update, publish, delete and restore, gallery and results included.</summary>
 public sealed partial class EventsService
 {
-    public async Task<IReadOnlyList<Event>> AllForEditAsync(bool deletedOnly, CancellationToken ct) =>
-        await (deletedOnly ? db.Events.IgnoreQueryFilters().Where(e => e.DeletedAt != null) : db.Events)
+    /// <summary>One row of the events list screen: the event and its confirmed/waitlisted registration count.</summary>
+    public sealed record EventRow(Event Event, int Registrations);
+
+    /// <summary>
+    /// Every event for the list screen, with its registration count folded in through one grouped
+    /// query rather than a <see cref="RegistrationCountAsync"/> call per row.
+    /// </summary>
+    public async Task<IReadOnlyList<EventRow>> AllForEditAsync(bool deletedOnly, CancellationToken ct)
+    {
+        var events = await (deletedOnly ? db.Events.IgnoreQueryFilters().Where(e => e.DeletedAt != null) : db.Events)
             .AsNoTracking().Include(e => e.City).OrderByDescending(e => e.DateStart).ToListAsync(ct);
+
+        var counts = await db.EventRegistrations.AsNoTracking()
+            .Where(r => r.Status != RegistrationStatus.Cancelled)
+            .GroupBy(r => r.EventId)
+            .Select(g => new { EventId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.EventId, x => x.Count, ct);
+
+        return [.. events.Select(e => new EventRow(e, counts.GetValueOrDefault(e.Id)))];
+    }
 
     public Task<Event?> ForEditAsync(Guid id, CancellationToken ct) =>
         db.Events.Include(e => e.City).Include(e => e.Gallery.OrderBy(g => g.SortOrder)).Include(e => e.Results.OrderBy(r => r.Position))

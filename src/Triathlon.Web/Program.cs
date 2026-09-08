@@ -67,6 +67,7 @@ builder.Services.AddIdentityCore<AppUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<DashboardScope>();
 builder.Services.AddScoped<IActivityLogger, ActivityLogger>();
 builder.Services.AddScoped<ContentGuard>();
 builder.Services.AddScoped<ContentCommit>();

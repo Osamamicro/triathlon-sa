@@ -1,0 +1,64 @@
+@page "/dashboard/events"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Events
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Events"]</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@L["Events"]</MudText>
+
+<EntityTable TItem="EventsService.EventRow" Items="@rows" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/events/new" Search="@(row => $"{row.Event.TitleEn} {row.Event.TitleAr} {row.Event.Slug}")"
+             EditHref="@(row => $"dashboard/events/{row.Event.Id}")" IsPublished="@(row => row.Event.IsPublished)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoEvents"]">
+    <Headers>
+        <MudTh>@L["DateStart"]</MudTh>
+        <MudTh>@L["Title"] (EN)</MudTh>
+        <MudTh>@L["Title"] (AR)</MudTh>
+        <MudTh>@L["Type"]</MudTh>
+        <MudTh>@L["City"]</MudTh>
+        <MudTh>@L["Registrations"]</MudTh>
+    </Headers>
+    <Columns Context="row">
+        <MudTd DataLabel="@L["DateStart"]">@row.Event.DateStart.ToString("yyyy-MM-dd")</MudTd>
+        <MudTd DataLabel="Title (EN)">@row.Event.TitleEn</MudTd>
+        <MudTd DataLabel="Title (AR)" dir="rtl">@row.Event.TitleAr</MudTd>
+        <MudTd DataLabel="@L["Type"]">
+            <MudChip T="string" Size="Size.Small" Color="@(row.Event.Type == EventType.Competition ? Color.Primary : Color.Secondary)">
+                @(row.Event.Type == EventType.Competition ? L["Competition"] : L["Community"])
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="@L["City"]">@row.Event.City.NameEn</MudTd>
+        <MudTd DataLabel="@L["Registrations"]">@row.Registrations</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<EventsService.EventRow> rows = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        rows = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().AllForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(EventsService.EventRow row)
+    {
+        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreAsync(row.Event.Id, CancellationToken.None));
+        Snackbar.Add(L["Saved"], Severity.Success);
+        await LoadAsync();
+    }
+}

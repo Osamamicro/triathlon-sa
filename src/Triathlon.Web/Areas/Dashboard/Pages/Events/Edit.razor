@@ -1,0 +1,450 @@
+@page "/dashboard/events/new"
+@page "/dashboard/events/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Areas.Public
+@using Triathlon.Web.Domain.Events
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/events" IsNew="@(Id is null)" IsPublished="@model.IsPublished" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" PreviewUrl="@PreviewUrl" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@(() => SaveAsync(publish: false))" OnPublish="@(() => SaveAsync(publish: true))" OnUnpublish="@UnpublishAsync" OnDelete="@DeleteAsync"
+           ActivityEntity="Event" ActivityId="@Id">
+
+    <MudText Typo="Typo.h6" Class="mt-4">@L["Basics"]</MudText>
+    <BilingualField Label="@L["Title"]" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+                     Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
+    <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Reserved="false" />
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="6">
+            <MudSelect T="EventType" Label="@L["Type"]" Value="@model.Type" ValueChanged="@(v => { model.Type = v; dirty = true; })">
+                <MudSelectItem Value="EventType.Competition">@L["Competition"]</MudSelectItem>
+                <MudSelectItem Value="EventType.Community">@L["Community"]</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudSelect T="Guid" Label="@L["City"]" Value="@model.CityId" ValueChanged="@(v => { model.CityId = v; dirty = true; })">
+                @foreach (var city in cities)
+                {
+                    <MudSelectItem Value="@city.Id">@city.NameEn</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+    <MudTextField T="string" Label="@L["Season"]" Value="@model.Season" ValueChanged="@(v => { model.Season = v; dirty = true; })" Class="mt-1" />
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["WhenWhere"]</MudText>
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="4">
+            <MudDatePicker Label="@L["DateStart"]" Date="@model.DateStart.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnDateStartChanged" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudDatePicker Label="@L["DateEnd"]" Date="@model.DateEnd?.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnDateEndChanged" Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudTimePicker Label="@L["StartTime"]" Time="@model.StartTime?.ToTimeSpan()" TimeChanged="@OnStartTimeChanged" Clearable="true" />
+        </MudItem>
+    </MudGrid>
+    <BilingualField Label="@L["Venue"]" En="@model.VenueEn" EnChanged="@(v => { model.VenueEn = v; dirty = true; })"
+                     Ar="@model.VenueAr" ArChanged="@(v => { model.VenueAr = v; dirty = true; })" />
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Story"]</MudText>
+    <BilingualField Label="@L["Description"]" Lines="5" En="@model.DescriptionEn" EnChanged="@(v => { model.DescriptionEn = v; dirty = true; })"
+                     Ar="@model.DescriptionAr" ArChanged="@(v => { model.DescriptionAr = v; dirty = true; })" />
+    <MudStack Class="mt-3">
+        <MediaPicker Kind="FileKind.Image" Label="@L["HeroImage"]" Path="@model.HeroImagePath" PathChanged="@(v => { model.HeroImagePath = v; dirty = true; })" />
+    </MudStack>
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Course"]</MudText>
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="4">
+            <MudTextField T="string" Label="@L["Swim"]" Value="@model.SwimDistance" ValueChanged="@(v => { model.SwimDistance = v; dirty = true; })" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudTextField T="string" Label="@L["Bike"]" Value="@model.BikeDistance" ValueChanged="@(v => { model.BikeDistance = v; dirty = true; })" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudTextField T="string" Label="@L["Run"]" Value="@model.RunDistance" ValueChanged="@(v => { model.RunDistance = v; dirty = true; })" />
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Categories"]</MudText>
+    <MudChipSet T="string" OnClose="RemoveCategory">
+        @foreach (var category in model.Categories)
+        {
+            <MudChip T="string" Value="@category" Text="@EventCategories.Label(category).En" />
+        }
+    </MudChipSet>
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start" Class="mt-2">
+        <MudTextField T="string" @bind-Value="newCategory" Label="@L["AddCategory"]" Immediate="true"
+                       Error="@(categoryError is not null)" ErrorText="@categoryError" OnKeyDown="@OnCategoryKeyDownAsync" />
+        <MudButton Variant="Variant.Outlined" OnClick="AddCategoryAsync">@L["AddCategory"]</MudButton>
+    </MudStack>
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Entry"]</MudText>
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="4">
+            <MudSelect T="RegistrationMode" Label="@L["RegistrationMode"]" Value="@model.RegistrationMode" ValueChanged="@(v => { model.RegistrationMode = v; dirty = true; })">
+                <MudSelectItem Value="RegistrationMode.None">@L["None"]</MudSelectItem>
+                <MudSelectItem Value="RegistrationMode.Internal">@L["Internal"]</MudSelectItem>
+                <MudSelectItem Value="RegistrationMode.External">@L["External"]</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-center">
+            <MudSwitch T="bool" Label="@L["RegistrationOpen"]" Value="@model.RegistrationOpen" ValueChanged="@(v => { model.RegistrationOpen = v; dirty = true; })" Color="Color.Primary" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudNumericField T="int?" Label="@L["Capacity"]" Value="@model.Capacity" ValueChanged="@(v => { model.Capacity = v; dirty = true; })" Min="1" />
+        </MudItem>
+    </MudGrid>
+    @if (model.RegistrationMode == RegistrationMode.External)
+    {
+        <MudTextField T="string" Label="@L["ExternalUrl"]" Value="@model.ExternalRegistrationUrl" ValueChanged="@(v => { model.ExternalRegistrationUrl = v; dirty = true; })" Class="mt-1" />
+    }
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Gallery"]</MudText>
+    @foreach (var (image, index) in model.Gallery.Select((g, i) => (g, i)))
+    {
+        <MudPaper Class="pa-3 mb-3" Outlined="true">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Wrap="Wrap.Wrap">
+                <MediaPicker Kind="FileKind.Image" Label="@L["Gallery"]" Path="@image.Path" PathChanged="@(v => { image.Path = v; dirty = true; })" />
+                <div class="flex-grow-1">
+                    <BilingualField Label="@L["Alt"]" Required="false" En="@image.AltEn" EnChanged="@(v => { image.AltEn = v; dirty = true; })"
+                                     Ar="@image.AltAr" ArChanged="@(v => { image.AltAr = v; dirty = true; })" />
+                </div>
+                <MudStack Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["MoveUp"]"
+                                   Disabled="@(index == 0)" OnClick="@(() => MoveGallery(index, -1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["MoveDown"]"
+                                   Disabled="@(index == model.Gallery.Count - 1)" OnClick="@(() => MoveGallery(index, 1))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
+                                   OnClick="@(() => RemoveGallery(index))" />
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    }
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddGallery">@L["AddImage"]</MudButton>
+
+    <MudText Typo="Typo.h6" Class="mt-6">@L["Results"]</MudText>
+    <MudSimpleTable Dense="true" Class="mb-3">
+        <thead>
+            <tr>
+                <th>@L["Position"]</th>
+                <th>@L["Athlete"] (EN)</th>
+                <th>@L["Athlete"] (AR)</th>
+                <th>@L["Club"] (EN)</th>
+                <th>@L["Club"] (AR)</th>
+                <th>@L["Time"]</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var (result, index) in model.Results.Select((r, i) => (r, i)))
+            {
+                <tr>
+                    <td><MudNumericField T="int" Value="@result.Position" ValueChanged="@(v => { result.Position = v; dirty = true; })" Min="1" /></td>
+                    <td><MudTextField T="string" Value="@result.AthleteEn" ValueChanged="@(v => { result.AthleteEn = v; dirty = true; })" /></td>
+                    <td dir="rtl"><MudTextField T="string" Value="@result.AthleteAr" ValueChanged="@(v => { result.AthleteAr = v; dirty = true; })" /></td>
+                    <td><MudTextField T="string" Value="@result.ClubEn" ValueChanged="@(v => { result.ClubEn = v; dirty = true; })" /></td>
+                    <td dir="rtl"><MudTextField T="string" Value="@result.ClubAr" ValueChanged="@(v => { result.ClubAr = v; dirty = true; })" /></td>
+                    <td><MudTextField T="string" Value="@result.Time" ValueChanged="@(v => { result.Time = v; dirty = true; })" /></td>
+                    <td>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Remove"]"
+                                       OnClick="@(() => RemoveResult(index))" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddResult" Class="mb-4">@L["AddResult"]</MudButton>
+    <MediaPicker Kind="FileKind.Pdf" Label="@L["ResultsPdf"]" Path="@model.ResultsFilePath" PathChanged="@(v => { model.ResultsFilePath = v; dirty = true; })" />
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class GalleryRow
+    {
+        public Guid? Id { get; set; }
+        public string? Path { get; set; }
+        public string? AltEn { get; set; }
+        public string? AltAr { get; set; }
+    }
+
+    private sealed class ResultRow
+    {
+        public Guid? Id { get; set; }
+        public int Position { get; set; }
+        public string? AthleteEn { get; set; }
+        public string? AthleteAr { get; set; }
+        public string? ClubEn { get; set; }
+        public string? ClubAr { get; set; }
+        public string? Time { get; set; }
+    }
+
+    private sealed class Model
+    {
+        public string Slug { get; set; } = "";
+        public EventType Type { get; set; } = EventType.Competition;
+        public bool IsPublished { get; set; }
+        public string Season { get; set; } = "";
+        public DateOnly DateStart { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        public DateOnly? DateEnd { get; set; }
+        public TimeOnly? StartTime { get; set; }
+        public Guid CityId { get; set; }
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
+        public string? VenueEn { get; set; }
+        public string? VenueAr { get; set; }
+        public string? DescriptionEn { get; set; }
+        public string? DescriptionAr { get; set; }
+        public string? SwimDistance { get; set; }
+        public string? BikeDistance { get; set; }
+        public string? RunDistance { get; set; }
+        public List<string> Categories { get; set; } = [];
+        public RegistrationMode RegistrationMode { get; set; }
+        public bool RegistrationOpen { get; set; }
+        public string? ExternalRegistrationUrl { get; set; }
+        public int? Capacity { get; set; }
+        public string? HeroImagePath { get; set; }
+        public string? ResultsFilePath { get; set; }
+        public List<GalleryRow> Gallery { get; set; } = [];
+        public List<ResultRow> Results { get; set; } = [];
+
+        public static Model From(Event ev) => new()
+        {
+            Slug = ev.Slug, Type = ev.Type, IsPublished = ev.IsPublished, Season = ev.Season,
+            DateStart = ev.DateStart, DateEnd = ev.DateEnd, StartTime = ev.StartTime, CityId = ev.CityId,
+            TitleEn = ev.TitleEn, TitleAr = ev.TitleAr, VenueEn = ev.VenueEn, VenueAr = ev.VenueAr,
+            DescriptionEn = ev.DescriptionEn, DescriptionAr = ev.DescriptionAr,
+            SwimDistance = ev.SwimDistance, BikeDistance = ev.BikeDistance, RunDistance = ev.RunDistance,
+            Categories = [.. ev.CategoryList],
+            RegistrationMode = ev.RegistrationMode, RegistrationOpen = ev.RegistrationOpen,
+            ExternalRegistrationUrl = ev.ExternalRegistrationUrl, Capacity = ev.Capacity,
+            HeroImagePath = ev.HeroImagePath, ResultsFilePath = ev.ResultsFilePath,
+            Gallery = [.. ev.Gallery.OrderBy(g => g.SortOrder).Select(g => new GalleryRow { Id = g.Id, Path = g.Path, AltEn = g.AltEn, AltAr = g.AltAr })],
+            Results = [.. ev.Results.OrderBy(r => r.Position).Select(r => new ResultRow
+            {
+                Id = r.Id, Position = r.Position, AthleteEn = r.AthleteEn, AthleteAr = r.AthleteAr, ClubEn = r.ClubEn, ClubAr = r.ClubAr, Time = r.Time,
+            })],
+        };
+
+        public EventInput ToInput(bool published) => new(
+            Slug, Type, published, Season, DateStart, DateEnd, StartTime, CityId,
+            TitleEn ?? "", TitleAr ?? "", VenueEn ?? "", VenueAr ?? "", DescriptionEn ?? "", DescriptionAr ?? "",
+            SwimDistance, BikeDistance, RunDistance, Categories,
+            RegistrationMode, RegistrationOpen, ExternalRegistrationUrl, Capacity,
+            HeroImagePath, ResultsFilePath,
+            [.. Gallery.Select(g => new GalleryImageInput(g.Id, g.Path ?? "", g.AltEn, g.AltAr))],
+            [.. Results.Select(r => new EventResultInput(r.Id, r.Position, r.AthleteEn ?? "", r.AthleteAr ?? "", r.ClubEn, r.ClubAr, r.Time ?? ""))]);
+    }
+
+    private Model model = new();
+    private Event? loaded;
+    private IReadOnlyList<City> cities = [];
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+    private string newCategory = "";
+    private string? categoryError;
+
+    private string title => Id is null ? L["NewEvent"] : (loaded is null ? "" : loaded.TitleEn);
+    private string? PreviewUrl => loaded is { IsPublished: true } ? $"/{Culture}/events/{loaded.Slug}" : null;
+    private static string Culture => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar" : "en";
+
+    protected override async Task OnInitializedAsync()
+    {
+        cities = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().CitiesAsync(CancellationToken.None));
+
+        // A fresh model defaults CityId to Guid.Empty, which MudSelect renders as its raw string
+        // rather than a blank placeholder since nothing matches it; picking the first city instead
+        // gives a new event a sensible, visible default the way the type/date fields already have one.
+        if (Id is null && cities.Count > 0)
+        {
+            model.CityId = cities[0].Id;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().ForEditAsync(id, CancellationToken.None));
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private void OnDateStartChanged(DateTime? value)
+    {
+        if (value is { } date)
+        {
+            model.DateStart = DateOnly.FromDateTime(date);
+            dirty = true;
+        }
+    }
+
+    private void OnDateEndChanged(DateTime? value)
+    {
+        model.DateEnd = value is { } date ? DateOnly.FromDateTime(date) : null;
+        dirty = true;
+    }
+
+    private void OnStartTimeChanged(TimeSpan? value)
+    {
+        model.StartTime = value is { } time ? TimeOnly.FromTimeSpan(time) : null;
+        dirty = true;
+    }
+
+    private Task OnCategoryKeyDownAsync(KeyboardEventArgs e) => e.Key == "Enter" ? AddCategoryAsync() : Task.CompletedTask;
+
+    private Task AddCategoryAsync()
+    {
+        var value = newCategory.Trim();
+        if (value.Length == 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (value.Contains(','))
+        {
+            categoryError = L["Validation_Comma"];
+            return Task.CompletedTask;
+        }
+
+        categoryError = null;
+        if (!model.Categories.Contains(value, StringComparer.Ordinal))
+        {
+            model.Categories.Add(value);
+            dirty = true;
+        }
+
+        newCategory = "";
+        return Task.CompletedTask;
+    }
+
+    private void RemoveCategory(MudChip<string> chip)
+    {
+        if (chip.Value is { } value)
+        {
+            model.Categories.Remove(value);
+            dirty = true;
+        }
+    }
+
+    private void AddGallery()
+    {
+        model.Gallery.Add(new GalleryRow());
+        dirty = true;
+    }
+
+    private void RemoveGallery(int index)
+    {
+        model.Gallery.RemoveAt(index);
+        dirty = true;
+    }
+
+    private void MoveGallery(int index, int delta)
+    {
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= model.Gallery.Count)
+        {
+            return;
+        }
+
+        (model.Gallery[index], model.Gallery[newIndex]) = (model.Gallery[newIndex], model.Gallery[index]);
+        dirty = true;
+    }
+
+    private void AddResult()
+    {
+        model.Results.Add(new ResultRow { Position = model.Results.Count + 1 });
+        dirty = true;
+    }
+
+    private void RemoveResult(int index)
+    {
+        model.Results.RemoveAt(index);
+        dirty = true;
+    }
+
+    private async Task SaveAsync(bool publish)
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var published = publish || (loaded?.IsPublished ?? false);
+            var input = model.ToInput(published);
+            if (Id is { } id)
+            {
+                await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().UpdateAsync(id, input, CancellationToken.None));
+                loaded = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().ForEditAsync(id, CancellationToken.None));
+            }
+            else
+            {
+                var created = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().CreateAsync(input, CancellationToken.None));
+                Nav.NavigateTo($"dashboard/events/{created.Id}");
+                return;
+            }
+
+            model = Model.From(loaded!);
+            dirty = false;
+            Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task UnpublishAsync()
+    {
+        if (Id is not { } id)
+        {
+            return;
+        }
+
+        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().SetPublishedAsync(id, false, CancellationToken.None));
+        loaded = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().ForEditAsync(id, CancellationToken.None));
+        model = Model.From(loaded!);
+        Snackbar.Add(L["Saved"], Severity.Success);
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteEventConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Slug))
+        {
+            return;
+        }
+
+        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().DeleteAsync(id, CancellationToken.None));
+        Snackbar.Add(L["Saved"], Severity.Success);
+        Nav.NavigateTo("dashboard/events");
+    }
+}

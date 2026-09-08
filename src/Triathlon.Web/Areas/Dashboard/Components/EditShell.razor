@@ -1,0 +1,138 @@
+@* The one edit-screen pattern every content type reuses: a back link, heading, error banner, the
+   caller's own field sections as ChildContent, the sticky PublishBar, and the activity drawer
+   toggle. Screens supply the fields; this only supplies the frame around them. *@
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudLink Href="@BackHref" Underline="Underline.Hover" Class="d-inline-flex align-center mb-2">
+    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" Class="me-1" />@L["Back"]
+</MudLink>
+<MudText Typo="Typo.h4" GutterBottom="true">@Title</MudText>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
+}
+
+@if (FieldErrors.Count > 0)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        <ul class="mb-0 ps-4">
+            @foreach (var (field, message) in FieldErrors)
+            {
+                <li>@field: @message</li>
+            }
+        </ul>
+    </MudAlert>
+}
+
+@if (!IsNew && IsPublished == false && string.IsNullOrEmpty(PreviewUrl))
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-4 d-block">@L["PreviewAfterPublish"]</MudText>
+}
+
+<div class="stf-edit-shell-body">
+    @ChildContent
+</div>
+
+<PublishBar IsPublished="@IsPublished" IsDirty="@IsDirty" IsSaving="@IsSaving"
+            OnSaveDraft="@OnSaveDraft" OnPublish="@OnPublish" OnUnpublish="@OnUnpublish" OnDelete="@OnDelete"
+            PreviewUrl="@PreviewUrl" LastUpdatedAt="@LastUpdatedAt" LastUpdatedBy="@LastUpdatedBy" />
+
+@if (ActivityId is { } id)
+{
+    <MudTooltip Text="@L["Activity"]">
+        <MudFab Color="Color.Default" StartIcon="@Icons.Material.Filled.History" OnClick="@(() => activityOpen = true)"
+                Class="stf-activity-fab" aria-label="@L["Activity"]" />
+    </MudTooltip>
+    <ActivityDrawer Entity="@ActivityEntity" EntityId="@id" @bind-Open="activityOpen" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string BackHref { get; set; } = "";
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    /// <summary><c>null</c> means the content type has no publish concept (e.g. cities).</summary>
+    [Parameter]
+    public bool? IsPublished { get; set; }
+
+    [Parameter]
+    public bool IsDirty { get; set; }
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    /// <summary>The save-refusal banner — a generic message not tied to one field.</summary>
+    [Parameter]
+    public string? Error { get; set; }
+
+    /// <summary>Field name to localized message, from a refused save's <see cref="ContentValidationException"/>.</summary>
+    [Parameter]
+    public IReadOnlyDictionary<string, string> FieldErrors { get; set; } = new Dictionary<string, string>(StringComparer.Ordinal);
+
+    [Parameter]
+    public string? PreviewUrl { get; set; }
+
+    [Parameter]
+    public DateTimeOffset? LastUpdatedAt { get; set; }
+
+    [Parameter]
+    public string? LastUpdatedBy { get; set; }
+
+    [Parameter]
+    public EventCallback OnSaveDraft { get; set; }
+
+    [Parameter]
+    public EventCallback OnPublish { get; set; }
+
+    [Parameter]
+    public EventCallback OnUnpublish { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    [Parameter, EditorRequired]
+    public string ActivityEntity { get; set; } = "";
+
+    [Parameter]
+    public Guid? ActivityId { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool activityOpen;
+
+    /// <summary>
+    /// Turns a refused save into a place to show it: a generic exception (no specific field — the
+    /// item itself, e.g. "not found") becomes the banner; anything else is keyed by field name for
+    /// the caller to show inline, and also listed by <see cref="EditShell"/> itself so nothing is
+    /// silently dropped when a field's own component has no slot for an external error.
+    /// </summary>
+    public static void Handle(
+        IStringLocalizer<DashboardStrings> localizer,
+        ContentValidationException ex,
+        out string? banner,
+        Dictionary<string, string> fieldErrors)
+    {
+        ArgumentNullException.ThrowIfNull(localizer);
+        ArgumentNullException.ThrowIfNull(ex);
+        ArgumentNullException.ThrowIfNull(fieldErrors);
+
+        var message = localizer[ex.Key, [.. ex.Arguments]];
+
+        if (ex.Field is "Id")
+        {
+            banner = message;
+        }
+        else
+        {
+            banner = null;
+            fieldErrors[ex.Field] = message;
+        }
+    }
+}

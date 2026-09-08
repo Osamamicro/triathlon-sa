@@ -43,28 +43,26 @@ public sealed class DashboardShellTests(WebAppFixture app)
     [Fact]
     public async Task Editor_does_not_see_the_users_nav_link()
     {
-        var (client, _) = await DashboardClient.CreateEditorAsync(app);
-        using (client)
-        {
-            using var response = await client.GetAsync("/dashboard");
-            var html = await response.Content.ReadAsStringAsync();
+        var (email, password) = await DashboardClient.CreateEditorAsync(app);
+        using var client = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: false, email: email, password: password);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.DoesNotContain("dashboard/users", html, StringComparison.Ordinal);
-        }
+        using var response = await client.GetAsync("/dashboard");
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.DoesNotContain("dashboard/users", html, StringComparison.Ordinal);
     }
 
     [Fact]
     public async Task Editor_is_redirected_away_from_the_users_page()
     {
-        var (client, _) = await DashboardClient.CreateEditorAsync(app);
-        using (client)
-        {
-            using var response = await client.GetAsync("/dashboard/users");
+        var (email, password) = await DashboardClient.CreateEditorAsync(app);
+        using var client = await DashboardClient.CreateSignedInClientAsync(app, allowAutoRedirect: false, email: email, password: password);
 
-            Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-            Assert.Contains("/dashboard/access-denied", response.Headers.Location!.ToString(), StringComparison.Ordinal);
-        }
+        using var response = await client.GetAsync("/dashboard/users");
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Contains("/dashboard/access-denied", response.Headers.Location!.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]

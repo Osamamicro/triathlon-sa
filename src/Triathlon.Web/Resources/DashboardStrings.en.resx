@@ -518,4 +518,224 @@
     <value>Your password has been changed.</value>
     <comment>Status message shown after a successful password change.</comment>
   </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+    <comment>EditShell's breadcrumb link back to the list screen it was opened from.</comment>
+  </data>
+  <data name="NewEvent" xml:space="preserve">
+    <value>New event</value>
+    <comment>Title of the events editor when creating a new event.</comment>
+  </data>
+  <data name="Basics" xml:space="preserve">
+    <value>Basics</value>
+    <comment>Heading of an edit screen's basics section (title, slug, type, city, season).</comment>
+  </data>
+  <data name="WhenWhere" xml:space="preserve">
+    <value>When &amp; where</value>
+    <comment>Heading of the events editor's date/time/venue section.</comment>
+  </data>
+  <data name="Story" xml:space="preserve">
+    <value>Story</value>
+    <comment>Heading of the events editor's description/hero image section.</comment>
+  </data>
+  <data name="Course" xml:space="preserve">
+    <value>Course</value>
+    <comment>Heading of the events editor's distances/categories section.</comment>
+  </data>
+  <data name="Entry" xml:space="preserve">
+    <value>Entry</value>
+    <comment>Heading of the events editor's registration section.</comment>
+  </data>
+  <data name="Gallery" xml:space="preserve">
+    <value>Gallery</value>
+    <comment>Heading of the events editor's photo gallery section.</comment>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Results</value>
+    <comment>Heading of the events editor's finisher results section.</comment>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+    <comment>Label/column for an event's competition-or-community type.</comment>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>City</value>
+    <comment>Label/column for an event's host city.</comment>
+  </data>
+  <data name="Season" xml:space="preserve">
+    <value>Season</value>
+    <comment>Label for an event's federation season, e.g. "2026-27".</comment>
+  </data>
+  <data name="DateStart" xml:space="preserve">
+    <value>Start date</value>
+    <comment>Label/column for an event's start date.</comment>
+  </data>
+  <data name="DateEnd" xml:space="preserve">
+    <value>End date</value>
+    <comment>Label for an event's optional end date.</comment>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>Start time</value>
+    <comment>Label for an event's optional start time.</comment>
+  </data>
+  <data name="Venue" xml:space="preserve">
+    <value>Venue</value>
+    <comment>Label of the bilingual venue field.</comment>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+    <comment>Label of the bilingual description field.</comment>
+  </data>
+  <data name="HeroImage" xml:space="preserve">
+    <value>Hero image</value>
+    <comment>Label of the events editor's hero image picker.</comment>
+  </data>
+  <data name="Swim" xml:space="preserve">
+    <value>Swim</value>
+    <comment>Label of the swim distance field.</comment>
+  </data>
+  <data name="Bike" xml:space="preserve">
+    <value>Bike</value>
+    <comment>Label of the bike distance field.</comment>
+  </data>
+  <data name="Run" xml:space="preserve">
+    <value>Run</value>
+    <comment>Label of the run distance field.</comment>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Categories</value>
+    <comment>Label of the event categories chip list.</comment>
+  </data>
+  <data name="AddCategory" xml:space="preserve">
+    <value>Add category</value>
+    <comment>Button/field that adds a new category chip.</comment>
+  </data>
+  <data name="RegistrationMode" xml:space="preserve">
+    <value>Registration mode</value>
+    <comment>Label of the event's registration mode select (none/internal/external).</comment>
+  </data>
+  <data name="RegistrationOpen" xml:space="preserve">
+    <value>Registration open</value>
+    <comment>Label of the switch that opens/closes registration for an event.</comment>
+  </data>
+  <data name="ExternalUrl" xml:space="preserve">
+    <value>External registration link</value>
+    <comment>Label of the external registration URL field, shown when registration mode is External.</comment>
+  </data>
+  <data name="Capacity" xml:space="preserve">
+    <value>Capacity</value>
+    <comment>Label of the optional entrant capacity field.</comment>
+  </data>
+  <data name="AddImage" xml:space="preserve">
+    <value>Add image</value>
+    <comment>Button that adds a new row to the gallery editor.</comment>
+  </data>
+  <data name="Alt" xml:space="preserve">
+    <value>Alt text</value>
+    <comment>Label of a gallery image's alt-text field.</comment>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Position</value>
+    <comment>Label/column for a finisher's placing.</comment>
+  </data>
+  <data name="Athlete" xml:space="preserve">
+    <value>Athlete</value>
+    <comment>Label/column for a finisher's name.</comment>
+  </data>
+  <data name="Club" xml:space="preserve">
+    <value>Club</value>
+    <comment>Label/column for a finisher's club.</comment>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Time</value>
+    <comment>Label/column for a finisher's time.</comment>
+  </data>
+  <data name="AddResult" xml:space="preserve">
+    <value>Add result</value>
+    <comment>Button that adds a new row to the results editor.</comment>
+  </data>
+  <data name="ResultsPdf" xml:space="preserve">
+    <value>Results PDF</value>
+    <comment>Label of the results-file picker.</comment>
+  </data>
+  <data name="NewCity" xml:space="preserve">
+    <value>New city</value>
+    <comment>Title of the cities editor when creating a new city.</comment>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>Key</value>
+    <comment>Label/column for a city's stable machine key.</comment>
+  </data>
+  <data name="SvgX" xml:space="preserve">
+    <value>X position</value>
+    <comment>Label/column for a city's horizontal map coordinate.</comment>
+  </data>
+  <data name="SvgY" xml:space="preserve">
+    <value>Y position</value>
+    <comment>Label/column for a city's vertical map coordinate.</comment>
+  </data>
+  <data name="LabelAtEnd" xml:space="preserve">
+    <value>Label at end</value>
+    <comment>Switch: the city's map label sits before the pin instead of after it.</comment>
+  </data>
+  <data name="LabelDy" xml:space="preserve">
+    <value>Label offset</value>
+    <comment>Label of the city map label's vertical nudge field.</comment>
+  </data>
+  <data name="SortOrder" xml:space="preserve">
+    <value>Sort order</value>
+    <comment>Label/column for a city's position in map/list order.</comment>
+  </data>
+  <data name="DeleteEventConfirm" xml:space="preserve">
+    <value>Type the slug to delete this event. Registrations are kept.</value>
+    <comment>Body text of the delete-event confirmation dialog.</comment>
+  </data>
+  <data name="DeleteCityConfirm" xml:space="preserve">
+    <value>Type the city key to delete it. A city that still has events cannot be deleted.</value>
+    <comment>Body text of the delete-city confirmation dialog.</comment>
+  </data>
+  <data name="PreviewAfterPublish" xml:space="preserve">
+    <value>The preview link appears once this item is published.</value>
+    <comment>Shown on a draft item's editor in place of the (not yet available) preview link.</comment>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>Move up</value>
+    <comment>aria-label of the button that moves a gallery image one place earlier.</comment>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>Move down</value>
+    <comment>aria-label of the button that moves a gallery image one place later.</comment>
+  </data>
+  <data name="Competition" xml:space="preserve">
+    <value>Competition</value>
+    <comment>EventType.Competition's display label.</comment>
+  </data>
+  <data name="Community" xml:space="preserve">
+    <value>Community</value>
+    <comment>EventType.Community's display label.</comment>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>None</value>
+    <comment>RegistrationMode.None's display label.</comment>
+  </data>
+  <data name="Internal" xml:space="preserve">
+    <value>Internal</value>
+    <comment>RegistrationMode.Internal's display label.</comment>
+  </data>
+  <data name="External" xml:space="preserve">
+    <value>External</value>
+    <comment>RegistrationMode.External's display label.</comment>
+  </data>
+  <data name="NoEvents" xml:space="preserve">
+    <value>No events yet.</value>
+    <comment>Events list screen's empty state.</comment>
+  </data>
+  <data name="NoCities" xml:space="preserve">
+    <value>No cities yet.</value>
+    <comment>Cities list screen's empty state.</comment>
+  </data>
+  <data name="Validation_Comma" xml:space="preserve">
+    <value>A category cannot contain a comma.</value>
+    <comment>Shown inline when an event category chip is typed with a comma in it.</comment>
+  </data>
 </root>

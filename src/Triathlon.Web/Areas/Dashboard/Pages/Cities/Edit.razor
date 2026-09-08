@@ -1,0 +1,151 @@
+@page "/dashboard/cities/new"
+@page "/dashboard/cities/{Id:guid}"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Events
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IDialogService Dialogs
+
+<PageTitle>@title</PageTitle>
+
+<EditShell @key="@Id" Title="@title" BackHref="dashboard/cities" IsNew="@(Id is null)" IsPublished="@((bool?)null)" IsDirty="@dirty" IsSaving="@saving"
+           Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
+           OnSaveDraft="@SaveAsync" OnDelete="@DeleteAsync" ActivityEntity="City" ActivityId="@Id">
+
+    <MudTextField T="string" Label="@L["Key"]" Value="@model.Key" ValueChanged="@(v => { model.Key = v; dirty = true; })" Class="mt-4" />
+    <BilingualField Label="@L["Name"]" En="@model.NameEn" EnChanged="@(v => { model.NameEn = v; dirty = true; })"
+                     Ar="@model.NameAr" ArChanged="@(v => { model.NameAr = v; dirty = true; })" />
+
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="4">
+            <MudNumericField T="int" Label="@L["SvgX"]" Value="@model.SvgX" ValueChanged="@(v => { model.SvgX = v; dirty = true; })" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudNumericField T="int" Label="@L["SvgY"]" Value="@model.SvgY" ValueChanged="@(v => { model.SvgY = v; dirty = true; })" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudNumericField T="int" Label="@L["LabelDy"]" Value="@model.LabelDy" ValueChanged="@(v => { model.LabelDy = v; dirty = true; })" />
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mt-1">
+        <MudItem xs="12" md="6" Class="d-flex align-center">
+            <MudSwitch T="bool" Label="@L["LabelAtEnd"]" Value="@model.LabelAtEnd" ValueChanged="@(v => { model.LabelAtEnd = v; dirty = true; })" Color="Color.Primary" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudNumericField T="int" Label="@L["SortOrder"]" Value="@model.SortOrder" ValueChanged="@(v => { model.SortOrder = v; dirty = true; })" />
+        </MudItem>
+    </MudGrid>
+</EditShell>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private sealed class Model
+    {
+        public string Key { get; set; } = "";
+        public string? NameEn { get; set; }
+        public string? NameAr { get; set; }
+        public int SvgX { get; set; }
+        public int SvgY { get; set; }
+        public bool LabelAtEnd { get; set; }
+        public int LabelDy { get; set; }
+        public int SortOrder { get; set; }
+
+        public static Model From(City city) => new()
+        {
+            Key = city.Key, NameEn = city.NameEn, NameAr = city.NameAr,
+            SvgX = city.SvgX, SvgY = city.SvgY, LabelAtEnd = city.LabelAtEnd, LabelDy = city.LabelDy, SortOrder = city.SortOrder,
+        };
+
+        public CityInput ToInput(Guid? id) => new(id, Key, NameEn ?? "", NameAr ?? "", SvgX, SvgY, LabelAtEnd, LabelDy, SortOrder);
+    }
+
+    private Model model = new();
+    private City? loaded;
+    private bool dirty;
+    private bool saving;
+    private string? error;
+    private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
+
+    private string title => Id is null ? L["NewCity"] : (loaded is null ? "" : loaded.NameEn);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            loaded = await Scope.RunAsync(async sp =>
+            {
+                var all = await sp.GetRequiredService<EventsService>().CitiesForEditAsync(false, CancellationToken.None);
+                return all.FirstOrDefault(c => c.Id == id);
+            });
+            if (loaded is null)
+            {
+                Nav.NavigateTo("dashboard/not-found");
+                return;
+            }
+
+            model = Model.From(loaded);
+        }
+
+        dirty = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            var input = model.ToInput(Id);
+            var saved = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().SaveCityAsync(input, CancellationToken.None));
+            if (Id is null)
+            {
+                Nav.NavigateTo($"dashboard/cities/{saved.Id}");
+                return;
+            }
+
+            loaded = saved;
+            model = Model.From(loaded);
+            dirty = false;
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Id is not { } id || loaded is null)
+        {
+            return;
+        }
+
+        if (!await ConfirmDialog.ShowAsync(Dialogs, L["Delete"], L["DeleteCityConfirm"], L["Delete"], danger: true, typeToConfirm: loaded.Key))
+        {
+            return;
+        }
+
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().DeleteCityAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/cities");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+    }
+}

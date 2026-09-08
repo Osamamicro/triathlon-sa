@@ -1,0 +1,116 @@
+@* The one list-screen pattern every content type reuses: a search box, a "show deleted" switch, a
+   "New" button, and a dense table with a status chip and an edit/restore action per row. Screens
+   supply only their own columns and how a row maps to search text/edit link/published state. *@
+@typeparam TItem
+@inject IStringLocalizer<DashboardStrings> L
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-4" Wrap="Wrap.Wrap">
+    <MudTextField T="string" Value="@searchText" ValueChanged="OnSearchChangedAsync" Immediate="true"
+                  Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="stf-entity-search" />
+    <MudSwitch T="bool" Value="@ShowDeleted" ValueChanged="OnShowDeletedChangedAsync" Label="@L["ShowDeleted"]" Color="Color.Primary" />
+    <MudSpacer />
+    @if (!string.IsNullOrEmpty(NewHref))
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@NewHref">@L["NewItem"]</MudButton>
+    }
+</MudStack>
+
+@if (Loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else
+{
+    <MudTable Items="@FilteredItems" Dense="true" Hover="true" Striped="true">
+        <HeaderContent>
+            @Headers
+            <MudTh>@L["Status"]</MudTh>
+            <MudTh>@L["Actions"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @Columns(context)
+            <MudTd DataLabel="@L["Status"]">
+                @if (IsPublished(context) is { } published)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(published ? Color.Success : Color.Default)">
+                        @(published ? L["Published"] : L["Draft"])
+                    </MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="@L["Actions"]">
+                @if (ShowDeleted)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => OnRestore.InvokeAsync(context))">@L["Restore"]</MudButton>
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Href="@EditHref(context)" aria-label="@L["Edit"]" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Color="Color.Secondary">@EmptyText</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TItem> Items { get; set; } = [];
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public bool ShowDeleted { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ShowDeletedChanged { get; set; }
+
+    /// <summary>Href of the "New" button, or <c>null</c>/empty to hide it.</summary>
+    [Parameter]
+    public string? NewHref { get; set; }
+
+    /// <summary>The text one row matches against, ordinal case-insensitive.</summary>
+    [Parameter, EditorRequired]
+    public Func<TItem, string> Search { get; set; } = _ => "";
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> Columns { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment Headers { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Func<TItem, string> EditHref { get; set; } = _ => "#";
+
+    /// <summary><c>null</c> hides the status chip entirely — used by content with no publish concept.</summary>
+    [Parameter, EditorRequired]
+    public Func<TItem, bool?> IsPublished { get; set; } = _ => null;
+
+    [Parameter]
+    public EventCallback<TItem> OnRestore { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "";
+
+    private string searchText = "";
+
+    private IEnumerable<TItem> FilteredItems =>
+        string.IsNullOrWhiteSpace(searchText)
+            ? Items
+            : Items.Where(item => Search(item).Contains(searchText, StringComparison.OrdinalIgnoreCase));
+
+    private Task OnSearchChangedAsync(string value)
+    {
+        searchText = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        ShowDeleted = value;
+        await ShowDeletedChanged.InvokeAsync(value);
+    }
+}

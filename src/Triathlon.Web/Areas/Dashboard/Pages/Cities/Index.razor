@@ -1,0 +1,60 @@
+@page "/dashboard/cities"
+@attribute [Authorize(Policy = Policies.Content)]
+@using Triathlon.Web.Domain.Events
+@inject DashboardScope Scope
+@inject IStringLocalizer<DashboardStrings> L
+@inject ISnackbar Snackbar
+
+<PageTitle>@L["Cities"]</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@L["Cities"]</MudText>
+
+<EntityTable TItem="City" Items="@cities" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
+             NewHref="dashboard/cities/new" Search="@(city => $"{city.Key} {city.NameEn} {city.NameAr}")"
+             EditHref="@(city => $"dashboard/cities/{city.Id}")" IsPublished="@(_ => null)"
+             OnRestore="@RestoreAsync" EmptyText="@L["NoCities"]">
+    <Headers>
+        <MudTh>@L["Key"]</MudTh>
+        <MudTh>@L["Name"] (EN)</MudTh>
+        <MudTh>@L["Name"] (AR)</MudTh>
+        <MudTh>@L["SvgX"]</MudTh>
+        <MudTh>@L["SvgY"]</MudTh>
+        <MudTh>@L["SortOrder"]</MudTh>
+    </Headers>
+    <Columns Context="city">
+        <MudTd DataLabel="@L["Key"]">@city.Key</MudTd>
+        <MudTd DataLabel="Name (EN)">@city.NameEn</MudTd>
+        <MudTd DataLabel="Name (AR)" dir="rtl">@city.NameAr</MudTd>
+        <MudTd DataLabel="@L["SvgX"]">@city.SvgX</MudTd>
+        <MudTd DataLabel="@L["SvgY"]">@city.SvgY</MudTd>
+        <MudTd DataLabel="@L["SortOrder"]">@city.SortOrder</MudTd>
+    </Columns>
+</EntityTable>
+
+@code {
+    private IReadOnlyList<City> cities = [];
+    private bool loading = true;
+    private bool showDeleted;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        cities = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().CitiesForEditAsync(showDeleted, CancellationToken.None));
+        loading = false;
+    }
+
+    private async Task OnShowDeletedChangedAsync(bool value)
+    {
+        showDeleted = value;
+        await LoadAsync();
+    }
+
+    private async Task RestoreAsync(City city)
+    {
+        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreCityAsync(city.Id, CancellationToken.None));
+        Snackbar.Add(L["Saved"], Severity.Success);
+        await LoadAsync();
+    }
+}
