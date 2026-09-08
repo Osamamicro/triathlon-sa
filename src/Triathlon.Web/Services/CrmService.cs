@@ -1,8 +1,11 @@
 using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Triathlon.Web.Data;
 using Triathlon.Web.Domain.Crm;
+using Triathlon.Web.Jobs;
 
 namespace Triathlon.Web.Services;
 
@@ -48,7 +51,7 @@ public static class AthleteCategories
 /// athlete and telling the applicant it arrived. Approval, licence issuing and the rest of the desk's
 /// work arrive with the CRM in Week 5.
 /// </summary>
-public sealed class CrmService(AppDbContext db, IEmailSender email, TimeProvider clock, ILogger<CrmService> log)
+public sealed class CrmService(AppDbContext db, IBackgroundJobClient jobs, TimeProvider clock, ILogger<CrmService> log, ContentCommit commit)
 {
     /// <summary>The youngest the federation licences; younger children race under a club's own scheme.</summary>
     public const int YoungestYears = 6;
@@ -64,19 +67,33 @@ public sealed class CrmService(AppDbContext db, IEmailSender email, TimeProvider
         (today.AddYears(-OldestYears), today.AddYears(-YoungestYears));
 
     /// <summary>
-    /// Records the application and confirms it by mail. The record is saved first and the mail is
-    /// sent afterwards inside a try/catch: a mail server that is slow, misconfigured or down must
-    /// not lose an application the athlete believes they submitted. Week 5 moves the send into a
-    /// Hangfire job, at which point the retry comes for free.
+    /// Records the application and queues its confirmation mail through <see cref="EmailJob"/>, so a
+    /// slow or unreachable SMTP server never costs an applicant their application and a failed send
+    /// gets Hangfire's retry for free instead of a caught-and-logged exception.
+    /// <para>
+    /// A pending or approved application already on file for the same email (case-insensitively) is
+    /// treated as the same person resubmitting rather than a new athlete: no second row, no second
+    /// mail, just the existing record handed back with <c>Created: false</c>. This is a public write
+    /// with no dashboard log either way — the desk's own edits are what <see cref="ContentCommit"/> audits.
+    /// </para>
     /// </summary>
-    public async Task<Athlete> ApplyAsync(AthleteApplication application, CancellationToken ct)
+    public async Task<(Athlete Athlete, bool Created)> ApplyAsync(AthleteApplication application, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(application);
+
+        var email = application.Email.Trim();
+        var existing = await db.Athletes.FirstOrDefaultAsync(
+            a => a.Email.ToLower() == email.ToLower() && a.Status != AthleteStatus.Rejected, ct);
+        if (existing is not null)
+        {
+            log.LogInformation("Duplicate application for {Email} ignored.", email);
+            return (existing, false);
+        }
 
         var athlete = new Athlete
         {
             FullName = application.FullName.Trim(),
-            Email = application.Email.Trim(),
+            Email = email,
             DateOfBirth = application.DateOfBirth,
             CityKey = string.IsNullOrWhiteSpace(application.CityKey) ? null : application.CityKey.Trim(),
             Category = application.Category.Trim(),
@@ -90,19 +107,38 @@ public sealed class CrmService(AppDbContext db, IEmailSender email, TimeProvider
         db.Athletes.Add(athlete);
         await db.SaveChangesAsync(ct);
 
-        try
+        jobs.Enqueue<EmailJob>(job => job.SendAsync(Confirmation(athlete), CancellationToken.None));
+
+        return (athlete, true);
+    }
+
+    // ---------------------------------------------------------------- athletes (dashboard)
+
+    public async Task<IReadOnlyList<Athlete>> AthletesForEditAsync(AthleteStatus? status, bool deletedOnly, CancellationToken ct)
+    {
+        var query = deletedOnly ? db.Athletes.IgnoreQueryFilters().Where(a => a.DeletedAt != null) : db.Athletes.AsQueryable();
+        if (status is { } value)
         {
-            await email.SendAsync(Confirmation(athlete), ct);
-        }
-        catch (Exception ex)
-        {
-            // Deliberately broad: every failure mode of an SMTP client — socket, protocol,
-            // authentication, timeout — has the same consequence here, and none of them is a reason
-            // to fail a request whose real work is already committed.
-            log.LogWarning(ex, "Could not send the registration confirmation for athlete {AthleteId}.", athlete.Id);
+            query = query.Where(a => a.Status == value);
         }
 
-        return athlete;
+        return await query.AsNoTracking().OrderByDescending(a => a.CreatedAt).ToListAsync(ct);
+    }
+
+    public async Task DeleteAthleteAsync(Guid id, CancellationToken ct)
+    {
+        var athlete = await db.Athletes.SingleOrDefaultAsync(a => a.Id == id, ct);
+        if (athlete is null) return;
+        db.Athletes.Remove(athlete);
+        await commit.ApplyAsync("Athlete", id, "delete", Audit.Snapshot(athlete), null, [], ct);
+    }
+
+    public async Task RestoreAthleteAsync(Guid id, CancellationToken ct)
+    {
+        var athlete = await db.Athletes.IgnoreQueryFilters().SingleOrDefaultAsync(a => a.Id == id && a.DeletedAt != null, ct);
+        if (athlete is null) return;
+        athlete.DeletedAt = null;
+        await commit.ApplyAsync("Athlete", id, "restore", null, Audit.Snapshot(athlete), [], ct);
     }
 
     /// <summary>

@@ -343,7 +343,9 @@ public static class PublicApi
                 return Results.Redirect(formUrl + "?turnstile=1");
             }
 
-            await crm.ApplyAsync(
+            // Created is ignored: a duplicate resolves to the athlete's existing pending application
+            // rather than a new row, but the visitor sees the same "we received it" confirmation either way.
+            var (_, _) = await crm.ApplyAsync(
                 new AthleteApplication(form.FullName, form.Email, dateOfBirth!.Value, cityKey, form.Category, clubId, interestEventId, culture),
                 ct);
 

@@ -66,11 +66,13 @@ public static class JobsSetup
     }
 
     /// <summary>
-    /// Mounts the job dashboard. It is an ordinary route under <c>/dashboard</c>, but it is served
-    /// by Hangfire rather than Blazor, so it carries its own authorisation filter.
+    /// Mounts the job dashboard and the app's one recurring job. The dashboard is an ordinary route
+    /// under <c>/dashboard</c>, but it is served by Hangfire rather than Blazor, so it carries its
+    /// own authorisation filter.
     /// </summary>
-    public static IEndpointConventionBuilder MapAppJobsDashboard(this IEndpointRouteBuilder endpoints) =>
-        endpoints.MapHangfireDashboard(DashboardPath, new DashboardOptions
+    public static IEndpointConventionBuilder MapAppJobsDashboard(this IEndpointRouteBuilder endpoints)
+    {
+        var dashboard = endpoints.MapHangfireDashboard(DashboardPath, new DashboardOptions
         {
             Authorization = [new HangfireDashboardAuthorization()],
 
@@ -78,4 +80,12 @@ public static class JobsSetup
             // point of exposing it to the administrator is to be able to retry a failed mail run.
             IsReadOnlyFunc = _ => false,
         });
+
+        // 02:00 Riyadh, which is 23:00 UTC the previous day — Saudi Arabia keeps no DST, so this
+        // cron expression never needs a seasonal adjustment.
+        endpoints.ServiceProvider.GetRequiredService<IRecurringJobManager>()
+            .AddOrUpdate<ComputedKpisJob>("computed-kpis", job => job.RunAsync(CancellationToken.None), "0 23 * * *");
+
+        return dashboard;
+    }
 }

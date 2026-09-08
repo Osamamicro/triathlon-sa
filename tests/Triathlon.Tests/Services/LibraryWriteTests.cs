@@ -64,6 +64,21 @@ public sealed class LibraryWriteTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task A_document_with_a_blank_file_path_is_refused()
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var documents = scope.ServiceProvider.GetRequiredService<DocumentsService>();
+
+        // A document always has a file — whitespace normalises to "nothing was uploaded", not a
+        // path worth checking for shape, so this must fail Required rather than ContentGuard.
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => documents.SaveDocumentAsync(
+            new DocumentInput(null, "No file", "بلا ملف", DocumentCategory.Governance, 2026, "   ", 10, true, 1),
+            CancellationToken.None));
+        Assert.Equal("FilePath", ex.Field);
+        Assert.Equal("Validation_Required", ex.Key);
+    }
+
+    [Fact]
     public async Task A_guide_save_sanitises_chapters_and_delete_restore_follows_ADR_0001()
     {
         var slug = "write-" + Guid.NewGuid().ToString("N")[..8];

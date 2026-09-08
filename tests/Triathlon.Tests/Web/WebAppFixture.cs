@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Hangfire;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -177,6 +178,12 @@ public sealed class WebAppFixture : WebApplicationFactory<Program>, IAsyncLifeti
             // messages instead, which is what lets a registration test read the mail it caused.
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(new RecordingEmailSender(_sentEmails));
+
+            // Runs an enqueued job (EmailJob, ComputedKpisJob) inline instead of handing it to
+            // Hangfire's own background server, so a test that posts a form can assert on the mail
+            // it caused without waiting for a poll interval. Recurring-job registration is untouched.
+            services.RemoveAll<IBackgroundJobClient>();
+            services.AddSingleton<IBackgroundJobClient>(sp => new InlineJobClient(sp.GetRequiredService<IServiceScopeFactory>()));
 
             // Pin the clock so tests that assert on seeded event dates (upcoming vs past, "closes
             // in N days", etc.) don't start failing once the real calendar catches up to them. Every

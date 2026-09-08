@@ -210,4 +210,16 @@
     <value>The upload was refused: {0}</value>
     <comment>Shown when the media store rejects an upload's bytes (wrong type, mismatched kind, or over the size limit).</comment>
   </data>
+  <data name="Validation_HomeOrder" xml:space="preserve">
+    <value>Home-page tiles need distinct positions 1 to 4.</value>
+    <comment>Shown when a KPI's home-band position is out of range or clashes with another home KPI.</comment>
+  </data>
+  <data name="Validation_YearDuplicate" xml:space="preserve">
+    <value>Each year may appear only once.</value>
+    <comment>Shown when a posted growth-series list carries the same year twice.</comment>
+  </data>
+  <data name="Validation_KeyDuplicate" xml:space="preserve">
+    <value>Each key may appear only once.</value>
+    <comment>Shown when a posted region list carries the same key twice.</comment>
+  </data>
 </root>

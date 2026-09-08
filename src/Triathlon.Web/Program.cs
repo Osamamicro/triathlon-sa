@@ -77,6 +77,8 @@ builder.Services.AddScoped<ContentService>();
 builder.Services.AddScoped<NewsService>();
 builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<CrmService>();
+builder.Services.AddScoped<EmailJob>();
+builder.Services.AddScoped<ComputedKpisJob>();
 
 // Cloudflare Turnstile guards the public registration form. Both keys or nothing: an unset pair —
 // a developer machine, the test suite — registers the verifier that passes everything, so the form
