@@ -12,7 +12,7 @@
                        MaxLength="@(MaxLength ?? DefaultMaxLength)"
                        HelperText="@HelperText"
                        Error="@enError"
-                       ErrorText="@(enError ? (string)L["Required"] : null)"
+                       ErrorText="@enErrorText"
                        OnBlur="@((FocusEventArgs _) => enTouched = true)" />
     </MudItem>
     <MudItem xs="12" md="6">
@@ -23,7 +23,7 @@
                        Lines="Lines"
                        MaxLength="@(MaxLength ?? DefaultMaxLength)"
                        Error="@arError"
-                       ErrorText="@(arError ? (string)L["Required"] : null)"
+                       ErrorText="@arErrorText"
                        OnBlur="@((FocusEventArgs _) => arTouched = true)"
                        dir="rtl" lang="ar" />
     </MudItem>
@@ -57,14 +57,35 @@
     [Parameter]
     public string? HelperText { get; set; }
 
+    /// <summary>
+    /// This field's name for a refused save's <see cref="FieldErrors"/> lookup — matched against
+    /// <c>Name + "En"</c> / <c>Name + "Ar"</c> (e.g. <c>Name="Title"</c> for a service that throws
+    /// <c>ContentValidationException("TitleEn", …)</c>). <c>null</c> disables server-error display.
+    /// </summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>Field name to localized message, cascaded from the enclosing <c>EditShell</c>.</summary>
+    [CascadingParameter(Name = "FieldErrors")]
+    public IReadOnlyDictionary<string, string>? FieldErrors { get; set; }
+
     /// <summary>MudTextField's own default — passed explicitly since it does not accept a null MaxLength.</summary>
     private const int DefaultMaxLength = 524288;
 
     private bool enTouched;
     private bool arTouched;
 
-    private bool enError => Required && enTouched && string.IsNullOrWhiteSpace(En);
-    private bool arError => Required && arTouched && string.IsNullOrWhiteSpace(Ar);
+    private string? EnServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name + "En");
+    private string? ArServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name + "Ar");
+
+    private bool enError => EnServerError is not null || (Required && enTouched && string.IsNullOrWhiteSpace(En));
+    private bool arError => ArServerError is not null || (Required && arTouched && string.IsNullOrWhiteSpace(Ar));
+
+    // A server error takes priority over the required-side check's own text: the server's message
+    // (e.g. "already taken") is more specific than "Required", and staying on the required text
+    // while a server error is also present would hide the reason the save was actually refused.
+    private string? enErrorText => EnServerError ?? (enError ? (string)L["Required"] : null);
+    private string? arErrorText => ArServerError ?? (arError ? (string)L["Required"] : null);
 
     /// <summary>Whether both sides carry text, when this field is required. Read by the caller before it saves.</summary>
     public bool IsValid => !Required || (!string.IsNullOrWhiteSpace(En) && !string.IsNullOrWhiteSpace(Ar));

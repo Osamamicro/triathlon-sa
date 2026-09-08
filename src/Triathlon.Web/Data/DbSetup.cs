@@ -35,6 +35,10 @@ public static class DbSetup
         // Both scoped, and for the same reason: the acting user is a property of the request or the
         // circuit the save is running on, so the interceptor has to be built per scope with that
         // scope's user. The options callbacks below resolve it from the scope that creates the context.
+        // ActingUser lives here too, not just where DashboardScope is registered: CurrentUser takes it
+        // as a required constructor dependency, so any host that registers ICurrentUser — including a
+        // minimal one built for a unit test — needs it resolvable in the same place.
+        services.TryAddScoped<ActingUser>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
         services.TryAddScoped(sp => new StampInterceptor(
             sp.GetRequiredService<TimeProvider>(),

@@ -8,13 +8,18 @@ namespace Triathlon.Web.Services;
 /// Scoped, because both sources it reads are: a Blazor circuit's authentication state lives in the
 /// circuit's scope, and <see cref="IHttpContextAccessor"/> answers for the scope's request.
 /// </remarks>
-public sealed class CurrentUser(IServiceProvider services, IHttpContextAccessor? httpContextAccessor = null)
+public sealed class CurrentUser(IServiceProvider services, ActingUser actingUser, IHttpContextAccessor? httpContextAccessor = null)
     : ICurrentUser
 {
     public string? Name
     {
         get
         {
+            if (actingUser.Name is { } acting)
+            {
+                return acting;
+            }
+
             // Already-completed is the normal case: ServerAuthenticationStateProvider hands back the
             // state the circuit was opened with. If it is genuinely pending, this synchronous caller
             // cannot wait for it, so fall through rather than block a save on a network round trip.
@@ -27,6 +32,11 @@ public sealed class CurrentUser(IServiceProvider services, IHttpContextAccessor?
 
     public async ValueTask<string?> GetNameAsync(CancellationToken ct = default)
     {
+        if (actingUser.Name is { } acting)
+        {
+            return acting;
+        }
+
         var state = AuthenticationState();
 
         if (state is not null)

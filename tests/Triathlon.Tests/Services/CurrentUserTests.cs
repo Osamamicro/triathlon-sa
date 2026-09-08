@@ -84,6 +84,7 @@ public sealed class CurrentUserTests
         AuthenticationStateProvider? authenticationState = null)
     {
         var services = new ServiceCollection();
+        services.AddScoped<ActingUser>();
         services.AddScoped<ICurrentUser, CurrentUser>();
 
         if (accessor is not null)

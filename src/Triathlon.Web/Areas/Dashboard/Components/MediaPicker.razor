@@ -3,25 +3,32 @@
 @inject IDialogService DialogService
 @inject IStringLocalizer<DashboardStrings> L
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="stf-media-picker">
-    @if (string.IsNullOrEmpty(Path))
-    {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">@Label</MudText>
-    }
-    else if (Kind == FileKind.Image)
-    {
-        <MudImage Src="@Path" Alt="@Label" Width="96" Height="64" ObjectFit="ObjectFit.Cover" Class="rounded" />
-    }
-    else
-    {
-        <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(Path)</MudChip>
-    }
+<MudStack Spacing="1" Class="stf-media-picker">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+        @if (string.IsNullOrEmpty(Path))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Label</MudText>
+        }
+        else if (Kind == FileKind.Image)
+        {
+            <MudImage Src="@Path" Alt="@Label" Width="96" Height="64" ObjectFit="ObjectFit.Cover" Class="rounded" />
+        }
+        else
+        {
+            <MudChip T="string" Icon="@Icons.Material.Filled.PictureAsPdf">@FileName(Path)</MudChip>
+        }
 
-    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="OpenAsync">@L["Choose"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="OpenAsync">@L["Choose"]</MudButton>
 
-    @if (!string.IsNullOrEmpty(Path))
+        @if (!string.IsNullOrEmpty(Path))
+        {
+            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" OnClick="RemoveAsync">@L["Remove"]</MudButton>
+        }
+    </MudStack>
+
+    @if (ServerError is { } message)
     {
-        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" OnClick="RemoveAsync">@L["Remove"]</MudButton>
+        <MudText Color="Color.Error" Typo="Typo.caption">@message</MudText>
     }
 </MudStack>
 
@@ -37,6 +44,16 @@
 
     [Parameter, EditorRequired]
     public string Label { get; set; } = "";
+
+    /// <summary>This field's name for a refused save's <see cref="FieldErrors"/> lookup, e.g. <c>"HeroImagePath"</c>.</summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>Field name to localized message, cascaded from the enclosing <c>EditShell</c>.</summary>
+    [CascadingParameter(Name = "FieldErrors")]
+    public IReadOnlyDictionary<string, string>? FieldErrors { get; set; }
+
+    private string? ServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name);
 
     private async Task OpenAsync()
     {

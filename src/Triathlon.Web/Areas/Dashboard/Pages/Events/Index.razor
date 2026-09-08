@@ -7,7 +7,7 @@
 
 <PageTitle>@L["Events"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">@L["Events"]</MudText>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Events"]</MudText>
 
 <EntityTable TItem="EventsService.EventRow" Items="@rows" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
              NewHref="dashboard/events/new" Search="@(row => $"{row.Event.TitleEn} {row.Event.TitleAr} {row.Event.Slug}")"
@@ -57,8 +57,16 @@
 
     private async Task RestoreAsync(EventsService.EventRow row)
     {
-        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreAsync(row.Event.Id, CancellationToken.None));
-        Snackbar.Add(L["Saved"], Severity.Success);
-        await LoadAsync();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreAsync(row.Event.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
     }
 }

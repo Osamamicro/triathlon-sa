@@ -7,11 +7,11 @@
 
 <PageTitle>@L["Cities"]</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">@L["Cities"]</MudText>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@L["Cities"]</MudText>
 
 <EntityTable TItem="City" Items="@cities" Loading="@loading" ShowDeleted="@showDeleted" ShowDeletedChanged="@OnShowDeletedChangedAsync"
              NewHref="dashboard/cities/new" Search="@(city => $"{city.Key} {city.NameEn} {city.NameAr}")"
-             EditHref="@(city => $"dashboard/cities/{city.Id}")" IsPublished="@(_ => null)"
+             EditHref="@(city => $"dashboard/cities/{city.Id}")" IsPublished="@(_ => null)" ShowStatus="false"
              OnRestore="@RestoreAsync" EmptyText="@L["NoCities"]">
     <Headers>
         <MudTh>@L["Key"]</MudTh>
@@ -53,8 +53,16 @@
 
     private async Task RestoreAsync(City city)
     {
-        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreCityAsync(city.Id, CancellationToken.None));
-        Snackbar.Add(L["Saved"], Severity.Success);
-        await LoadAsync();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().RestoreCityAsync(city.Id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            await LoadAsync();
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
     }
 }

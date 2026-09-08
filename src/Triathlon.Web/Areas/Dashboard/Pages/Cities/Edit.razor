@@ -14,8 +14,9 @@
            Error="@error" FieldErrors="@fieldErrors" LastUpdatedAt="@loaded?.UpdatedAt" LastUpdatedBy="@loaded?.UpdatedBy"
            OnSaveDraft="@SaveAsync" OnDelete="@DeleteAsync" ActivityEntity="City" ActivityId="@Id">
 
-    <MudTextField T="string" Label="@L["Key"]" Value="@model.Key" ValueChanged="@(v => { model.Key = v; dirty = true; })" Class="mt-4" />
-    <BilingualField Label="@L["Name"]" En="@model.NameEn" EnChanged="@(v => { model.NameEn = v; dirty = true; })"
+    <SlugField Label="@L["Key"]" Name="Key" Reserved="false" Source="@model.NameEn" Value="@model.Key"
+               ValueChanged="@(v => { model.Key = v; dirty = true; })" Class="mt-4" />
+    <BilingualField Label="@L["Name"]" Name="Name" En="@model.NameEn" EnChanged="@(v => { model.NameEn = v; dirty = true; })"
                      Ar="@model.NameAr" ArChanged="@(v => { model.NameAr = v; dirty = true; })" />
 
     <MudGrid Class="mt-1">
@@ -104,6 +105,7 @@
             var saved = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().SaveCityAsync(input, CancellationToken.None));
             if (Id is null)
             {
+                Snackbar.Add(L["Saved"], Severity.Success);
                 Nav.NavigateTo($"dashboard/cities/{saved.Id}");
                 return;
             }
@@ -136,6 +138,9 @@
             return;
         }
 
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
         try
         {
             await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().DeleteCityAsync(id, CancellationToken.None));
@@ -146,6 +151,10 @@
         {
             EditShell.Handle(L, ex, out error, fieldErrors);
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
         }
     }
 }

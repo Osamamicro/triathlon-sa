@@ -6,7 +6,7 @@
 <MudLink Href="@BackHref" Underline="Underline.Hover" Class="d-inline-flex align-center mb-2">
     <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" Class="me-1" />@L["Back"]
 </MudLink>
-<MudText Typo="Typo.h4" GutterBottom="true">@Title</MudText>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@Title</MudText>
 
 @if (!string.IsNullOrEmpty(Error))
 {
@@ -15,14 +15,7 @@
 
 @if (FieldErrors.Count > 0)
 {
-    <MudAlert Severity="Severity.Error" Class="mb-4">
-        <ul class="mb-0 ps-4">
-            @foreach (var (field, message) in FieldErrors)
-            {
-                <li>@field: @message</li>
-            }
-        </ul>
-    </MudAlert>
+    <MudAlert Severity="Severity.Error" Class="mb-4">@L["FixFieldsBelow"]</MudAlert>
 }
 
 @if (!IsNew && IsPublished == false && string.IsNullOrEmpty(PreviewUrl))
@@ -31,7 +24,9 @@
 }
 
 <div class="stf-edit-shell-body">
-    @ChildContent
+    <CascadingValue Value="@FieldErrors" Name="FieldErrors" IsFixed="false">
+        @ChildContent
+    </CascadingValue>
 </div>
 
 <PublishBar IsPublished="@IsPublished" IsDirty="@IsDirty" IsSaving="@IsSaving"

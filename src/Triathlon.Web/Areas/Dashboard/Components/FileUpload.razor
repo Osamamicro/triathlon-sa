@@ -21,9 +21,9 @@
     }
 </MudStack>
 
-@if (error is not null)
+@if ((error ?? ServerError) is { } message)
 {
-    <MudText Color="Color.Error" Typo="Typo.caption">@error</MudText>
+    <MudText Color="Color.Error" Typo="Typo.caption">@message</MudText>
 }
 
 @code {
@@ -38,6 +38,16 @@
 
     [Parameter]
     public long MaxBytes { get; set; } = LocalFileStore.MaxBytes;
+
+    /// <summary>This field's name for a refused save's <see cref="FieldErrors"/> lookup.</summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>Field name to localized message, cascaded from the enclosing <c>EditShell</c>.</summary>
+    [CascadingParameter(Name = "FieldErrors")]
+    public IReadOnlyDictionary<string, string>? FieldErrors { get; set; }
+
+    private string? ServerError => Name is null ? null : FieldErrors?.GetValueOrDefault(Name);
 
     private bool uploading;
     private string? error;

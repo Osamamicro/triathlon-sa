@@ -6,11 +6,12 @@
 @inject IStringLocalizer<DashboardStrings> L
 
 <MudTextField T="string"
-              Label="@L["Slug"]"
+              Label="@(Label ?? L["Slug"])"
               Value="@Value"
               ValueChanged="OnChangedAsync"
               Error="@hasError"
               ErrorText="@errorText"
+              Class="@Class"
               OnBlur="@((FocusEventArgs _) => touched = true)" />
 
 @code {
@@ -23,6 +24,26 @@
     /// <summary>The English title this slug is derived from until the user types one of their own.</summary>
     [Parameter]
     public string? Source { get; set; }
+
+    /// <summary>Overrides the default "Slug" label — e.g. Cities' Key field applies the same slug rule.</summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// This field's name for a refused save's <see cref="FieldErrors"/> lookup. Defaults to
+    /// <c>"Slug"</c>, matching the field name every other slug-shaped save throws under; Cities'
+    /// Key field passes <c>Name="Key"</c> since that is what <c>SaveCityAsync</c> actually throws.
+    /// </summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>Field name to localized message, cascaded from the enclosing <c>EditShell</c>.</summary>
+    [CascadingParameter(Name = "FieldErrors")]
+    public IReadOnlyDictionary<string, string>? FieldErrors { get; set; }
+
+    /// <summary>Passed through to the underlying <c>MudTextField</c>.</summary>
+    [Parameter]
+    public string? Class { get; set; }
 
     /// <summary>
     /// Whether a value in <see cref="PublicSite.ReservedSlugs"/> (minus <see cref="PublicSite.CompanionPageSlugs"/>)
@@ -78,7 +99,9 @@
         && PublicSite.ReservedSlugs.Contains(slug)
         && !PublicSite.CompanionPageSlugs.Contains(slug);
 
-    private bool hasError => touched && !string.IsNullOrEmpty(Value) && (!Slugs.IsValid(Value) || IsReserved(Value));
+    private string? ServerError => FieldErrors?.GetValueOrDefault(Name ?? "Slug");
 
-    private string? errorText => IsReserved(Value) ? L["SlugReserved"] : L["SlugInvalid"];
+    private bool hasError => ServerError is not null || (touched && !string.IsNullOrEmpty(Value) && (!Slugs.IsValid(Value) || IsReserved(Value)));
+
+    private string? errorText => ServerError ?? (IsReserved(Value) ? L["SlugReserved"] : L["SlugInvalid"]);
 }

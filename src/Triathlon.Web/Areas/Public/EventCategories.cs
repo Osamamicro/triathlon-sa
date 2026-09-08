@@ -35,4 +35,10 @@ public static class EventCategories
     /// <summary>The bilingual label for a stored category value; unknown values come back unchanged in both.</summary>
     public static (string En, string Ar) Label(string category) =>
         (category, ArabicLabels.TryGetValue(category, out var ar) ? ar : category);
+
+    /// <summary>
+    /// The known category keys, for the dashboard's Events editor to offer as a picker alongside its
+    /// free-text add (an editor can still type a category outside this set — see the type summary).
+    /// </summary>
+    public static IReadOnlyList<string> Keys { get; } = [.. ArabicLabels.Keys];
 }

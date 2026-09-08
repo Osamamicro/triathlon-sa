@@ -17,7 +17,7 @@
            ActivityEntity="Event" ActivityId="@Id">
 
     <MudText Typo="Typo.h6" Class="mt-4">@L["Basics"]</MudText>
-    <BilingualField Label="@L["Title"]" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
+    <BilingualField Label="@L["Title"]" Name="Title" En="@model.TitleEn" EnChanged="@(v => { model.TitleEn = v; dirty = true; })"
                      Ar="@model.TitleAr" ArChanged="@(v => { model.TitleAr = v; dirty = true; })" />
     <SlugField Value="@model.Slug" ValueChanged="@(v => { model.Slug = v; dirty = true; })" Source="@model.TitleEn" Reserved="false" />
     <MudGrid Class="mt-1">
@@ -28,7 +28,8 @@
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="6">
-            <MudSelect T="Guid" Label="@L["City"]" Value="@model.CityId" ValueChanged="@(v => { model.CityId = v; dirty = true; })">
+            <MudSelect T="Guid" Label="@L["City"]" Value="@model.CityId" ValueChanged="@(v => { model.CityId = v; dirty = true; })"
+                       Error="@fieldErrors.ContainsKey("CityId")" ErrorText="@fieldErrors.GetValueOrDefault("CityId")">
                 @foreach (var city in cities)
                 {
                     <MudSelectItem Value="@city.Id">@city.NameEn</MudSelectItem>
@@ -36,7 +37,8 @@
             </MudSelect>
         </MudItem>
     </MudGrid>
-    <MudTextField T="string" Label="@L["Season"]" Value="@model.Season" ValueChanged="@(v => { model.Season = v; dirty = true; })" Class="mt-1" />
+    <MudTextField T="string" Label="@L["Season"]" Value="@model.Season" ValueChanged="@(v => { model.Season = v; dirty = true; })" Class="mt-1"
+                  Error="@fieldErrors.ContainsKey("Season")" ErrorText="@fieldErrors.GetValueOrDefault("Season")" />
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["WhenWhere"]</MudText>
     <MudGrid Class="mt-1">
@@ -44,20 +46,21 @@
             <MudDatePicker Label="@L["DateStart"]" Date="@model.DateStart.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnDateStartChanged" />
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudDatePicker Label="@L["DateEnd"]" Date="@model.DateEnd?.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnDateEndChanged" Clearable="true" />
+            <MudDatePicker Label="@L["DateEnd"]" Date="@model.DateEnd?.ToDateTime(TimeOnly.MinValue)" DateChanged="@OnDateEndChanged" Clearable="true"
+                           Error="@fieldErrors.ContainsKey("DateEnd")" ErrorText="@fieldErrors.GetValueOrDefault("DateEnd")" />
         </MudItem>
         <MudItem xs="12" md="4">
             <MudTimePicker Label="@L["StartTime"]" Time="@model.StartTime?.ToTimeSpan()" TimeChanged="@OnStartTimeChanged" Clearable="true" />
         </MudItem>
     </MudGrid>
-    <BilingualField Label="@L["Venue"]" En="@model.VenueEn" EnChanged="@(v => { model.VenueEn = v; dirty = true; })"
+    <BilingualField Label="@L["Venue"]" Name="Venue" En="@model.VenueEn" EnChanged="@(v => { model.VenueEn = v; dirty = true; })"
                      Ar="@model.VenueAr" ArChanged="@(v => { model.VenueAr = v; dirty = true; })" />
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["Story"]</MudText>
-    <BilingualField Label="@L["Description"]" Lines="5" En="@model.DescriptionEn" EnChanged="@(v => { model.DescriptionEn = v; dirty = true; })"
+    <BilingualField Label="@L["Description"]" Name="Description" Lines="5" En="@model.DescriptionEn" EnChanged="@(v => { model.DescriptionEn = v; dirty = true; })"
                      Ar="@model.DescriptionAr" ArChanged="@(v => { model.DescriptionAr = v; dirty = true; })" />
     <MudStack Class="mt-3">
-        <MediaPicker Kind="FileKind.Image" Label="@L["HeroImage"]" Path="@model.HeroImagePath" PathChanged="@(v => { model.HeroImagePath = v; dirty = true; })" />
+        <MediaPicker Kind="FileKind.Image" Label="@L["HeroImage"]" Name="HeroImagePath" Path="@model.HeroImagePath" PathChanged="@(v => { model.HeroImagePath = v; dirty = true; })" />
     </MudStack>
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["Course"]</MudText>
@@ -74,13 +77,20 @@
     </MudGrid>
 
     <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Categories"]</MudText>
-    <MudChipSet T="string" OnClose="RemoveCategory">
+    <MudChipSet T="string" AllClosable="true" OnClose="RemoveCategory">
         @foreach (var category in model.Categories)
         {
-            <MudChip T="string" Value="@category" Text="@EventCategories.Label(category).En" />
+            <MudChip T="string" Value="@category" Text="@CategoryLabel(category)" />
         }
     </MudChipSet>
-    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start" Class="mt-2">
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start" Class="mt-2" Wrap="Wrap.Wrap">
+        <MudSelect T="string" Label="@L["Categories"]" Value="@selectedCategory" ValueChanged="AddKnownCategoryAsync"
+                   Disabled="@(availableCategories.Count == 0)">
+            @foreach (var key in availableCategories)
+            {
+                <MudSelectItem Value="@key">@CategoryLabel(key)</MudSelectItem>
+            }
+        </MudSelect>
         <MudTextField T="string" @bind-Value="newCategory" Label="@L["AddCategory"]" Immediate="true"
                        Error="@(categoryError is not null)" ErrorText="@categoryError" OnKeyDown="@OnCategoryKeyDownAsync" />
         <MudButton Variant="Variant.Outlined" OnClick="AddCategoryAsync">@L["AddCategory"]</MudButton>
@@ -99,20 +109,22 @@
             <MudSwitch T="bool" Label="@L["RegistrationOpen"]" Value="@model.RegistrationOpen" ValueChanged="@(v => { model.RegistrationOpen = v; dirty = true; })" Color="Color.Primary" />
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudNumericField T="int?" Label="@L["Capacity"]" Value="@model.Capacity" ValueChanged="@(v => { model.Capacity = v; dirty = true; })" Min="1" />
+            <MudNumericField T="int?" Label="@L["Capacity"]" Value="@model.Capacity" ValueChanged="@(v => { model.Capacity = v; dirty = true; })" Min="1"
+                              Error="@fieldErrors.ContainsKey("Capacity")" ErrorText="@fieldErrors.GetValueOrDefault("Capacity")" />
         </MudItem>
     </MudGrid>
     @if (model.RegistrationMode == RegistrationMode.External)
     {
-        <MudTextField T="string" Label="@L["ExternalUrl"]" Value="@model.ExternalRegistrationUrl" ValueChanged="@(v => { model.ExternalRegistrationUrl = v; dirty = true; })" Class="mt-1" />
+        <MudTextField T="string" Label="@L["ExternalUrl"]" Value="@model.ExternalRegistrationUrl" ValueChanged="@(v => { model.ExternalRegistrationUrl = v; dirty = true; })" Class="mt-1"
+                      Error="@fieldErrors.ContainsKey("ExternalRegistrationUrl")" ErrorText="@fieldErrors.GetValueOrDefault("ExternalRegistrationUrl")" />
     }
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["Gallery"]</MudText>
     @foreach (var (image, index) in model.Gallery.Select((g, i) => (g, i)))
     {
-        <MudPaper Class="pa-3 mb-3" Outlined="true">
+        <MudPaper @key="image" Class="pa-3 mb-3" Outlined="true">
             <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Wrap="Wrap.Wrap">
-                <MediaPicker Kind="FileKind.Image" Label="@L["Gallery"]" Path="@image.Path" PathChanged="@(v => { image.Path = v; dirty = true; })" />
+                <MediaPicker Kind="FileKind.Image" Label="@L["Gallery"]" Name="Gallery" Path="@image.Path" PathChanged="@(v => { image.Path = v; dirty = true; })" />
                 <div class="flex-grow-1">
                     <BilingualField Label="@L["Alt"]" Required="false" En="@image.AltEn" EnChanged="@(v => { image.AltEn = v; dirty = true; })"
                                      Ar="@image.AltAr" ArChanged="@(v => { image.AltAr = v; dirty = true; })" />
@@ -146,7 +158,7 @@
         <tbody>
             @foreach (var (result, index) in model.Results.Select((r, i) => (r, i)))
             {
-                <tr>
+                <tr @key="result">
                     <td><MudNumericField T="int" Value="@result.Position" ValueChanged="@(v => { result.Position = v; dirty = true; })" Min="1" /></td>
                     <td><MudTextField T="string" Value="@result.AthleteEn" ValueChanged="@(v => { result.AthleteEn = v; dirty = true; })" /></td>
                     <td dir="rtl"><MudTextField T="string" Value="@result.AthleteAr" ValueChanged="@(v => { result.AthleteAr = v; dirty = true; })" /></td>
@@ -162,7 +174,7 @@
         </tbody>
     </MudSimpleTable>
     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddResult" Class="mb-4">@L["AddResult"]</MudButton>
-    <MediaPicker Kind="FileKind.Pdf" Label="@L["ResultsPdf"]" Path="@model.ResultsFilePath" PathChanged="@(v => { model.ResultsFilePath = v; dirty = true; })" />
+    <MediaPicker Kind="FileKind.Pdf" Label="@L["ResultsPdf"]" Name="ResultsFilePath" Path="@model.ResultsFilePath" PathChanged="@(v => { model.ResultsFilePath = v; dirty = true; })" />
 </EditShell>
 
 @code {
@@ -254,6 +266,16 @@
     private readonly Dictionary<string, string> fieldErrors = new(StringComparer.Ordinal);
     private string newCategory = "";
     private string? categoryError;
+    private string? selectedCategory;
+
+    private IReadOnlyList<string> availableCategories =>
+        [.. EventCategories.Keys.Where(key => !model.Categories.Contains(key, StringComparer.Ordinal))];
+
+    private string CategoryLabel(string category)
+    {
+        var (en, ar) = EventCategories.Label(category);
+        return Culture == "ar" ? ar : en;
+    }
 
     private string title => Id is null ? L["NewEvent"] : (loaded is null ? "" : loaded.TitleEn);
     private string? PreviewUrl => loaded is { IsPublished: true } ? $"/{Culture}/events/{loaded.Slug}" : null;
@@ -337,6 +359,18 @@
         return Task.CompletedTask;
     }
 
+    private Task AddKnownCategoryAsync(string? value)
+    {
+        if (!string.IsNullOrEmpty(value) && !model.Categories.Contains(value, StringComparer.Ordinal))
+        {
+            model.Categories.Add(value);
+            dirty = true;
+        }
+
+        selectedCategory = null;
+        return Task.CompletedTask;
+    }
+
     private void RemoveCategory(MudChip<string> chip)
     {
         if (chip.Value is { } value)
@@ -399,6 +433,7 @@
             else
             {
                 var created = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().CreateAsync(input, CancellationToken.None));
+                Snackbar.Add(publish ? L["PublishedToast"] : L["Saved"], Severity.Success);
                 Nav.NavigateTo($"dashboard/events/{created.Id}");
                 return;
             }
@@ -425,10 +460,25 @@
             return;
         }
 
-        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().SetPublishedAsync(id, false, CancellationToken.None));
-        loaded = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().ForEditAsync(id, CancellationToken.None));
-        model = Model.From(loaded!);
-        Snackbar.Add(L["Saved"], Severity.Success);
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().SetPublishedAsync(id, false, CancellationToken.None));
+            loaded = await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().ForEditAsync(id, CancellationToken.None));
+            model = Model.From(loaded!);
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 
     private async Task DeleteAsync()
@@ -443,8 +493,23 @@
             return;
         }
 
-        await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().DeleteAsync(id, CancellationToken.None));
-        Snackbar.Add(L["Saved"], Severity.Success);
-        Nav.NavigateTo("dashboard/events");
+        saving = true;
+        error = null;
+        fieldErrors.Clear();
+        try
+        {
+            await Scope.RunAsync(sp => sp.GetRequiredService<EventsService>().DeleteAsync(id, CancellationToken.None));
+            Snackbar.Add(L["Saved"], Severity.Success);
+            Nav.NavigateTo("dashboard/events");
+        }
+        catch (ContentValidationException ex)
+        {
+            EditShell.Handle(L, ex, out error, fieldErrors);
+            Snackbar.Add(L["ErrorSaving"], Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 }

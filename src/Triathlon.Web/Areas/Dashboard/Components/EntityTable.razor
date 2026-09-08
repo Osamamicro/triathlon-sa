@@ -25,19 +25,25 @@ else
     <MudTable Items="@FilteredItems" Dense="true" Hover="true" Striped="true">
         <HeaderContent>
             @Headers
-            <MudTh>@L["Status"]</MudTh>
+            @if (ShowStatus)
+            {
+                <MudTh>@L["Status"]</MudTh>
+            }
             <MudTh>@L["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             @Columns(context)
-            <MudTd DataLabel="@L["Status"]">
-                @if (IsPublished(context) is { } published)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(published ? Color.Success : Color.Default)">
-                        @(published ? L["Published"] : L["Draft"])
-                    </MudChip>
-                }
-            </MudTd>
+            @if (ShowStatus)
+            {
+                <MudTd DataLabel="@L["Status"]">
+                    @if (IsPublished(context) is { } published)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(published ? Color.Success : Color.Default)">
+                            @(published ? L["Published"] : L["Draft"])
+                        </MudChip>
+                    }
+                </MudTd>
+            }
             <MudTd DataLabel="@L["Actions"]">
                 @if (ShowDeleted)
                 {
@@ -88,6 +94,10 @@ else
     /// <summary><c>null</c> hides the status chip entirely — used by content with no publish concept.</summary>
     [Parameter, EditorRequired]
     public Func<TItem, bool?> IsPublished { get; set; } = _ => null;
+
+    /// <summary>Whether the Status column renders at all. <c>false</c> for content with no publish concept (e.g. cities).</summary>
+    [Parameter]
+    public bool ShowStatus { get; set; } = true;
 
     [Parameter]
     public EventCallback<TItem> OnRestore { get; set; }

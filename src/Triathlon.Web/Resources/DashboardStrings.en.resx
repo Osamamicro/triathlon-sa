@@ -738,4 +738,8 @@
     <value>A category cannot contain a comma.</value>
     <comment>Shown inline when an event category chip is typed with a comma in it.</comment>
   </data>
+  <data name="FixFieldsBelow" xml:space="preserve">
+    <value>Some fields need attention. See the messages next to them.</value>
+    <comment>EditShell's field-error banner, shown above the form when a refused save has one or more field-level errors.</comment>
+  </data>
 </root>
