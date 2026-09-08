@@ -102,7 +102,14 @@ public sealed class OutputCacheTests(WebAppFixture app)
     {
         using var client = app.CreateClient();
 
-        var all = await client.GetStringAsync("/en/events");
+        using var first = await client.GetAsync("/en/events");
+        using var second = await client.GetAsync("/en/events");
+
+        // The second bare GET must be a cache hit, or a mismatch below could just mean nothing was
+        // ever cached rather than that the declared query key actually fragmented the cache.
+        Assert.True(second.Headers.Contains("Age"), "The second GET /en/events was not served from the output cache.");
+
+        var all = await second.Content.ReadAsStringAsync();
         var competition = await client.GetStringAsync("/en/events?type=competition");
 
         Assert.NotEqual(all, competition);

@@ -65,14 +65,15 @@ public sealed class ContentGuard
 
         return IsSiteFilePath(path)
             ? path
-            : throw new ContentValidationException(field, $"'{path}' is not a file under {DocsPrefix}/ or {_mediaPrefix}/.");
+            : throw new ContentValidationException(field, "Validation_FilePath", path, DocsPrefix, _mediaPrefix);
     }
 
     public bool IsSiteFilePath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) || path[0] != '/' || path.Contains("//", StringComparison.Ordinal)
             || path.Contains('?', StringComparison.Ordinal) || path.Contains('#', StringComparison.Ordinal)
-            || path.Contains('\\', StringComparison.Ordinal) || path.Contains(':', StringComparison.Ordinal))
+            || path.Contains('\\', StringComparison.Ordinal) || path.Contains(':', StringComparison.Ordinal)
+            || path.Contains('%', StringComparison.Ordinal) || path.Any(c => char.IsControl(c) || char.IsWhiteSpace(c)))
         {
             return false;
         }

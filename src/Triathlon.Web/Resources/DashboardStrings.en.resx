@@ -126,4 +126,8 @@
     <value>The request could not be completed. Please try again, or contact the federation IT team if it keeps happening.</value>
     <comment>Body text of the dashboard error page.</comment>
   </data>
+  <data name="Validation_FilePath" xml:space="preserve">
+    <value>'{0}' is not a file under {1}/ or {2}/.</value>
+    <comment>Shown when a saved file path is not a site-relative /docs or media path.</comment>
+  </data>
 </root>

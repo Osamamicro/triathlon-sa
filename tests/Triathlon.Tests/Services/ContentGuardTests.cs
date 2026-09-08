@@ -51,6 +51,9 @@ public sealed class ContentGuardTests
     [InlineData("/docs/x.pdf?y=1", false)]
     [InlineData("docs/x.pdf", false)]
     [InlineData("/docs/", false)]
+    [InlineData("/docs/%2e%2e/appsettings.json", false)]
+    [InlineData("/docs/x\r\ny.pdf", false)]
+    [InlineData("/docs/x y.pdf", false)]
     public void Only_site_relative_docs_and_media_paths_are_accepted(string path, bool ok)
     {
         Assert.Equal(ok, Guard().IsSiteFilePath(path));

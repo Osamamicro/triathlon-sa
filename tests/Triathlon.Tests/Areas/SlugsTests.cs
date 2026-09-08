@@ -19,6 +19,13 @@ public sealed class SlugsTests
         Assert.Equal(expected, Slugs.IsValid(slug));
 
     [Fact]
+    public void Length_is_capped_at_128_characters()
+    {
+        Assert.True(Slugs.IsValid(new string('a', 128)));
+        Assert.False(Slugs.IsValid(new string('a', 129)));
+    }
+
+    [Fact]
     public void Reserved_slugs_cover_every_dedicated_public_route()
     {
         foreach (var route in new[] { "events", "register", "training", "rules", "governance", "statistics", "news", "not-found", "error", "api", "media", "docs", "dashboard", "health" })

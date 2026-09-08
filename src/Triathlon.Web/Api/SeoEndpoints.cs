@@ -22,6 +22,7 @@ public static class SeoEndpoints
 
         app.MapGet("/sitemap.xml", BuildSitemapAsync)
             .CacheOutput(policy => policy
+                .SetVaryByQuery([])
                 .Expire(OutputCacheSetup.PublicLifetime)
                 .Tag(CacheTags.Site, CacheTags.Events, CacheTags.News, CacheTags.Guides));
 

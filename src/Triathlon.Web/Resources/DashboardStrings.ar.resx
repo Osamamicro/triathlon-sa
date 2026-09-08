@@ -126,4 +126,8 @@
     <value>تعذر إتمام الطلب. يرجى المحاولة مرة أخرى، أو التواصل مع فريق تقنية المعلومات في الاتحاد إذا استمرت المشكلة.</value>
     <comment>Body text of the dashboard error page.</comment>
   </data>
+  <data name="Validation_FilePath" xml:space="preserve">
+    <value>'{0}' ليس ملفاً ضمن {1}/ أو {2}/.</value>
+    <comment>Shown when a saved file path is not a site-relative /docs or media path.</comment>
+  </data>
 </root>
