@@ -30,7 +30,7 @@
                 @(row.Event.Type == EventType.Competition ? L["Competition"] : L["Community"])
             </MudChip>
         </MudTd>
-        <MudTd DataLabel="@L["City"]">@row.Event.City.NameEn</MudTd>
+        <MudTd DataLabel="@L["City"]">@(Culture == "ar" ? row.Event.City.NameAr : row.Event.City.NameEn)</MudTd>
         <MudTd DataLabel="@L["Registrations"]">@row.Registrations</MudTd>
     </Columns>
 </EntityTable>
@@ -39,6 +39,7 @@
     private IReadOnlyList<EventsService.EventRow> rows = [];
     private bool loading = true;
     private bool showDeleted;
+    private static string Culture => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar" : "en";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 

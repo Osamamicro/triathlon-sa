@@ -6,6 +6,10 @@
 @typeparam TItem
 @inject IStringLocalizer<DashboardStrings> L
 
+@if (Items.Count == 0 && !string.IsNullOrEmpty(EmptyText))
+{
+    <MudText Color="Color.Secondary" Class="@Class">@EmptyText</MudText>
+}
 <MudStack Spacing="3" Class="@Class">
     @foreach (var (item, index) in Items.Select((it, i) => (it, i)))
     {
@@ -43,6 +47,11 @@
 
     [Parameter]
     public string? Class { get; set; }
+
+    /// <summary>Shown instead of the (empty) list when there are no items yet. <c>null</c>/empty shows
+    /// nothing, matching every caller's behaviour before this parameter existed.</summary>
+    [Parameter]
+    public string? EmptyText { get; set; }
 
     /// <summary>False hides the up/down move buttons (remove stays available) — for a list whose order
     /// is derived from the data itself (e.g. Growth, sorted by year) rather than a free drag order, so

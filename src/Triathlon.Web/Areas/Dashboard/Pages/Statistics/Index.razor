@@ -31,7 +31,15 @@ else
                     <th>@L["Color"]</th>
                     <th>@L["SortOrder"]</th>
                     <th>@L["ShowOnHome"]</th>
-                    <th>@L["HomeOrder"]</th>
+                    <th>
+                        @L["HomeOrder"]
+                        @* The uniqueness rule below used to repeat as a 3-line caption under every
+                           row's field — with a dozen KPIs that was a wall of identical text between
+                           the actual data. One tooltip on the header says it once. *@
+                        <MudTooltip Text="@L["HomeOrderHint"]">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="ms-1" />
+                        </MudTooltip>
+                    </th>
                     <th>@L["Source"]</th>
                     <th></th>
                 </tr>
@@ -72,7 +80,6 @@ else
                         <td>
                             <MudNumericField T="int" Value="@row.HomeOrder" ValueChanged="@(v => row.HomeOrder = v)" Min="0" Max="4"
                                              Error="@row.FieldErrors.ContainsKey("HomeOrder")" ErrorText="@row.FieldErrors.GetValueOrDefault("HomeOrder")" />
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">@L["HomeOrderHint"]</MudText>
                         </td>
                         <td>
                             <MudSelect T="KpiSource" Value="@row.Source" ValueChanged="@(v => row.Source = v)">

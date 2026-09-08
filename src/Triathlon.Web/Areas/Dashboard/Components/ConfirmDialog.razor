@@ -11,7 +11,11 @@
 
         @if (TypeToConfirm is { Length: > 0 })
         {
-            <MudTextField T="string" @bind-Value="typed" Label="@L["TypeToConfirm"]" Class="mt-3" AutoFocus="true" />
+            @* Immediate: without it, MudTextField's default binding only commits on blur/change — so
+               typing the exact phrase and clicking Confirm right away (the normal path) can hit the
+               button while it is still disabled, since the blur round-trip that would enable it
+               hasn't landed yet. Immediate enables the button the moment the typed text matches. *@
+            <MudTextField T="string" @bind-Value="typed" Immediate="true" Label="@L["TypeToConfirm"]" Class="mt-3" AutoFocus="true" />
         }
     </DialogContent>
     <DialogActions>

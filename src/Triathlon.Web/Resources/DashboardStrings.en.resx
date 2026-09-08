@@ -758,6 +758,10 @@
     <value>No cities yet.</value>
     <comment>Cities list screen's empty state.</comment>
   </data>
+  <data name="NoNavLinks" xml:space="preserve">
+    <value>No links yet. Add one to get started.</value>
+    <comment>ReorderList's empty state on the Navigation screen, one per location tab (Header, Footer — Compete, Footer — Involved).</comment>
+  </data>
   <data name="Validation_Comma" xml:space="preserve">
     <value>A category cannot contain a comma.</value>
     <comment>Shown inline when an event category chip is typed with a comma in it.</comment>

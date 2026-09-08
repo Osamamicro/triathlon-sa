@@ -177,14 +177,14 @@
         {
             @if (banner.GetValueOrDefault(location) is { } bannerMessage)
             {
-                <MudAlert Severity="Severity.Error" Class="mb-3">@bannerMessage</MudAlert>
+                <div role="alert"><MudAlert Severity="Severity.Error" Class="mb-3">@bannerMessage</MudAlert></div>
             }
             @foreach (var message in fieldErrors[location].Values)
             {
-                <MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert>
+                <div role="alert"><MudAlert Severity="Severity.Error" Class="mb-3">@message</MudAlert></div>
             }
 
-            <ReorderList TItem="NavItemRow" Items="@items[location]" OnChanged="@(() => dirty[location] = true)">
+            <ReorderList TItem="NavItemRow" Items="@items[location]" OnChanged="@(() => dirty[location] = true)" EmptyText="@L["NoNavLinks"]">
                 <ItemTemplate Context="row">
                     <CascadingValue Value="@row.FieldErrors" Name="FieldErrors" IsFixed="false">
                         <MudGrid>

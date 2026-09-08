@@ -8,14 +8,24 @@
 </MudLink>
 <MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">@Title</MudText>
 
-@if (!string.IsNullOrEmpty(Error))
+@if (!string.IsNullOrEmpty(Error) || FieldErrors.Count > 0)
 {
-    <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
-}
+    @* tabindex="-1" + a focus() call below moves keyboard/AT focus here the moment a save is
+       refused, the same way Routes.razor's FocusOnNavigate moves it to the page's own <h1> on
+       navigation — otherwise a screen reader user (or anyone who Tab-scrolled past the top of a
+       long form) never learns the save failed. role="alert" makes it announce on its own even
+       without focus moving, for the rare case focus is already trapped elsewhere (e.g. a dialog). *@
+    <div class="stf-error-summary" tabindex="-1" role="alert" @ref="errorSummaryRef">
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@Error</MudAlert>
+        }
 
-@if (FieldErrors.Count > 0)
-{
-    <MudAlert Severity="Severity.Error" Class="mb-4">@L["FixFieldsBelow"]</MudAlert>
+        @if (FieldErrors.Count > 0)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@L["FixFieldsBelow"]</MudAlert>
+        }
+    </div>
 }
 
 @if (!IsNew && IsPublished == false && string.IsNullOrEmpty(PreviewUrl))
@@ -101,6 +111,31 @@
     public RenderFragment? ChildContent { get; set; }
 
     private bool activityOpen;
+    private ElementReference errorSummaryRef;
+    private bool hadError;
+    private bool focusErrorSummary;
+
+    /// <summary>
+    /// Detects the transition into an error state (not every re-render while one is showing, only
+    /// the moment it first appears) so <see cref="OnAfterRenderAsync"/> can move focus there once —
+    /// re-focusing on every unrelated re-render would yank focus away from whatever the caller is
+    /// typing next.
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        var hasError = !string.IsNullOrEmpty(Error) || FieldErrors.Count > 0;
+        focusErrorSummary = hasError && !hadError;
+        hadError = hasError;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusErrorSummary)
+        {
+            focusErrorSummary = false;
+            await errorSummaryRef.FocusAsync();
+        }
+    }
 
     /// <summary>
     /// Turns a refused save into a place to show it: a generic exception (no specific field — the

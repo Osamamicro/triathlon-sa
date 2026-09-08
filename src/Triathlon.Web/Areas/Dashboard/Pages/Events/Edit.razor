@@ -32,7 +32,7 @@
                        Error="@fieldErrors.ContainsKey("CityId")" ErrorText="@fieldErrors.GetValueOrDefault("CityId")">
                 @foreach (var city in cities)
                 {
-                    <MudSelectItem Value="@city.Id">@city.NameEn</MudSelectItem>
+                    <MudSelectItem Value="@city.Id">@(Culture == "ar" ? city.NameAr : city.NameEn)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>

@@ -217,3 +217,40 @@ button.primary:hover {
     background: var(--mud-palette-background-grey);
     border-radius: 4px;
 }
+
+/* Routes.razor's <FocusOnNavigate Selector="h1"> moves focus to the page heading after every
+   navigation, and EditShell does the same to .stf-error-summary the moment a save is refused
+   (both a11y requirements, not decoration) — both landed with the browser's default focus
+   rectangle, a heavy black box that reads as a rendering glitch against this theme. Give both a
+   ring in the dashboard's own primary green instead. The heading uses :focus-visible so a mouse
+   click on body text never rings it; the error summary is a plain, non-interactive <div>, and
+   Chromium never grants a script-focused plain <div> :focus-visible (only browser-driven
+   navigation focus gets that treatment) — so it uses plain :focus, which is exactly the two
+   moments this div is ever focused (a refused save, or a keyboard user tabbing through it). */
+h1:focus-visible {
+    outline: 2px solid var(--mud-palette-primary, #008c3d);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.stf-error-summary:focus {
+    outline: 2px solid var(--mud-palette-primary, #008c3d);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* MudBlazor's "small" buttons and icon-buttons — every row action (Edit, kebab), gallery/result
+   row reorder and remove control, and Choose/Remove media buttons — run 26-31px, under the 44px
+   minimum touch target. Fine with a mouse at the density this dashboard wants; too small on the
+   tablets used at events. Only grow the hit area for touch-sized viewports/coarse pointers so the
+   dense desktop tables keep their row height. */
+@media (max-width: 1024px), (pointer: coarse) {
+    .mud-icon-button-size-small {
+        min-inline-size: 44px;
+        min-block-size: 44px;
+    }
+
+    .mud-button-root[class*="-size-small"]:not(.mud-icon-button-size-small) {
+        min-block-size: 44px;
+    }
+}
