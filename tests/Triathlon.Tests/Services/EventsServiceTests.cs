@@ -11,15 +11,16 @@ namespace Triathlon.Tests.Services;
 [Collection(WebAppCollection.Name)]
 public sealed class EventsServiceTests(WebAppFixture app)
 {
-    private static EventsService At(AppDbContext db, string utc) =>
-        new(db, new FakeTimeProvider(DateTimeOffset.Parse(utc, null, System.Globalization.DateTimeStyles.AssumeUniversal)));
+    private static EventsService At(IServiceProvider sp, AppDbContext db, string utc) =>
+        new(db, new FakeTimeProvider(DateTimeOffset.Parse(utc, null, System.Globalization.DateTimeStyles.AssumeUniversal)),
+            sp.GetRequiredService<ContentGuard>(), sp.GetRequiredService<ContentCommit>());
 
     [Fact]
     public async Task Seed_loaded_the_prototype_events_and_cities()
     {
         await using var scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var service = At(db, "2026-09-07T10:00:00Z");
+        var service = At(scope.ServiceProvider, db, "2026-09-07T10:00:00Z");
 
         var cities = await service.CitiesAsync(CancellationToken.None);
         var upcoming = await service.UpcomingAsync(null, null, 0, CancellationToken.None);
@@ -40,7 +41,7 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Upcoming_past_boundary_is_midnight_in_Riyadh(string utc, bool stillUpcoming)
     {
         await using var scope = app.Services.CreateAsyncScope();
-        var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), utc);
+        var service = At(scope.ServiceProvider, scope.ServiceProvider.GetRequiredService<AppDbContext>(), utc);
 
         var upcoming = await service.UpcomingAsync(null, null, 0, CancellationToken.None);
 
@@ -51,7 +52,7 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Type_and_city_filters_apply()
     {
         await using var scope = app.Services.CreateAsyncScope();
-        var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
+        var service = At(scope.ServiceProvider, scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
 
         var competitions = await service.UpcomingAsync(EventType.Competition, null, 0, CancellationToken.None);
         var riyadh = await service.UpcomingAsync(null, "riyadh", 0, CancellationToken.None);
@@ -90,7 +91,7 @@ public sealed class EventsServiceTests(WebAppFixture app)
             for (var i = 0; i < 3; i++)
             {
                 await using var scope = app.Services.CreateAsyncScope();
-                var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
+                var service = At(scope.ServiceProvider, scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
                 outcomes.Add(await service.RegisterAsync(slug,
                     new GuestRegistration($"Guest {i}", $"g{i}@x.test", null, "Open", null), CancellationToken.None));
             }
@@ -109,7 +110,7 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Registration_is_closed_for_soon_and_past_events()
     {
         await using var scope = app.Services.CreateAsyncScope();
-        var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
+        var service = At(scope.ServiceProvider, scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
         var form = new GuestRegistration("G", "g@x.test", null, "Open", null);
 
         Assert.Equal(RegistrationOutcome.Closed, await service.RegisterAsync("abha-youth-2026", form, CancellationToken.None));
@@ -121,7 +122,7 @@ public sealed class EventsServiceTests(WebAppFixture app)
     public async Task Timeline_defaults_to_the_current_season_and_lists_its_cities()
     {
         await using var scope = app.Services.CreateAsyncScope();
-        var service = At(scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
+        var service = At(scope.ServiceProvider, scope.ServiceProvider.GetRequiredService<AppDbContext>(), "2026-09-07T10:00:00Z");
 
         var timeline = await service.TimelineAsync(null, null, CancellationToken.None);
 

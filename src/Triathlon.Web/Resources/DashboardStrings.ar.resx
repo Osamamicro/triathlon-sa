@@ -170,4 +170,28 @@
     <value>أدخل عنوان بريد إلكتروني صحيحاً.</value>
     <comment>Shown when a contact email setting is not a plausible address.</comment>
   </data>
+  <data name="Validation_City" xml:space="preserve">
+    <value>اختر مدينة.</value>
+    <comment>Shown when an event save does not reference a city that exists.</comment>
+  </data>
+  <data name="Validation_DateEnd" xml:space="preserve">
+    <value>تاريخ الانتهاء يسبق تاريخ البدء.</value>
+    <comment>Shown when an event's end date is earlier than its start date.</comment>
+  </data>
+  <data name="Validation_Capacity" xml:space="preserve">
+    <value>يجب أن تكون السعة رقماً موجباً أو فارغة.</value>
+    <comment>Shown when an event's capacity is zero or negative.</comment>
+  </data>
+  <data name="Validation_ExternalUrl" xml:space="preserve">
+    <value>التسجيل الخارجي يحتاج إلى رابط https.</value>
+    <comment>Shown when an event's external registration mode is missing a safe https URL.</comment>
+  </data>
+  <data name="Validation_GalleryFile" xml:space="preserve">
+    <value>صورة المعرض تحتاج إلى ملف.</value>
+    <comment>Shown when a gallery image row has no file path.</comment>
+  </data>
+  <data name="Validation_CityHasEvents" xml:space="preserve">
+    <value>لا تزال لهذه المدينة فعاليات؛ انقلها أولاً.</value>
+    <comment>Shown when a city delete is refused because an event still references it.</comment>
+  </data>
 </root>

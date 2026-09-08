@@ -170,4 +170,28 @@
     <value>Enter a valid email address.</value>
     <comment>Shown when a contact email setting is not a plausible address.</comment>
   </data>
+  <data name="Validation_City" xml:space="preserve">
+    <value>Choose a city.</value>
+    <comment>Shown when an event save does not reference a city that exists.</comment>
+  </data>
+  <data name="Validation_DateEnd" xml:space="preserve">
+    <value>The end date is before the start date.</value>
+    <comment>Shown when an event's end date is earlier than its start date.</comment>
+  </data>
+  <data name="Validation_Capacity" xml:space="preserve">
+    <value>Capacity must be a positive number or empty.</value>
+    <comment>Shown when an event's capacity is zero or negative.</comment>
+  </data>
+  <data name="Validation_ExternalUrl" xml:space="preserve">
+    <value>External registration needs an https link.</value>
+    <comment>Shown when an event's external registration mode is missing a safe https URL.</comment>
+  </data>
+  <data name="Validation_GalleryFile" xml:space="preserve">
+    <value>A gallery image needs a file.</value>
+    <comment>Shown when a gallery image row has no file path.</comment>
+  </data>
+  <data name="Validation_CityHasEvents" xml:space="preserve">
+    <value>This city still has events; move them first.</value>
+    <comment>Shown when a city delete is refused because an event still references it.</comment>
+  </data>
 </root>

@@ -21,7 +21,7 @@ public enum RegistrationOutcome { Confirmed, Waitlist, Closed, NotFound }
 /// Queries, timeline data and guest registration for the events domain. Split across partial-class
 /// files as later sub-tasks add to it; this file owns the clock and the delete cascade.
 /// </summary>
-public sealed partial class EventsService(AppDbContext db, TimeProvider clock)
+public sealed partial class EventsService(AppDbContext db, TimeProvider clock, ContentGuard guard, ContentCommit commit)
 {
     /// <summary>Saudi Arabia is UTC+3 year-round — no daylight saving to account for.</summary>
     public static readonly TimeSpan RiyadhOffset = TimeSpan.FromHours(3);
@@ -121,9 +121,18 @@ public sealed partial class EventsService(AppDbContext db, TimeProvider clock)
     {
         var ev = await db.Events.Include(e => e.Gallery).Include(e => e.Results).SingleOrDefaultAsync(e => e.Id == id, ct);
         if (ev is null) return;
+        var before = Audit.Snapshot(ev);
         db.EventGalleryImages.RemoveRange(ev.Gallery);
         db.EventResults.RemoveRange(ev.Results);
-        db.Events.Remove(ev);
-        await db.SaveChangesAsync(ct);
+        // Set DeletedAt directly rather than db.Events.Remove(ev): a registration for this event that
+        // is already tracked in this scope (e.g. one just created by RegisterAsync) gets fixed up into
+        // ev.Registrations by EF regardless of whether this query loaded it, and Remove()'s in-memory
+        // cascade check throws the moment it sees that tracked, required-relationship child — even
+        // though the "delete" is only ever a DeletedAt update, never a real row DELETE (StampInterceptor
+        // rewrites every hard delete that way). Mutating the column ourselves takes the same UPDATE
+        // path without ever putting the event into EntityState.Deleted, so that check never runs.
+        // Registrations are never touched either way — see docs/adr/0001-soft-delete-cascade.md.
+        ev.DeletedAt = clock.GetUtcNow();
+        await commit.ApplyAsync("Event", ev.Id, "delete", before, null, EventTags(ev.Slug), ct);
     }
 }
