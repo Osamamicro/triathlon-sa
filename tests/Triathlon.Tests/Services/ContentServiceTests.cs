@@ -92,4 +92,35 @@ public sealed class ContentServiceTests(WebAppFixture app)
             await db.SaveChangesAsync();
         }
     }
+
+    [Fact]
+    public async Task A_blank_page_title_is_refused_instead_of_saving_silently()
+    {
+        // CreatePageAsync used to only .Trim() TitleEn/TitleAr, never require them, so a page with no
+        // title at all would save without complaint (Week 4 final-review finding).
+        await using var scope = app.Services.CreateAsyncScope();
+        var content = scope.ServiceProvider.GetRequiredService<ContentService>();
+        var input = new PageInput("blank-title-" + Guid.NewGuid().ToString("N")[..8], "   ", "عنوان", null, null, false, []);
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => content.CreatePageAsync(input, CancellationToken.None));
+
+        Assert.Equal("TitleEn", ex.Field);
+        Assert.Equal("Validation_Required", ex.Key);
+    }
+
+    [Fact]
+    public async Task A_blank_news_summary_is_refused_instead_of_saving_silently()
+    {
+        // SaveAsync used to only .Trim() SummaryEn/SummaryAr, never require them, so a post with no
+        // summary at all would save without complaint (Week 4 final-review finding).
+        await using var scope = app.Services.CreateAsyncScope();
+        var news = scope.ServiceProvider.GetRequiredService<NewsService>();
+        var input = new NewsPostInput(null, "blank-summary-" + Guid.NewGuid().ToString("N")[..8], "Title", "عنوان",
+            "", "ملخص", "<p>b</p>", "<p>ب</p>", null, DateOnly.FromDateTime(DateTime.UtcNow), false);
+
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() => news.SaveAsync(input, CancellationToken.None));
+
+        Assert.Equal("SummaryEn", ex.Field);
+        Assert.Equal("Validation_Required", ex.Key);
+    }
 }

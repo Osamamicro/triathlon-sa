@@ -2,8 +2,9 @@
    "choose from the library" flow. Uploads straight into MediaService and hands the caller the
    resulting MediaAsset; the caller decides what to do with its Path. *@
 @using Microsoft.AspNetCore.Components.Forms
-@inject MediaService MediaService
+@inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
+@inject ILogger<EditShell> Logger
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
     <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelectedAsync" Accept="@Accept">
@@ -74,7 +75,7 @@
         try
         {
             await using var stream = file.OpenReadStream(MaxBytes);
-            var asset = await MediaService.UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None);
+            var asset = await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None));
             await OnUploaded.InvokeAsync(asset);
         }
         catch (ContentValidationException ex)
@@ -86,6 +87,13 @@
             // Belt-and-suspenders for the Size check above: a stale/misreported Size, or a stream
             // that grows mid-read, must still surface as an inline error rather than kill the circuit.
             error = L["Validation_File", OverLimitText];
+        }
+        catch (DbUpdateException ex)
+        {
+            // Same circuit-safety net as every EditShell-backed save (see EditShell.HandleUnexpected):
+            // a column-level constraint the service's own checks missed must not terminate the circuit.
+            EditShell.HandleUnexpected(L, ex, Logger, out var banner);
+            error = banner;
         }
         finally
         {

@@ -88,9 +88,18 @@ public sealed class MediaService(AppDbContext db, IFileStore store, ContentCommi
     public async Task UpdateAltAsync(Guid id, string? altEn, string? altAr, CancellationToken ct)
     {
         var row = await db.MediaAssets.SingleOrDefaultAsync(a => a.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound");
+
+        // ---- pass 1: validate only — no property assignment below this point ----
+        // AltEn/AltAr are HasMaxLength(256) (Data/Configurations/Media/MediaAssetConfiguration.cs) —
+        // same class of bug as F1's Event.Season: an over-length alt text must not reach
+        // SaveChangesAsync as an unhandled DbUpdateException.
+        var altEnChecked = FieldLength.Check(Blank(altEn), 256, "AltEn");
+        var altArChecked = FieldLength.Check(Blank(altAr), 256, "AltAr");
+
+        // ---- pass 2: every check above passed — assign ----
         var before = Audit.Snapshot(row);
-        row.AltEn = Blank(altEn);
-        row.AltAr = Blank(altAr);
+        row.AltEn = altEnChecked;
+        row.AltAr = altArChecked;
         await commit.ApplyAsync("MediaAsset", id, "update", before, Audit.Snapshot(row), [], ct);
     }
 

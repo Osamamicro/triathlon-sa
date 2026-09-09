@@ -58,9 +58,11 @@ else
                     </MudText>
 
                     <MudTextField T="string" Label="@($"{L["Alt"]} (EN)")" Value="@asset.AltEn" ValueChanged="@(v => OnAltChangedAsync(asset, v, asset.AltAr))"
-                                  Margin="Margin.Dense" Class="mt-2" />
+                                  Margin="Margin.Dense" Class="mt-2"
+                                  Error="@altEnErrors.ContainsKey(asset.Id)" ErrorText="@altEnErrors.GetValueOrDefault(asset.Id)" />
                     <MudTextField T="string" Label="@($"{L["Alt"]} (AR)")" Value="@asset.AltAr" ValueChanged="@(v => OnAltChangedAsync(asset, asset.AltEn, v))"
-                                  Margin="Margin.Dense" dir="rtl" lang="ar" />
+                                  Margin="Margin.Dense" dir="rtl" lang="ar"
+                                  Error="@altArErrors.ContainsKey(asset.Id)" ErrorText="@altArErrors.GetValueOrDefault(asset.Id)" />
 
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-2">
                         <MudTooltip Text="@L["CopyPath"]">
@@ -97,6 +99,11 @@ else
     private FileKind? filter;
     private int pageNumber = 1;
     private int total;
+
+    /// <summary>A refused alt-text save, keyed by asset id — the grid has no per-card EditShell to
+    /// cascade FieldErrors from, so each field's own error is tracked here instead.</summary>
+    private readonly Dictionary<Guid, string> altEnErrors = new();
+    private readonly Dictionary<Guid, string> altArErrors = new();
 
     private int pageCount => Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
 
@@ -150,6 +157,8 @@ else
 
     private async Task OnAltChangedAsync(MediaAsset asset, string? altEn, string? altAr)
     {
+        altEnErrors.Remove(asset.Id);
+        altArErrors.Remove(asset.Id);
         try
         {
             await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().UpdateAltAsync(asset.Id, altEn, altAr, CancellationToken.None));
@@ -159,7 +168,18 @@ else
         }
         catch (ContentValidationException ex)
         {
-            EditShell.Handle(L, ex, out _, new Dictionary<string, string>(StringComparer.Ordinal));
+            var fieldErrors = new Dictionary<string, string>(StringComparer.Ordinal);
+            EditShell.Handle(L, ex, out _, fieldErrors);
+            if (fieldErrors.TryGetValue("AltEn", out var altEnMessage))
+            {
+                altEnErrors[asset.Id] = altEnMessage;
+            }
+
+            if (fieldErrors.TryGetValue("AltAr", out var altArMessage))
+            {
+                altArErrors[asset.Id] = altArMessage;
+            }
+
             Snackbar.Add(L["ErrorSaving"], Severity.Error);
         }
         catch (DbUpdateException ex)

@@ -64,12 +64,16 @@ else
                                 <MudNumericField T="long" Value="@row.Value" ValueChanged="@(v => row.Value = v)" />
                             }
                         </td>
-                        <td><MudTextField T="string" Value="@row.Suffix" ValueChanged="@(v => row.Suffix = v)" /></td>
+                        <td><MudTextField T="string" Value="@row.Suffix" ValueChanged="@(v => row.Suffix = v)"
+                                          Error="@row.FieldErrors.ContainsKey("Suffix")" ErrorText="@row.FieldErrors.GetValueOrDefault("Suffix")" /></td>
                         <td><MudCheckBox T="bool" Value="@row.ShowPlus" ValueChanged="@(v => row.ShowPlus = v)" /></td>
-                        <td class="stf-kpi-note-col"><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" FullWidth="true" /></td>
-                        <td class="stf-kpi-note-col" dir="rtl"><MudTextField T="string" Value="@row.NoteAr" ValueChanged="@(v => row.NoteAr = v)" FullWidth="true" /></td>
+                        <td class="stf-kpi-note-col"><MudTextField T="string" Value="@row.NoteEn" ValueChanged="@(v => row.NoteEn = v)" FullWidth="true"
+                                          Error="@row.FieldErrors.ContainsKey("NoteEn")" ErrorText="@row.FieldErrors.GetValueOrDefault("NoteEn")" /></td>
+                        <td class="stf-kpi-note-col" dir="rtl"><MudTextField T="string" Value="@row.NoteAr" ValueChanged="@(v => row.NoteAr = v)" FullWidth="true"
+                                          Error="@row.FieldErrors.ContainsKey("NoteAr")" ErrorText="@row.FieldErrors.GetValueOrDefault("NoteAr")" /></td>
                         <td>
-                            <MudSelect T="string" Value="@(row.Color ?? "")" ValueChanged="@(v => row.Color = string.IsNullOrEmpty(v) ? null : v)">
+                            <MudSelect T="string" Value="@(row.Color ?? "")" ValueChanged="@(v => row.Color = string.IsNullOrEmpty(v) ? null : v)"
+                                       Error="@row.FieldErrors.ContainsKey("Color")" ErrorText="@row.FieldErrors.GetValueOrDefault("Color")">
                                 <MudSelectItem Value="@("")">@L["None"]</MudSelectItem>
                                 <MudSelectItem Value="@("swim")">@L["Swim"]</MudSelectItem>
                                 <MudSelectItem Value="@("bike")">@L["Bike"]</MudSelectItem>

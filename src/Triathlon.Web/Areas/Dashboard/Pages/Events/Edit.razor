@@ -67,17 +67,24 @@
     <MudText Typo="Typo.h6" Class="mt-6">@L["Course"]</MudText>
     <MudGrid Class="mt-1">
         <MudItem xs="12" md="4">
-            <MudTextField T="string" Label="@L["Swim"]" Value="@model.SwimDistance" ValueChanged="@(v => { model.SwimDistance = v; dirty = true; })" />
+            <MudTextField T="string" Label="@L["Swim"]" Value="@model.SwimDistance" ValueChanged="@(v => { model.SwimDistance = v; dirty = true; })"
+                          Error="@fieldErrors.ContainsKey("SwimDistance")" ErrorText="@fieldErrors.GetValueOrDefault("SwimDistance")" />
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudTextField T="string" Label="@L["Bike"]" Value="@model.BikeDistance" ValueChanged="@(v => { model.BikeDistance = v; dirty = true; })" />
+            <MudTextField T="string" Label="@L["Bike"]" Value="@model.BikeDistance" ValueChanged="@(v => { model.BikeDistance = v; dirty = true; })"
+                          Error="@fieldErrors.ContainsKey("BikeDistance")" ErrorText="@fieldErrors.GetValueOrDefault("BikeDistance")" />
         </MudItem>
         <MudItem xs="12" md="4">
-            <MudTextField T="string" Label="@L["Run"]" Value="@model.RunDistance" ValueChanged="@(v => { model.RunDistance = v; dirty = true; })" />
+            <MudTextField T="string" Label="@L["Run"]" Value="@model.RunDistance" ValueChanged="@(v => { model.RunDistance = v; dirty = true; })"
+                          Error="@fieldErrors.ContainsKey("RunDistance")" ErrorText="@fieldErrors.GetValueOrDefault("RunDistance")" />
         </MudItem>
     </MudGrid>
 
     <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Categories"]</MudText>
+    @if (fieldErrors.GetValueOrDefault("Categories") is { } categoriesError)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" Class="d-block">@categoriesError</MudText>
+    }
     <MudChipSet T="string" AllClosable="true" OnClose="RemoveCategory">
         @foreach (var category in model.Categories)
         {
@@ -144,6 +151,10 @@
     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" OnClick="AddGallery">@L["AddImage"]</MudButton>
 
     <MudText Typo="Typo.h6" Class="mt-6">@L["Results"]</MudText>
+    @if (fieldErrors.GetValueOrDefault("Results") is { } resultsError)
+    {
+        <MudText Color="Color.Error" Typo="Typo.caption" Class="d-block">@resultsError</MudText>
+    }
     <MudSimpleTable Dense="true" Class="mb-3">
         <thead>
             <tr>

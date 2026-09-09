@@ -75,6 +75,25 @@ public sealed class MediaServiceTests(WebAppFixture app)
     }
 
     [Fact]
+    public async Task An_over_length_alt_text_is_refused_instead_of_crashing_the_save()
+    {
+        // AltEn/AltAr are HasMaxLength(256) (Data/Configurations/Media/MediaAssetConfiguration.cs);
+        // UpdateAltAsync used to skip FieldLength.Check entirely, so this would previously reach
+        // SaveChangesAsync as an unhandled DbUpdateException instead of a validation message.
+        await using var scope = app.Services.CreateAsyncScope();
+        var media = scope.ServiceProvider.GetRequiredService<MediaService>();
+        await using var png = Fixtures.Png(100, 100);
+        var asset = await media.UploadAsync(png, "alt-test.png", FileKind.Image, null, null, CancellationToken.None);
+
+        var tooLong = new string('a', 257);
+        var ex = await Assert.ThrowsAsync<ContentValidationException>(() =>
+            media.UpdateAltAsync(asset.Id, tooLong, "ok", CancellationToken.None));
+
+        Assert.Equal("AltEn", ex.Field);
+        Assert.Equal("Validation_MaxLength", ex.Key);
+    }
+
+    [Fact]
     public async Task DeletedOnly_lists_a_deleted_asset_and_excludes_it_from_the_live_listing()
     {
         await using var scope = app.Services.CreateAsyncScope();

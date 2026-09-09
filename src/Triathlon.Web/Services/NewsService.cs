@@ -51,10 +51,12 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         var bodyEn = guard.Html(input.BodyEn) ?? throw new ContentValidationException("BodyEn", "Validation_Required");
         var bodyAr = guard.Html(input.BodyAr) ?? throw new ContentValidationException("BodyAr", "Validation_Required");
         var heroImagePath = FieldLength.Check(guard.FilePath(input.HeroImagePath, "HeroImagePath"), 512, "HeroImagePath");
-        var titleEn = FieldLength.Check(input.TitleEn.Trim(), 256, "TitleEn")!;
-        var titleAr = FieldLength.Check(input.TitleAr.Trim(), 256, "TitleAr")!;
-        var summaryEn = FieldLength.Check(input.SummaryEn.Trim(), 1024, "SummaryEn")!;
-        var summaryAr = FieldLength.Check(input.SummaryAr.Trim(), 1024, "SummaryAr")!;
+        // Title and Summary were only ever .Trim()med, never required — a blank post saved silently
+        // until this Required check was added (Week 4 final-review finding, same class as ContentService.Apply).
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
+        var summaryEn = FieldLength.Check(Required(input.SummaryEn, "SummaryEn"), 1024, "SummaryEn")!;
+        var summaryAr = FieldLength.Check(Required(input.SummaryAr, "SummaryAr"), 1024, "SummaryAr")!;
 
         var post = input.Id is { } id
             ? await db.NewsPosts.SingleOrDefaultAsync(p => p.Id == id, ct) ?? throw new ContentValidationException("Id", "Validation_NotFound")
@@ -101,4 +103,7 @@ public sealed class NewsService(AppDbContext db, TimeProvider clock, ContentGuar
         post.DeletedAt = null;
         await commit.ApplyAsync("NewsPost", id, "restore", null, Audit.Snapshot(post), [CacheTags.News], ct);
     }
+
+    private static string Required(string? value, string field) =>
+        string.IsNullOrWhiteSpace(value) ? throw new ContentValidationException(field, "Validation_Required") : value.Trim();
 }

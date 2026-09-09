@@ -1,7 +1,8 @@
 @* The shared media library, opened from MediaPicker: pick an existing upload, or add a new one. *@
 @using Microsoft.AspNetCore.Components.Forms
-@inject MediaService MediaService
+@inject DashboardScope Scope
 @inject IStringLocalizer<DashboardStrings> L
+@inject ILogger<EditShell> Logger
 
 <MudDialog>
     <DialogContent>
@@ -87,7 +88,7 @@
         loading = true;
         try
         {
-            var result = await MediaService.ListAsync(Kind, false, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None);
+            var result = await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().ListAsync(Kind, false, (pageNumber - 1) * PageSize, PageSize, CancellationToken.None));
             items = [.. result.Items];
             total = result.Total;
         }
@@ -125,7 +126,7 @@
         try
         {
             await using var stream = file.OpenReadStream(LocalFileStore.MaxBytes);
-            var asset = await MediaService.UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None);
+            var asset = await Scope.RunAsync(sp => sp.GetRequiredService<MediaService>().UploadAsync(stream, file.Name, Kind, null, null, CancellationToken.None));
             items.Insert(0, asset);
         }
         catch (ContentValidationException ex)
@@ -137,6 +138,13 @@
             // Belt-and-suspenders for the Size check above: a stale/misreported Size, or a stream
             // that grows mid-read, must still surface as an inline error rather than kill the circuit.
             error = L["Validation_File", OverLimitText];
+        }
+        catch (DbUpdateException ex)
+        {
+            // Same circuit-safety net as every EditShell-backed save (see EditShell.HandleUnexpected):
+            // a column-level constraint the service's own checks missed must not terminate the circuit.
+            EditShell.HandleUnexpected(L, ex, Logger, out var banner);
+            error = banner;
         }
         finally
         {

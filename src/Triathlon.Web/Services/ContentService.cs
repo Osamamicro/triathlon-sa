@@ -136,9 +136,11 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
     {
         // ---- pass 1: validate only — no property assignment, no db.*.Add, below this point ----
         // guard.Html and SafeHref never throw; PageConfiguration bounds TitleEn/Ar and
-        // MetaDescriptionEn/Ar, so those get the same over-length guard as F1's Event.Season.
-        var titleEn = FieldLength.Check(input.TitleEn.Trim(), 256, "TitleEn")!;
-        var titleAr = FieldLength.Check(input.TitleAr.Trim(), 256, "TitleAr")!;
+        // MetaDescriptionEn/Ar, so those get the same over-length guard as F1's Event.Season. Neither
+        // side of the title was ever required server-side — a blank post saved silently until this
+        // Required check was added (Week 4 final-review finding).
+        var titleEn = FieldLength.Check(Required(input.TitleEn, "TitleEn"), 256, "TitleEn")!;
+        var titleAr = FieldLength.Check(Required(input.TitleAr, "TitleAr"), 256, "TitleAr")!;
         var metaDescriptionEn = FieldLength.Check(Blank(input.MetaDescriptionEn), 1024, "MetaDescriptionEn");
         var metaDescriptionAr = FieldLength.Check(Blank(input.MetaDescriptionAr), 1024, "MetaDescriptionAr");
 
@@ -231,6 +233,9 @@ public sealed class ContentService(AppDbContext db, ContentGuard guard, ContentC
     }
 
     private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string Required(string? value, string field) =>
+        string.IsNullOrWhiteSpace(value) ? throw new ContentValidationException(field, "Validation_Required") : value.Trim();
 
     /// <summary>A plausible email address for a settings value: exactly one '@', no whitespace anywhere.</summary>
     private static bool IsPlausibleEmail(string value) =>

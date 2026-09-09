@@ -23,7 +23,19 @@
 
         @if (FieldErrors.Count > 0)
         {
-            <MudAlert Severity="Severity.Error" Class="mb-4">@L["FixFieldsBelow"]</MudAlert>
+            <MudAlert Severity="Severity.Error" Class="mb-4">
+                @L["FixFieldsBelow"]
+                @* Every refused field's own message, not just the field names — a field whose input
+                   has no Error/ErrorText slot (an omission on the screen's part, see Handle's doc
+                   below) would otherwise vanish behind this generic line with no way for the editor
+                   to learn what was actually wrong. *@
+                <ul class="mb-0 mt-2 ps-4">
+                    @foreach (var message in FieldErrors.Values)
+                    {
+                        <li>@message</li>
+                    }
+                </ul>
+            </MudAlert>
         }
     </div>
 }
@@ -140,8 +152,10 @@
     /// <summary>
     /// Turns a refused save into a place to show it: a generic exception (no specific field — the
     /// item itself, e.g. "not found") becomes the banner; anything else is keyed by field name for
-    /// the caller to show inline, and also listed by <see cref="EditShell"/> itself so nothing is
-    /// silently dropped when a field's own component has no slot for an external error.
+    /// the caller to show inline. Every entry in <paramref name="fieldErrors"/> is also rendered by
+    /// <see cref="EditShell"/> itself, as a bullet list under the "fix the fields below" banner, so a
+    /// refusal for a field whose input has no <c>Error</c>/<c>ErrorText</c> slot is still readable —
+    /// not silently dropped behind a generic line with no specifics.
     /// </summary>
     public static void Handle(
         IStringLocalizer<DashboardStrings> localizer,
